@@ -1,7 +1,8 @@
-import { checkbox } from "@inquirer/prompts";
+import { getIssues } from "@@/fetch/linear.ts";
 import { iconMap } from "@@/help";
 import { releaseIssues } from "@@/help/linear.ts";
-import { getIssues } from "@@/fetch/linear.ts";
+import { checkbox } from "@inquirer/prompts";
+import { $ } from "bun";
 
 const issueStateMap = {
   started: "started",
@@ -28,4 +29,8 @@ export default async function () {
       }),
   });
   releaseIssues(answer);
+  const releaseNote = process.env.RELEASE_NOTE_PAGE;
+  if (releaseNote) {
+    await $`open ${releaseNote}`;
+  }
 }

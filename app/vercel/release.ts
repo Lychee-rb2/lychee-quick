@@ -1,6 +1,8 @@
 import { getProjects } from "@@/fetch/vercel.ts";
-import { checkbox, select } from "@inquirer/prompts";
 import { DeployHook as _DeployHook, Project } from "@@/types/vercel.ts";
+import { checkbox, select } from "@inquirer/prompts";
+import { $ } from "bun";
+import { addMinutes, subMinutes } from "date-fns";
 
 type DeployHook = _DeployHook & {
   projectName: Project["name"];
@@ -8,7 +10,6 @@ type DeployHook = _DeployHook & {
 export default async function () {
   const { get } = getProjects();
   const projects = await get();
-
   const map = projects.reduce<Record<string, DeployHook[]>>(
     (acc, { link, name }) => {
       link?.deployHooks.forEach((deployHook) => {
@@ -41,4 +42,12 @@ export default async function () {
       .sort((a, b) => a.name.localeCompare(b.name)),
   });
   await Promise.all(answer.map(({ url }) => fetch(url)));
+
+  const team = Bun.env.VERCEL_TEAM!;
+  const query = new URLSearchParams();
+  const start = subMinutes(new Date(), 10).toISOString();
+  const end = addMinutes(new Date(), 10).toISOString();
+  query.append("range", JSON.stringify({ start, end }));
+  const url = `https://vercel.com/${team}/~/deployments?${query.toString()}`;
+  await $`open ${url}`;
 }

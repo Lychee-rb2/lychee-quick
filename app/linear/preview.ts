@@ -1,7 +1,7 @@
 import { getIssues } from "@@/fetch/linear.ts";
-import { search, Separator } from "@inquirer/prompts";
 import { iconMap } from "@@/help";
 import { sendPreview } from "@@/help/linear.ts";
+import { search, Separator } from "@inquirer/prompts";
 
 export default async function () {
   const { get } = getIssues();

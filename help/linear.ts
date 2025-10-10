@@ -1,24 +1,27 @@
-import type { Attachment, Issue } from "@@/types/linear";
-import { createClient } from "@@/fetch/linear.ts";
-import { z } from "zod";
 import type { GithubAttachmentMeta } from "@/types/linear";
-import { confirm } from "@inquirer/prompts";
-import { $ } from "bun";
-import { format } from "date-fns";
+import { createClient } from "@@/fetch/linear.ts";
 import { pbcopy } from "@@/help/io.ts";
 import { logger } from "@@/help/logger.ts";
+import type { Attachment, Issue } from "@@/types/linear";
+import { checkbox, confirm } from "@inquirer/prompts";
+import { $ } from "bun";
+import { format } from "date-fns";
+import { z } from "zod";
 
-const buildMention = (mention: { id: string; label: string }) => ({
-  type: "suggestion_userMentions",
-  attrs: { id: mention.id, label: mention.label },
-});
+const buildMention = (mention: { id: string; label: string }) => [
+  {
+    type: "suggestion_userMentions",
+    attrs: { id: mention.id, label: mention.label },
+  },
+  { type: "text", text: ", " },
+];
 const buildHello = (mentions: { id: string; label: string }[]) => [
   {
     type: "paragraph",
     content: [
       { type: "text", text: "Hello " },
-      ...mentions.map(buildMention),
-      { type: "text", text: ", preview links👇" },
+      ...mentions.flatMap(buildMention),
+      { type: "text", text: "preview links👇" },
     ],
   },
   { type: "horizontal_rule" },
@@ -27,8 +30,10 @@ const buildHello = (mentions: { id: string; label: string }[]) => [
 const buildPreviews = (
   previews: Pick<
     GithubAttachmentMeta["previewLinks"][number],
-    "url" | "name"
+    // "url" | "name"
+    "url"
   >[],
+  issueIdentifier: string,
 ) => ({
   type: "bullet_list",
   content: previews.map((preview) => ({
@@ -39,15 +44,8 @@ const buildPreviews = (
         content: [
           {
             type: "text",
-            marks: [
-              {
-                type: "link",
-                attrs: {
-                  href: preview.url,
-                },
-              },
-            ],
-            text: preview.name,
+            marks: [{ type: "link", attrs: { href: preview.url } }],
+            text: `${issueIdentifier} ${preview.url}`,
           },
         ],
       },
@@ -56,16 +54,15 @@ const buildPreviews = (
 });
 const buildFooter = (footer: string) => [
   { type: "horizontal_rule" },
-  {
-    type: "paragraph",
-    content: [{ type: "text", text: footer }],
-  },
+  { type: "paragraph", content: [{ type: "text", text: footer }] },
 ];
 export const buildCommentBody = (
+  issueIdentifier: string,
   mentions: { id: string; label: string }[],
   previews: Pick<
     GithubAttachmentMeta["previewLinks"][number],
-    "url" | "name"
+    // "url" | "name"
+    "url"
   >[],
   footer?: string,
 ) => {
@@ -74,14 +71,14 @@ export const buildCommentBody = (
       type: "doc",
       content: [
         ...buildHello(mentions),
-        buildPreviews(previews),
+        buildPreviews(previews, issueIdentifier),
         ...(footer ? buildFooter(footer) : []),
       ],
     },
     markdown: [
       `# Hello ${mentions.map((i) => i.label).join(",")}, preview links👇`,
       `---`,
-      ...previews.map((i) => `- [${i.name}](${i.url})`),
+      ...previews.map((i) => `- [${issueIdentifier} ${i.url}](${i.url})`),
       ...(footer ? [`---`, footer] : []),
     ],
   };
@@ -101,10 +98,26 @@ export const sendPreview = async (issue: Issue, attachment: Attachment) => {
   const mentions = await client
     .users({ filter: { email: { in: emails } } })
     .then((res) => res.users.nodes.map((i) => ({ id: i.id, label: i.name })));
-
+  const name = attachment.metadata.previewLinks[0]?.name;
+  if (name) {
+    console.log("name is fixed", name);
+  }
+  const previewLinks = await checkbox({
+    message: "Send which preview link?",
+    loop: false,
+    choices: attachment.metadata.previewLinks.map((issue) => {
+      return {
+        name: `${issue.url}`,
+        value: issue,
+        short: issue.url,
+        checked: true,
+      };
+    }),
+  });
   const body = buildCommentBody(
+    issue.identifier,
     mentions,
-    attachment.metadata.previewLinks,
+    previewLinks,
     Bun.env.PREVIEWS_COMMENT_FOOTER,
   );
   body.markdown.forEach((i) => console.log(i));

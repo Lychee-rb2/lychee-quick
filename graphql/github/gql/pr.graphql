@@ -1,11 +1,11 @@
 query pullRequest($name: String!, $owner: String!) {
-    repository(name: $name, owner: $owner){
-        pullRequests(states: OPEN, first: 10){
-            nodes {
-                title
-                url
-                headRefName
-            }
-        }
+  repository(name: $name, owner: $owner) {
+    pullRequests(states: OPEN, first: 10) {
+      nodes {
+        title
+        url
+        headRefName
+      }
     }
+  }
 }
