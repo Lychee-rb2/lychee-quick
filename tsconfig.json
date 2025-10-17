@@ -32,13 +32,11 @@
     "outDir": "out",
     "esModuleInterop": true,
     "types": [
-      "vscode",
       "node",
       "bun"
     ],
   },
   "exclude": [
     "node_modules",
-    ".vscode-test"
   ]
 }
