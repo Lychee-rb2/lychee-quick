@@ -1,8 +1,8 @@
-import { getSdk, Sdk } from "@@/graphql/github/client.ts";
+import { getSdk, Sdk } from "@/graphql/github/client.ts";
 import { GraphQLClient } from "graphql-request";
 import { z } from "zod";
-import { upstashCache } from "@@/help/redis.ts";
-import { PullRequest } from "@@/types/github.ts";
+import { upstashCache } from "@/help/redis.ts";
+import { PullRequest } from "@/types/github.ts";
 
 let client: Sdk | null = null;
 

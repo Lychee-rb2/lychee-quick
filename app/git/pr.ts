@@ -1,4 +1,4 @@
-import { createClient } from "@@/fetch/github.ts";
+import { createClient } from "@/fetch/github.ts";
 
 export default async function () {
   await createClient()

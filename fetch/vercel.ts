@@ -3,8 +3,8 @@ import { Vercel } from "@vercel/sdk";
 import mapValues from "lodash-es/mapValues";
 import pick from "lodash-es/pick";
 import { z } from "zod";
-import { Deployment, Project } from "@@/types/vercel.ts";
-import { upstashCache } from "@@/help/redis.ts";
+import { Deployment, Project } from "@/types/vercel.ts";
+import { upstashCache } from "@/help/redis.ts";
 
 let vercel: Vercel | null = null;
 export const createVercelClient = () => {

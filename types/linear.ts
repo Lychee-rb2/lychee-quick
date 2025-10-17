@@ -1,4 +1,4 @@
-import type { IssuesQuery } from "@@/graphql/linear/client";
+import type { IssuesQuery } from "@/graphql/linear/client";
 
 export interface GithubAttachmentMeta {
   id: string;

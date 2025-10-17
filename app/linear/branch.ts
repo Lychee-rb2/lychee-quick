@@ -1,8 +1,8 @@
 import { search, Separator } from "@inquirer/prompts";
-import { Issue } from "@@/types/linear.ts";
-import { findNextBranch, iconMap } from "@@/help";
+import { Issue } from "@/types/linear.ts";
+import { findNextBranch, iconMap } from "@/help";
 import { $ } from "bun";
-import { getIssues } from "@@/fetch/linear.ts";
+import { getIssues } from "@/fetch/linear.ts";
 
 const sortBy = {
   Me: 10000,

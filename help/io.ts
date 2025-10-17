@@ -18,7 +18,7 @@ export const pbcopy = (data: string) => {
 };
 
 const _require = (actionName: string[]) => {
-  const actionPath = `@@/app/${actionName.join("/")}`;
+  const actionPath = `@/app/${actionName.join("/")}`;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require(actionPath);

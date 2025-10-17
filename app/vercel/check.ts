@@ -1,7 +1,7 @@
-import { getPullRequestBranches } from "@@/fetch/github.ts";
+import { getPullRequestBranches } from "@/fetch/github.ts";
 import { select } from "@inquirer/prompts";
-import { getDeployments } from "@@/fetch/vercel.ts";
-import { Deployment } from "@@/types/vercel.ts";
+import { getDeployments } from "@/fetch/vercel.ts";
+import { Deployment } from "@/types/vercel.ts";
 
 export default async function () {
   const { get } = getPullRequestBranches();

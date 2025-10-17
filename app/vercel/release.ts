@@ -1,5 +1,5 @@
-import { getProjects } from "@@/fetch/vercel.ts";
-import { DeployHook as _DeployHook, Project } from "@@/types/vercel.ts";
+import { getProjects } from "@/fetch/vercel.ts";
+import { DeployHook as _DeployHook, Project } from "@/types/vercel.ts";
 import { checkbox, select } from "@inquirer/prompts";
 import { $ } from "bun";
 import { addMinutes, subMinutes } from "date-fns";

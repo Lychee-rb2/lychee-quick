@@ -1,4 +1,4 @@
-import { createRedisClient } from "@@/fetch/redis.ts";
+import { createRedisClient } from "@/fetch/redis.ts";
 
 export const upstashCache = <T>(
   url: string,

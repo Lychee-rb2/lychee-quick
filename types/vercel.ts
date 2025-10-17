@@ -53,5 +53,3 @@ export type Deployment = Pick<
     | "githubCommitSha"
   >;
 };
-
-export type Target = "preview" | "production";

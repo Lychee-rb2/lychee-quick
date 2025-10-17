@@ -1,6 +1,6 @@
-import { getIssues } from "@@/fetch/linear.ts";
-import { iconMap } from "@@/help";
-import { releaseIssues } from "@@/help/linear.ts";
+import { getIssues } from "@/fetch/linear.ts";
+import { iconMap } from "@/help";
+import { releaseIssues } from "@/help/linear.ts";
 import { checkbox } from "@inquirer/prompts";
 import { $ } from "bun";
 
