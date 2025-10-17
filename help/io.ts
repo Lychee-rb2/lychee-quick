@@ -1,7 +1,5 @@
 import dotenv from "dotenv";
 import { logger, typedBoolean } from "help";
-import inquirer from "inquirer";
-import { resolve } from "node:path";
 
 export const cli = (cmd: string[]) => {
   const proc = Bun.spawnSync(cmd);
@@ -11,15 +9,6 @@ export const cli = (cmd: string[]) => {
   }
   return proc;
 };
-
-export const parseArgv = () =>
-  Bun.argv.reduce<Record<string, string>>((pre, cur) => {
-    const matcher = cur.match(/-(.+)=(.+)/);
-    if (matcher) {
-      pre[matcher[1]] = matcher[2];
-    }
-    return pre;
-  }, {});
 
 export const pbcopy = (data: string) => {
   const proc = Bun.spawn(["pbcopy"], { stdin: "pipe" });
@@ -56,35 +45,4 @@ export const main = async (meta: ImportMeta) => {
   } else {
     logger.error(`Does not find "${actionName.join(" ")}"`);
   }
-};
-
-export const tempFile = async (fileName: string, content: string) => {
-  const file = resolve(Bun.env.TEMP_FOLDER || `/tmp`, fileName);
-  await Bun.write(file, content);
-  return file;
-};
-
-export const ask = async (question: string) => {
-  const { answer } = await inquirer.prompt([
-    {
-      type: "confirm",
-      name: "answer",
-      message: question,
-      default: true,
-    },
-  ]);
-  return answer;
-};
-
-export const checkbox = async (question: string, choices: string[]) => {
-  const { answer } = await inquirer.prompt([
-    {
-      type: "checkbox",
-      name: "answer",
-      message: question,
-      choices: choices,
-      default: choices,
-    },
-  ]);
-  return answer;
 };

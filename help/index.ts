@@ -2,7 +2,6 @@ export * from "./logger";
 export * from "./git";
 export * from "./io";
 export * from "./format";
-export * from "./_zod";
 
 export type FalseType = "" | 0 | false | null | undefined;
 

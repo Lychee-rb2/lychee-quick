@@ -8,7 +8,7 @@ const content = `
 declare namespace NodeJS {
   export interface ProcessEnv {
     ${Object.keys(dotenv.parse(env))
-      .map((key) => `${key}?: string`)
+      .map((key) => `${key}?: string;`)
       .join("\n    ")}
   }
 }

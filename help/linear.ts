@@ -1,8 +1,7 @@
-import type { GithubAttachmentMeta } from "@/types/linear";
 import { createClient } from "@@/fetch/linear.ts";
 import { pbcopy } from "@@/help/io.ts";
 import { logger } from "@@/help/logger.ts";
-import type { Attachment, Issue } from "@@/types/linear";
+import type { Attachment, GithubAttachmentMeta, Issue } from "@@/types/linear";
 import { checkbox, confirm } from "@inquirer/prompts";
 import { $ } from "bun";
 import { format } from "date-fns";

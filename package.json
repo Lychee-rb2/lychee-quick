@@ -1,274 +1,33 @@
 {
   "name": "lychee-quick",
-  "displayName": "Lychee quick panel",
-  "description": "Quick panel for Lychee",
+  "displayName": "Lychee quick cli",
+  "description": "Quick cli for Lychee",
   "version": "0.0.1",
   "publisher": "Lychee",
-  "engines": {
-    "vscode": "^1.93.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [],
   "repository": "https://github.com/Lychee-rb2/bun-help.git",
-  "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "lychee-quick.linear-view.open-issue",
-        "when": "false",
-        "icon": "$(link-external)",
-        "title": "Open issue"
-      },
-      {
-        "command": "lychee-quick.linear-view.release-issues",
-        "icon": "$(rocket)",
-        "title": "Release issues"
-      },
-      {
-        "command": "lychee-quick.linear-view.create-branch",
-        "title": "Create branch",
-        "when": "false",
-        "icon": "$(git-branch-create)"
-      },
-      {
-        "command": "lychee-quick.vercel-view.refresh",
-        "title": "Refresh Vercel",
-        "when": "false",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "lychee-quick.vercel-view.release-projects",
-        "icon": "$(rocket)",
-        "when": "false",
-        "title": "Release projects"
-      },
-      {
-        "command": "lychee-quick.vercel-view.release-project",
-        "icon": "$(rocket)",
-        "when": "false",
-        "title": "Release project"
-      },
-      {
-        "command": "lychee-quick.vercel-view.refresh-project",
-        "title": "Refresh Vercel project",
-        "when": "false",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "lychee-quick.vercel-view.open-preview",
-        "when": "false",
-        "icon": "$(open-preview)",
-        "title": "Open preview"
-      },
-      {
-        "command": "lychee-quick.vercel-view.open-inspector",
-        "when": "false",
-        "icon": "$(debug)",
-        "title": "Open inspector"
-      },
-      {
-        "command": "lychee-quick.vercel-view.check-branch",
-        "title": "Check branch",
-        "when": "false",
-        "icon": "$(git-branch)"
-      },
-      {
-        "command": "lychee-quick.linear-view.refresh",
-        "title": "Refresh Linear issues",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "lychee-quick.linear-view.send-preview",
-        "title": "Send preview",
-        "when": "false",
-        "icon": "$(send)"
-      },
-      {
-        "command": "lychee-quick.linear-view.open-pull-request",
-        "title": "Open pull request",
-        "when": "false",
-        "icon": "$(git-pull-request)"
-      }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "lychee-quick-sidebar",
-          "title": "Lychee Quick",
-          "icon": "$(zap)"
-        }
-      ]
-    },
-    "views": {
-      "lychee-quick-sidebar": [
-        {
-          "id": "lychee-quick.linear-view",
-          "name": "Linear",
-          "type": "tree",
-          "checkbox": true
-        },
-        {
-          "id": "lychee-quick.vercel-view",
-          "name": "Vercel",
-          "type": "tree",
-          "checkbox": true
-        }
-      ]
-    },
-    "menus": {
-      "commandPalette": [],
-      "view/title": [
-        {
-          "command": "lychee-quick.linear-view.release-issues",
-          "group": "navigation",
-          "when": "view == lychee-quick.linear-view"
-        },
-        {
-          "command": "lychee-quick.linear-view.refresh",
-          "group": "navigation",
-          "when": "view == lychee-quick.linear-view"
-        },
-        {
-          "command": "lychee-quick.vercel-view.refresh",
-          "group": "navigation",
-          "when": "view == lychee-quick.vercel-view"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "lychee-quick.linear-view.create-branch",
-          "when": "view == lychee-quick.linear-view && viewItem == lychee-quick.linear-view.issue",
-          "group": "inline"
-        },
-        {
-          "command": "lychee-quick.linear-view.open-issue",
-          "when": "view == lychee-quick.linear-view && viewItem == lychee-quick.linear-view.issue",
-          "group": "inline"
-        },
-        {
-          "command": "lychee-quick.linear-view.send-preview",
-          "when": "view == lychee-quick.linear-view && viewItem == lychee-quick.linear-view.pull-request",
-          "group": "inline"
-        },
-        {
-          "command": "lychee-quick.linear-view.open-pull-request",
-          "when": "view == lychee-quick.linear-view && viewItem == lychee-quick.linear-view.pull-request",
-          "group": "inline"
-        },
-        {
-          "command": "lychee-quick.vercel-view.release-projects",
-          "when": "view == lychee-quick.vercel-view && viewItem == lychee-quick.vercel-view.releases.branch",
-          "group": "inline"
-        },
-        {
-          "command": "lychee-quick.vercel-view.release-project",
-          "when": "view == lychee-quick.vercel-view && viewItem == lychee-quick.vercel-view.releases.branch.project",
-          "group": "inline"
-        },
-        {
-          "command": "lychee-quick.vercel-view.open-preview",
-          "when": "view == lychee-quick.vercel-view && viewItem == lychee-quick.vercel-view.deployments.project.branch",
-          "group": "inline"
-        },
-        {
-          "command": "lychee-quick.vercel-view.open-inspector",
-          "when": "view == lychee-quick.vercel-view && viewItem == lychee-quick.vercel-view.deployments.project.deployment",
-          "group": "inline"
-        },
-        {
-          "command": "lychee-quick.vercel-view.refresh-project",
-          "when": "view == lychee-quick.vercel-view && viewItem == lychee-quick.vercel-view.deployments.project",
-          "group": "inline"
-        },
-        {
-          "command": "lychee-quick.vercel-view.check-branch",
-          "when": "view == lychee-quick.vercel-view && viewItem == lychee-quick.vercel-view.deployments.project.branch",
-          "group": "inline"
-        }
-      ]
-    },
-    "configuration": {
-      "title": "Lychee Quick",
-      "properties": {
-        "lychee-quick.linearApiKey": {
-          "type": "string",
-          "description": "API key for Linear integration"
-        },
-        "lychee-quick.linearTeam": {
-          "type": "string",
-          "description": "Linear group name"
-        },
-        "lychee-quick.previewsCommentMentions": {
-          "type": "array",
-          "description": "Previews comment mentions emails",
-          "default": []
-        },
-        "lychee-quick.previewsCommentFooter": {
-          "type": "string",
-          "description": "Previews comment footer"
-        },
-        "lychee-quick.vercelToken": {
-          "type": "string",
-          "description": "Authentication token for Vercel"
-        },
-        "lychee-quick.vercelTeam": {
-          "type": "string",
-          "description": "Vercel team name"
-        },
-        "lychee-quick.deepseekApi": {
-          "type": "string",
-          "description": "DeepSeek API key"
-        },
-        "lychee-quick.moonshotApi": {
-          "type": "string",
-          "description": "Moonshot API key"
-        },
-        "lychee-quick.redisUrl": {
-          "type": "string",
-          "description": "Redis url"
-        },
-        "lychee-quick.redisToken": {
-          "type": "string",
-          "description": "Redis token"
-        }
-      }
-    }
-  },
   "module": "index.ts",
   "scripts": {
     "postinstall": "bun scripts/postinstall.ts",
-    "package": "bun scripts/package.ts",
-    "vscode:prepublish": "bun run compile",
-    "compile": "bun esbuild.config.js",
-    "watch": "bun esbuild.config.js --watch",
-    "pretest": "bun run build && bun run lint",
-    "lint": "eslint . --ext ts",
-    "test": "bun run test",
     "codegen": "bun scripts/codegen.ts"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^5.0.5",
-    "@types/bun": "^1.1.6",
-    "@types/glob": "^8.1.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "20",
-    "@types/vscode": "1.93",
-    "@vscode/test-electron": "^2.3.0",
-    "esbuild": "^0.25.1",
-    "eslint": "9",
-    "glob": "^8.1.0",
-    "mocha": "^10.2.0",
-    "typescript": "^5.8.2",
     "@eslint/js": "^9.22.0",
+    "@graphql-codegen/cli": "^5.0.5",
     "@graphql-codegen/typescript-graphql-request": "^6.2.0",
     "@graphql-codegen/typescript-operations": "^4.5.1",
+    "@types/bun": "^1.1.6",
     "@types/dotenv": "^8.2.0",
+    "@types/glob": "^8.1.0",
+    "@types/node": "20",
+    "@types/node-notifier": "^8.0.5",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
+    "eslint": "9",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",
-    "@types/node-notifier": "^8.0.5"
+    "glob": "^8.1.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.1",
+    "prettier": "^3.5.3"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.4.1",
@@ -276,9 +35,7 @@
     "@types/lodash-es": "^4.17.12",
     "@upstash/redis": "^1.34.6",
     "@vercel/sdk": "^1.6.0",
-    "@vscode/vsce": "^3.2.2",
     "date-fns": "^4.1.0",
-    "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "graphql": "^16.10.0",
     "graphql-request": "^7.1.2",
@@ -286,12 +43,8 @@
     "lodash-es": "^4.17.21",
     "log-update": "^6.1.0",
     "node-notifier": "^10.0.1",
-    "octokit": "^4.1.2",
     "pino": "^9.3.1",
     "pino-pretty": "^11.2.1",
-    "prettier": "^3.5.3",
-    "typescript-eslint": "^8.26.1",
-    "vsce": "^2.15.0",
     "zod": "^3.24.2"
   }
 }
