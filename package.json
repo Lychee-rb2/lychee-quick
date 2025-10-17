@@ -5,7 +5,6 @@
   "version": "0.0.1",
   "publisher": "Lychee",
   "repository": "https://github.com/Lychee-rb2/bun-help.git",
-  "module": "index.ts",
   "scripts": {
     "postinstall": "bun scripts/postinstall.ts",
     "codegen": "bun scripts/codegen.ts"

@@ -15,10 +15,6 @@ declare namespace NodeJS {
     GIT_TOKEN?: string;
     REDIS_URL?: string;
     REDIS_TOKEN?: string;
-    DEEPSEEP_URL?: string;
-    DEEPSEEP_API?: string;
-    MOONSHOT_API?: string;
-    MOONSHOT_URL?: string;
     PREVIEWS_COMMENT_MENTIONS?: string;
     PREVIEWS_COMMENT_FOOTER?: string;
     RELEASE_NOTE_PAGE?: string;
