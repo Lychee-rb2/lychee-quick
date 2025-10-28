@@ -35,15 +35,19 @@ export const getProjects = () => {
     createVercelClient()
       .projects.getProjects({ teamId })
       .then((res) =>
-        res.projects.map((project) => ({
-          ...pick(project, ["id", "name"]),
-          link: {
-            deployHooks: project.link.deployHooks.map((deployHook) =>
-              pick(deployHook, ["ref", "url"]),
+        res.projects
+          .filter((project) => project.link)
+          .map((project) => ({
+            ...pick(project, ["id", "name"]),
+            link: {
+              deployHooks: project.link.deployHooks.map((deployHook) =>
+                pick(deployHook, ["ref", "url"]),
+              ),
+            },
+            targets: mapValues(project.targets, (target) =>
+              pick(target, ["id"]),
             ),
-          },
-          targets: mapValues(project.targets, (target) => pick(target, ["id"])),
-        })),
+          })),
       ),
   );
   return {
