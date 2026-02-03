@@ -128,17 +128,47 @@ bun run codegen
 ## 项目结构
 
 ```
-├── app/                 # CLI 命令实现
-│   ├── clash/          # Mihomo 代理命令
-│   ├── linear/         # Linear 相关命令
-│   └── vercel/         # Vercel 相关命令
-├── completions/        # Shell 补全脚本
-├── fetch/              # API 请求封装
-├── graphql/            # GraphQL schema 和查询
-├── help/               # 工具函数
-├── types/              # TypeScript 类型定义
-├── scripts/            # 构建脚本
-└── bin.ts              # CLI 入口
+├── app/                    # CLI 命令实现
+│   ├── clash/              # Mihomo 代理命令
+│   │   ├── meta.ts         # 命令组描述
+│   │   ├── delay/          # 子命令文件夹
+│   │   │   ├── meta.ts     # 子命令描述 (export const completion)
+│   │   │   └── handler.ts  # 子命令实现 (export default)
+│   │   ├── now/
+│   │   └── toggle/
+│   ├── linear/             # Linear 相关命令
+│   │   ├── meta.ts
+│   │   ├── branch/
+│   │   ├── preview/
+│   │   └── release/
+│   └── vercel/             # Vercel 相关命令
+│       ├── meta.ts
+│       ├── check/
+│       └── release/
+├── completions/            # Shell 补全脚本
+├── fetch/                  # API 请求封装
+├── graphql/                # GraphQL schema 和查询
+├── help/                   # 工具函数
+├── types/                  # TypeScript 类型定义
+├── scripts/                # 构建脚本
+└── bin.ts                  # CLI 入口
+```
+
+### 添加新命令
+
+每个子命令是一个文件夹，包含两个文件：
+
+- `meta.ts` - 导出命令描述，用于帮助信息和自动补全
+- `handler.ts` - 导出默认函数作为命令处理器
+
+```typescript
+// app/example/mycommand/meta.ts
+export const completion = "命令描述";
+
+// app/example/mycommand/handler.ts
+export default async function handle() {
+  // 命令实现
+}
 ```
 
 ## License

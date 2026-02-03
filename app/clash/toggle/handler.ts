@@ -4,7 +4,6 @@ import { pickProxy } from "@/help/mihomo";
 import { MihomoConfig } from "@/types/mihomo";
 import { select } from "@inquirer/prompts";
 
-export const completion = "切换代理模式";
 export default async function handle() {
   const config = await mihomo<MihomoConfig>(`configs`);
   const mode = await select({

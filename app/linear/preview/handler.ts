@@ -3,7 +3,6 @@ import { iconMap } from "@/help";
 import { sendPreview } from "@/help/linear.ts";
 import { search, Separator } from "@inquirer/prompts";
 
-export const completion = "发送预览评论";
 export default async function handle() {
   const { get } = getIssues();
 

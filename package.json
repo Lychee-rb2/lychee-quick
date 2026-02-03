@@ -16,13 +16,11 @@
     "@graphql-codegen/typescript-operations": "^4.5.1",
     "@types/bun": "^1.1.6",
     "@types/dotenv": "^8.2.0",
-    "@types/glob": "^8.1.0",
     "@types/node": "20",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "eslint": "9",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",
-    "glob": "^8.1.0",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.1",
     "prettier": "^3.5.3"

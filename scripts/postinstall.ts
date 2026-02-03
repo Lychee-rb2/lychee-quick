@@ -47,7 +47,7 @@ const installCli = () => {
   }
 };
 
-// Scan app directory and get completions from ts files
+// Scan app directory and get completions from folder structure
 const getCompletions = async () => {
   const commands: { name: string; completion: string }[] = [];
   const subcommands: Record<string, { name: string; completion: string }[]> =
@@ -60,23 +60,25 @@ const getCompletions = async () => {
   for (const folder of folders) {
     const folderPath = resolve(appDir, folder.name);
 
-    // Get folder completion from COMPLETION.ts
-    const metaFile = resolve(folderPath, "META.json");
-    const meta = await Bun.file(metaFile).json();
-    commands.push({ name: folder.name, completion: meta.completion });
+    // Get folder completion from meta.ts
+    const metaFile = resolve(folderPath, "meta.ts");
+    const mod = await import(metaFile);
+    commands.push({ name: folder.name, completion: mod.completion });
 
-    // Get subcommand completions
+    // Get subcommand completions from subdirectories
     subcommands[folder.name] = [];
-    const files = readdirSync(folderPath).filter(
-      (f) => f.endsWith(".ts") && f !== "META.json",
+    const subFolders = readdirSync(folderPath, { withFileTypes: true }).filter(
+      (d) => d.isDirectory(),
     );
 
-    for (const file of files) {
-      const filePath = resolve(folderPath, file);
-      const mod = await import(filePath);
+    for (const subFolder of subFolders) {
+      const metaPath = resolve(folderPath, subFolder.name, "meta.ts");
+      const mod = await import(metaPath);
       if (mod.completion) {
-        const name = file.replace(".ts", "");
-        subcommands[folder.name].push({ name, completion: mod.completion });
+        subcommands[folder.name].push({
+          name: subFolder.name,
+          completion: mod.completion,
+        });
       }
     }
   }

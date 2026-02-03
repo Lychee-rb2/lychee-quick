@@ -4,7 +4,6 @@ import { checkbox, select } from "@inquirer/prompts";
 import { $ } from "bun";
 import { addMinutes, subMinutes } from "date-fns";
 
-export const completion = "触发部署";
 type DeployHook = _DeployHook & {
   projectName: Project["name"];
 };

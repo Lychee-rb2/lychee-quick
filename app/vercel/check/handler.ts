@@ -3,7 +3,6 @@ import { select } from "@inquirer/prompts";
 import { getDeployments } from "@/fetch/vercel.ts";
 import { Deployment } from "@/types/vercel.ts";
 
-export const completion = "检查部署状态";
 export default async function handle() {
   const { get } = getPullRequestBranches();
   const branches = await get();

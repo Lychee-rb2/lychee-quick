@@ -4,7 +4,6 @@ import { findNextBranch, iconMap } from "@/help";
 import { $ } from "bun";
 import { getIssues } from "@/fetch/linear.ts";
 
-export const completion = "从 Issue 创建分支";
 const sortBy = {
   Me: 10000,
   None: -1,
