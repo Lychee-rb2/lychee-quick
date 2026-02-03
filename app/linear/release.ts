@@ -4,12 +4,13 @@ import { releaseIssues } from "@/help/linear.ts";
 import { checkbox } from "@inquirer/prompts";
 import { $ } from "bun";
 
+export const completion = "发布 Issue";
 const issueStateMap = {
   started: "started",
   completed: "completed",
 } as const;
 
-export default async function () {
+export default async function handle() {
   const { get } = getIssues();
 
   const issues = await get();

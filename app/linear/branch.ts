@@ -4,6 +4,7 @@ import { findNextBranch, iconMap } from "@/help";
 import { $ } from "bun";
 import { getIssues } from "@/fetch/linear.ts";
 
+export const completion = "从 Issue 创建分支";
 const sortBy = {
   Me: 10000,
   None: -1,
@@ -16,7 +17,7 @@ const issueStateMap = {
   backlog: "backlog",
 } as const;
 
-export default async function () {
+export default async function handle() {
   const { get } = getIssues();
   const issue = await search({
     message: "Checkout branch from which issue?",

@@ -100,6 +100,21 @@ your-cli-name linear branch
 <cli> clash delay
 ```
 
+## Zsh 自动补全
+
+如果你使用 zsh，安装时会自动配置补全。安装完成后重新加载 zsh 即可：
+
+```bash
+source ~/.zshrc
+```
+
+之后输入命令时按 Tab 即可自动补全：
+
+```bash
+your-cli-name <Tab>        # 显示: clash, linear, vercel
+your-cli-name linear <Tab> # 显示: branch, preview, release
+```
+
 ## 开发
 
 ```bash
@@ -117,6 +132,7 @@ bun run codegen
 │   ├── clash/          # Mihomo 代理命令
 │   ├── linear/         # Linear 相关命令
 │   └── vercel/         # Vercel 相关命令
+├── completions/        # Shell 补全脚本
 ├── fetch/              # API 请求封装
 ├── graphql/            # GraphQL schema 和查询
 ├── help/               # 工具函数

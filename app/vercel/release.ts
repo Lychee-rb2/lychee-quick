@@ -4,10 +4,11 @@ import { checkbox, select } from "@inquirer/prompts";
 import { $ } from "bun";
 import { addMinutes, subMinutes } from "date-fns";
 
+export const completion = "触发部署";
 type DeployHook = _DeployHook & {
   projectName: Project["name"];
 };
-export default async function () {
+export default async function handle() {
   const { get } = getProjects();
   const projects = await get();
   const map = projects.reduce<Record<string, DeployHook[]>>(

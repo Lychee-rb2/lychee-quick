@@ -177,3 +177,7 @@ dist
 bin
 *.vsix
 .lingma
+
+# Generated files
+global-env.d.ts
+completions/init.zsh

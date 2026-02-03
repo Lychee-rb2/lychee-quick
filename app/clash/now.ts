@@ -4,6 +4,7 @@ import { findCurrentProxy, pickProxy } from "@/help/mihomo";
 import { MihomoConfig } from "@/types/mihomo";
 import { confirm } from "@inquirer/prompts";
 
+export const completion = "当前代理状态";
 export default async function handle() {
   const config = await mihomo<MihomoConfig>(`configs`);
   if (config.mode !== "rule") {

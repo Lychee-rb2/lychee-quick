@@ -2,7 +2,7 @@ import { findCurrentProxy } from "@/help/mihomo";
 import { logger } from "@/help";
 import { mihomo } from "@/fetch/mihomo";
 import { $ } from "bun";
-
+export const completion = "延迟测试";
 export default async function handle() {
   const proxyChain = await findCurrentProxy();
   const lastProxy = proxyChain.at(-1);
