@@ -156,10 +156,14 @@ compdef _lychee_quick_completion ${cliName}
 
     appendFileSync(zshrcPath, `\n${sourceLine}\n`);
     console.log(`Zsh completion installed for: ${cliName}`);
-    console.log("Run 'source ~/.zshrc' or restart terminal to enable");
   } catch (err) {
     console.error("Failed to install zsh completion:", err);
   }
+
+  // Print source command for user to run
+  console.log(
+    `\nRun this to enable completion now:\n  source ${completionFile}\n`,
+  );
 };
 
 installCli();
