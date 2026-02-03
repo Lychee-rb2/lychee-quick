@@ -17,5 +17,6 @@ export default async function handle() {
   const delay = await mihomo<{ delay: number }>(
     `proxies/${encodeURIComponent(lastProxy.name)}/delay?${qs.toString()}`,
   ).then((result) => result.delay);
-  await $`echo "${lastProxy.name} -> ${delay}ms"`;
+  await $`echo "proxy: ${proxyChain.map((p) => p.name).join(" -> ")}"`;
+  await $`echo "delay: ${delay}ms"`;
 }
