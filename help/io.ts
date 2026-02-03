@@ -94,18 +94,41 @@ const _require = (actionName: string[]) => {
   }
 };
 
+const showHelp = async (actionName: string[]) => {
+  const metaPath = `@/app/${actionName.join("/")}/meta`;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require(metaPath);
+    if (mod.help) {
+      logger.info(mod.help);
+    } else if (mod.completion) {
+      logger.info(mod.completion);
+    } else {
+      logger.info(`No help available for "${actionName.join(" ")}"`);
+    }
+  } catch {
+    logger.error(`Can't find help for "${actionName.join(" ")}"`);
+  }
+};
+
 export const main = async (meta: ImportMeta) => {
   dotenv.config({ path: `${meta.dir}/.env` });
   const binIndex = Bun.argv.findIndex((i) => i === meta.path);
   if (binIndex === -1) {
     throw new Error("Parse argv fail");
   }
-  const actionName = Bun.argv
-    .slice(binIndex + 1)
-    .filter(typedBoolean)
-    .filter((i) => !i.includes("-"));
+  const args = Bun.argv.slice(binIndex + 1).filter(typedBoolean);
+  const hasHelp = args.includes("-h") || args.includes("--help");
+  const actionName = args.filter((i) => !i.startsWith("-"));
+
   if (actionName.length === 0) {
     await showAvailableActions();
+    return;
+  }
+
+  // 如果有 -h 或 --help 参数，显示帮助信息
+  if (hasHelp) {
+    await showHelp(actionName);
     return;
   }
 
