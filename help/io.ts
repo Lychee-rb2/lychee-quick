@@ -2,6 +2,56 @@ import dotenv from "dotenv";
 import { logger, typedBoolean } from "help";
 const cliName = process.env.CLI_NAME;
 
+/**
+ * 解析缩写命令，例如 "c-c" -> ["clash", "check"]
+ * 支持用 "-" 分隔的缩写格式，每个部分使用前缀匹配
+ */
+const expandAlias = async (alias: string): Promise<string[] | null> => {
+  // 如果不包含 "-"，不是缩写格式
+  if (!alias.includes("-")) return null;
+
+  const parts = alias.split("-");
+  const appDir = `${import.meta.dir}/../app`;
+  const result: string[] = [];
+
+  // 扫描并匹配命令
+  const scanAndMatch = async (
+    dir: string,
+    prefix: string,
+  ): Promise<string | null> => {
+    const glob = new Bun.Glob("*/meta.ts");
+    const matches: string[] = [];
+
+    for await (const path of glob.scan({ cwd: dir })) {
+      const name = path.split("/")[0];
+      if (name.startsWith(prefix)) {
+        matches.push(name);
+      }
+    }
+
+    // 只有唯一匹配时才返回
+    if (matches.length === 1) {
+      return matches[0];
+    } else if (matches.length > 1) {
+      logger.debug(
+        `缩写 "${prefix}" 匹配多个命令: ${matches.join(", ")}，请使用更长的前缀`,
+      );
+      return null;
+    }
+    return null;
+  };
+
+  let currentDir = appDir;
+  for (const part of parts) {
+    const match = await scanAndMatch(currentDir, part);
+    if (!match) return null;
+    result.push(match);
+    currentDir = `${currentDir}/${match}`;
+  }
+
+  return result.length > 0 ? result : null;
+};
+
 const showAvailableActions = async () => {
   const appDir = `${import.meta.dir}/../app`;
   const glob = new Bun.Glob("*/meta.ts");
@@ -119,7 +169,16 @@ export const main = async (meta: ImportMeta) => {
   }
   const args = Bun.argv.slice(binIndex + 1).filter(typedBoolean);
   const hasHelp = args.includes("-h") || args.includes("--help");
-  const actionName = args.filter((i) => !i.startsWith("-"));
+  let actionName = args.filter((i) => !i.startsWith("-"));
+
+  // 尝试展开缩写命令，例如 "c-c" -> ["clash", "check"]
+  if (actionName.length === 1 && actionName[0].includes("-")) {
+    const expanded = await expandAlias(actionName[0]);
+    if (expanded) {
+      logger.info(`→ ${cliName} ${expanded.join(" ")}`);
+      actionName = expanded;
+    }
+  }
 
   // 如果有 -h 或 --help 参数，显示帮助信息
   if (hasHelp) {

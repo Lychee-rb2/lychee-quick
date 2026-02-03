@@ -47,6 +47,16 @@ const installCli = () => {
   }
 };
 
+// Validate command names don't contain "-" (reserved for alias shortcuts)
+const validateCommandName = (name: string, path: string) => {
+  if (name.includes("-")) {
+    console.error(
+      `\n❌ 命令名称不能包含 "-": ${name}\n   路径: ${path}\n   原因: "-" 用于缩写指令分隔符（如 c-c -> clash check）\n`,
+    );
+    process.exit(1);
+  }
+};
+
 // Scan app directory and get completions from folder structure
 const getCompletions = async () => {
   const commands: { name: string; completion: string }[] = [];
@@ -58,6 +68,9 @@ const getCompletions = async () => {
   );
 
   for (const folder of folders) {
+    // 检测命令名称是否包含 "-"
+    validateCommandName(folder.name, `app/${folder.name}`);
+
     const folderPath = resolve(appDir, folder.name);
 
     // Get folder completion from meta.ts
@@ -72,6 +85,12 @@ const getCompletions = async () => {
     );
 
     for (const subFolder of subFolders) {
+      // 检测子命令名称是否包含 "-"
+      validateCommandName(
+        subFolder.name,
+        `app/${folder.name}/${subFolder.name}`,
+      );
+
       const metaPath = resolve(folderPath, subFolder.name, "meta.ts");
       const mod = await import(metaPath);
       if (mod.completion) {
