@@ -7,7 +7,9 @@
   "repository": "https://github.com/Lychee-rb2/bun-help.git",
   "scripts": {
     "postinstall": "bun scripts/postinstall.ts",
-    "codegen": "bun scripts/codegen.ts"
+    "codegen": "bun scripts/codegen.ts",
+    "test": "bun test --coverage --reporter=junit --reporter-outfile=test-report.xml",
+    "test:watch": "bun test --watch"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

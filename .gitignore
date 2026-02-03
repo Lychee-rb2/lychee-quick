@@ -181,3 +181,4 @@ bin
 # Generated files
 global-env.d.ts
 completions/init.zsh
+test-report.xml
