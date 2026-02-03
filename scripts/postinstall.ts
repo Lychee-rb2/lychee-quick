@@ -1,53 +1,42 @@
 import dotenv from "dotenv";
 import { resolve } from "node:path";
+import { existsSync, unlinkSync, symlinkSync } from "node:fs";
+import { homedir } from "node:os";
 
 const root = resolve(import.meta.dir, "..");
-const path = (p: string) => resolve(root, p);
-const env = await Bun.file("./.env").text();
+const envFile = await Bun.file(resolve(root, ".env")).text();
+const envVars = dotenv.parse(envFile);
+
+// Generate global-env.d.ts
 const content = `
 declare namespace NodeJS {
   export interface ProcessEnv {
-    ${Object.keys(dotenv.parse(env))
+    ${Object.keys(envVars)
       .map((key) => `${key}?: string;`)
       .join("\n    ")}
   }
 }
 `;
+await Bun.write(resolve(root, "global-env.d.ts"), content);
 
-await Bun.write("./global-env.d.ts", content);
-const installForZsh = async () => {
-  if (!Bun.env.ZSH_RC) {
-    console.log(
-      "You can add ZSH_RC into your env and run `postinstall` again to use alias",
-    );
-    return;
-  }
-  if (!Bun.env.CLI_NAME) {
-    console.log(
-      "You can add CLI_NAME into your env and run `postinstall` again to use alias",
-    );
-    return;
-  }
-  const BIN_PATH = `./bin/bun-help`;
-  await Bun.write(
-    BIN_PATH,
-    `#!/bin/sh
-exec bun "${path("./bin.ts")}" "$@"
-`,
-  );
-  const zshrc = await Bun.file(`${Bun.env.ZSH_RC}`).text();
-  const zshrcContent = zshrc.split("\n");
-  const alias = `alias ${Bun.env.CLI_NAME}="zsh ${path(BIN_PATH)}"`;
-  if (zshrcContent.some((i) => i === alias)) {
-    console.log(`zshrc already has ${alias}", skip add`);
-  } else {
-    await Bun.write(`${Bun.env.ZSH_RC}`, `${zshrc}\n${alias}`);
-    console.log(`zshrc add "${alias}", use "source ${Bun.env.ZSH_RC}"`);
+// Install CLI with custom name from CLI_NAME env var (default: ly)
+const installCli = () => {
+  const cliName = envVars.CLI_NAME || "ly";
+  const binPath = resolve(root, "bin.ts");
+  const bunBinDir = resolve(homedir(), ".bun", "bin");
+  const linkPath = resolve(bunBinDir, cliName);
+
+  try {
+    // Remove existing symlink if exists
+    if (existsSync(linkPath)) {
+      unlinkSync(linkPath);
+    }
+    // Create new symlink
+    symlinkSync(binPath, linkPath);
+    console.log(`CLI installed: ${cliName} -> ${binPath}`);
+  } catch (err) {
+    console.error(`Failed to install CLI:`, err);
   }
 };
 
-if (Bun.env.ZSH) {
-  installForZsh();
-} else {
-  console.log("CLI only support ZSH now.");
-}
+installCli();

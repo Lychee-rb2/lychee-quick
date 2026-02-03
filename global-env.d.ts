@@ -1,9 +1,7 @@
-
 declare namespace NodeJS {
   export interface ProcessEnv {
     CLI_NAME?: string;
     NU_CONFIG?: string;
-    ZSH_RC?: string;
     LINEAR_API_KEY?: string;
     LINEAR_TEAM?: string;
     LINEAR_SPACE?: string;
@@ -18,5 +16,8 @@ declare namespace NodeJS {
     PREVIEWS_COMMENT_MENTIONS?: string;
     PREVIEWS_COMMENT_FOOTER?: string;
     RELEASE_NOTE_PAGE?: string;
+    MIHOMO_URL?: string;
+    MIHOMO_TOKEN?: string;
+    MIHOMO_TOP_PROXY?: string;
   }
 }
