@@ -1,19 +1,20 @@
 import { mihomo } from "@/fetch/mihomo";
-import { logger } from "@/help";
+import { iconMap, logger } from "@/help";
 import { pickProxy } from "@/help/mihomo";
 import { MihomoConfig } from "@/types/mihomo";
 import { select } from "@inquirer/prompts";
 
+const modes = ["rule", "direct", "global"] as const;
 export default async function handle() {
   const config = await mihomo<MihomoConfig>(`configs`);
   const mode = await select({
     message: "To which mode?",
-    choices: ["rule", "direct", "global"]
-      .sort((a) => (config.mode === a ? 1 : -1))
-      .map((mode) => ({
-        name: mode === config.mode ? `${mode}(NOW)` : mode,
-        value: mode,
-      })),
+    choices: modes.map((mode) => ({
+      name: `${iconMap(`mihomo_${mode}`)}${mode}${
+        mode === config.mode ? iconMap("mihomo_active") : ``
+      }`,
+      value: mode,
+    })),
     loop: true,
   });
 

@@ -1,6 +1,7 @@
 import { mihomo } from "@/fetch/mihomo";
 import { MihomoProxy } from "@/types/mihomo";
 import { search } from "@inquirer/prompts";
+import { iconMap } from ".";
 
 export const findCurrentProxy = async (): Promise<MihomoProxy[]> => {
   const proxies = await mihomo<{ proxies: Record<string, MihomoProxy> }>(
@@ -22,23 +23,29 @@ function findProxyChain(
 function getProxyDelay(proxy: MihomoProxy) {
   return proxy.history?.at(-1)?.delay;
 }
+function delayLevel(delay: number) {
+  if (delay === 0) return "mihomo_delay_very_bad" as const;
+  if (delay < 100) return "mihomo_delay_good" as const;
+  if (delay < 300) return "mihomo_delay_normal" as const;
+  return "mihomo_delay_bad" as const;
+}
 const choices = (
   proxies: { proxy: MihomoProxy; delay: number; index: number }[],
 ) => [
   ...proxies.map(({ proxy, delay, index }) => {
     if (proxy.type === "URLTest") {
       return {
-        name: `[${index}] ${delay > 0 ? `🟢` : `🔴`} ${proxy.name} -> ${proxy.now} (${delay}ms)`,
+        name: `[${index}] ${iconMap(delayLevel(delay))}${proxy.name} -> ${proxy.now} (${delay}ms)`,
         value: proxy.name,
       };
     }
     return {
-      name: `[${index}] ${delay > 0 ? `🟢` : `🔴`} ${proxy.name} (${delay}ms)`,
+      name: `[${index}] ${iconMap(delayLevel(delay))}${proxy.name} (${delay}ms)`,
       value: proxy.name,
     };
   }),
-  { name: "[👋] 🔄 Refresh", value: "REFRESH" },
-  { name: "[👋] 🔄 Reset", value: "RESET" },
+  { name: `${iconMap("mihomo_refresh")} Refresh`, value: "REFRESH" },
+  { name: `${iconMap("mihomo_reset")} Reset`, value: "RESET" },
 ];
 
 const getChildren = (
