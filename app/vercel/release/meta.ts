@@ -3,6 +3,9 @@ export const help = `触发部署
 
 通过 Deploy Hook 触发 Vercel 部署。
 
+选项:
+  -f  强制刷新项目缓存
+
 功能:
   - 选择要发布的分支
   - 多选要部署的项目

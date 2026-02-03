@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { logger, typedBoolean } from "help";
+const cliName = process.env.CLI_NAME;
 
 const showAvailableActions = async () => {
   const appDir = `${import.meta.dir}/../app`;
@@ -18,14 +19,13 @@ const showAvailableActions = async () => {
     }
     apps.push({ name, description });
   }
-
-  logger.info("Usage: bun <command> [subcommand] [options]\n");
+  logger.info(`Usage: ${cliName} <command> [subcommand] [options]\n`);
   logger.info("Available commands:\n");
   for (const app of apps) {
     const desc = app.description ? ` - ${app.description}` : "";
     logger.info(`  ${app.name}${desc}`);
   }
-  logger.info("\nRun 'bun <command>' to see available subcommands.");
+  logger.info(`\nRun '${cliName} <command>' to see available subcommands.`);
 };
 
 export const cli = (cmd: string[]) => {
@@ -73,7 +73,7 @@ const showSubcommands = async (actionName: string[]) => {
   }
 
   const cmdName = actionName.join(" ");
-  logger.info(`Usage: ly ${cmdName} <subcommand>\n`);
+  logger.info(`Usage: ${cliName} ${cmdName} <subcommand>\n`);
   if (mainDescription) {
     logger.info(`${mainDescription}\n`);
   }
@@ -121,14 +121,25 @@ export const main = async (meta: ImportMeta) => {
   const hasHelp = args.includes("-h") || args.includes("--help");
   const actionName = args.filter((i) => !i.startsWith("-"));
 
-  if (actionName.length === 0) {
-    await showAvailableActions();
+  // 如果有 -h 或 --help 参数，显示帮助信息
+  if (hasHelp) {
+    if (actionName.length === 0) {
+      // 显示根目录帮助
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const mod = require("@/app/meta");
+        logger.info(mod.help || mod.completion || "");
+      } catch {
+        await showAvailableActions();
+      }
+    } else {
+      await showHelp(actionName);
+    }
     return;
   }
 
-  // 如果有 -h 或 --help 参数，显示帮助信息
-  if (hasHelp) {
-    await showHelp(actionName);
+  if (actionName.length === 0) {
+    await showAvailableActions();
     return;
   }
 
