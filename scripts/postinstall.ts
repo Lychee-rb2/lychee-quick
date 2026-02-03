@@ -45,42 +45,9 @@ exec bun "${path("./bin.ts")}" "$@"
     console.log(`zshrc add "${alias}", use "source ${Bun.env.ZSH_RC}"`);
   }
 };
-const installForNu = async () => {
-  if (!Bun.env.NU_CONFIG) {
-    console.log(
-      "You can add NU_CONFIG into your env and run `postinstall` again to use alias",
-    );
-    return;
-  }
-  if (!Bun.env.CLI_NAME) {
-    console.log(
-      "You can add CLI_NAME into your env and run `postinstall` again to use alias",
-    );
-    return;
-  }
-  const BIN_PATH = `./bin/bun-help.nu`;
-  await Bun.write(
-    BIN_PATH,
-    `#!/usr/bin/env nu
-def main [...@: string, --force (-f)] {
-  exec bun "${path("./bin.ts")}" ...$@
-}
-`,
-  );
-  const configNu = await Bun.file(Bun.env.NU_CONFIG).text();
-  const configNuContent = configNu.split("\n");
-  const alias = `alias ${Bun.env.CLI_NAME} = nu ${path(BIN_PATH)}`;
-  if (configNuContent.some((i) => i === alias)) {
-    console.log(`config nu already has ${alias}", skip add`);
-  } else {
-    await Bun.write(Bun.env.NU_CONFIG, `${configNu}\n${alias}`);
-    console.log(`config nu add "${alias}", use "source ${Bun.env.NU_CONFIG}"`);
-  }
-};
+
 if (Bun.env.ZSH) {
   installForZsh();
-} else if (Bun.env.NU_VERSION) {
-  installForNu();
 } else {
-  console.log("CLI only support ZSH and Nu now.");
+  console.log("CLI only support ZSH now.");
 }
