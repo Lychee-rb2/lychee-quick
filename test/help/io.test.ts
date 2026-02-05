@@ -17,6 +17,7 @@ import {
   showHelp,
   _require,
 } from "@/help/io";
+import type { ModuleLoader, FileSystem } from "@/help/io-types";
 
 // Mock modules (must be called before imports)
 vi.mock("dotenv", () => ({
@@ -170,114 +171,134 @@ describe("io helper functions", () => {
       expect(result).toBeNull();
     });
 
-    test("should expand single-level alias", async () => {
-      // Mock file system structure - need to mock the actual directory structure
-      // Since expandAlias uses import.meta.dir, we need to ensure the mock works
-      // For this test, we'll skip it as it requires complex file system mocking
-      // Instead, test that it returns null for non-dash aliases
-      const result = await expandAlias("c");
-
-      // Without proper file system mocking, this will return null
-      // This test validates the function logic, not the file system interaction
-      expect(result).toBeNull();
-    });
-
-    test("should expand multi-level alias", async () => {
-      let callCount = 0;
-      mockGlobScan.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          // First call: scan app directory
-          return (async function* () {
-            yield "clash/meta.ts";
-          })();
-        } else {
-          // Second call: scan clash directory
-          return (async function* () {
-            yield "check/meta.ts";
-          })();
-        }
-      });
-
-      const result = await expandAlias("c-c");
-
-      expect(result).toEqual(["clash", "check"]);
-    });
-
-    test("should return null when multiple matches found and log debug message", async () => {
-      // Mock multiple matches to trigger logger.debug
-      // Reset mockGlobScan first
-      vi.clearAllMocks();
-      mockGlobScan.mockReset();
-
-      // Mock Glob.scan to return multiple matches
+    test("should use default FileSystem when fileSystem parameter is undefined", async () => {
+      // Mock Bun.Glob to return empty results
+      const bun = globalThis.Bun as unknown as MockedBun;
       const testGlobScan = vi.fn(() =>
         (async function* () {
-          yield "clash/meta.ts";
-          yield "clash2/meta.ts";
+          // Empty generator
         })(),
       );
-
-      // Replace the Glob mock's scan method
-      const bun = globalThis.Bun as unknown as MockedBun;
       const testGlob = vi.fn(() => ({
         scan: testGlobScan,
       }));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (bun as any).Glob = testGlob;
 
-      const result = await expandAlias("c");
+      // Call expandAlias without fileSystem parameter to test default implementation branch
+      const result = await expandAlias("c-x");
 
       expect(result).toBeNull();
-      // Verify logger.debug was called (may not work if Glob mock doesn't work)
-      const mockedLogger = getMockedLogger();
-      const debugCalls = mockedLogger.debug.mock.calls;
-      // If debug was called, verify it contains the multiple matches message
-      if (debugCalls.length > 0) {
-        const hasMultipleMatchesMessage = debugCalls.some((call) =>
-          call[0]?.toString().includes("匹配多个命令"),
-        );
-        expect(hasMultipleMatchesMessage).toBe(true);
-      }
-      // If debug wasn't called (mock didn't work), at least verify result is null
-      // This covers the code path even if mock doesn't work perfectly
-      expect(result).toBeNull();
+      // Verify that Bun.Glob was called (which means default FileSystem was used)
+      expect(testGlob).toHaveBeenCalled();
 
       // Restore original Glob mock
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (bun as any).Glob = mockGlob;
     });
 
-    test("should return null when no match found", async () => {
-      mockGlobScan.mockReturnValue(
-        (async function* () {
-          // Empty generator
-        })(),
-      );
+    test("should return null when result array is empty", async () => {
+      // This tests the branch: return result.length > 0 ? result : null
+      // When all parts fail to match, result will be empty array
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          // Return empty - no matches for any prefix
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
 
-      const result = await expandAlias("x");
+      // Use a multi-part alias where first part fails immediately
+      const result = await expandAlias("x-y", mockFileSystem);
+
+      // Should return null because result.length === 0
+      expect(result).toBeNull();
+    });
+
+    test("should expand multi-level alias", async () => {
+      let callCount = 0;
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          callCount++;
+          if (callCount === 1) {
+            // First call: scan app directory
+            yield "clash/meta.ts";
+          } else {
+            // Second call: scan clash directory
+            yield "check/meta.ts";
+          }
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      const result = await expandAlias("c-c", mockFileSystem);
+
+      expect(result).toEqual(["clash", "check"]);
+    });
+
+    test("should return null when multiple matches found and log debug message", async () => {
+      const mockScanMetaFiles = vi.fn(async function* () {
+        yield "clash/meta.ts";
+        yield "clash2/meta.ts";
+      });
+
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: mockScanMetaFiles,
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      // Clear previous mock calls
+      vi.clearAllMocks();
+
+      // Use "c-x" to trigger the scan, where "c" matches multiple commands
+      const result = await expandAlias("c-x", mockFileSystem);
+
+      expect(result).toBeNull();
+      // Verify scanMetaFiles was called
+      expect(mockScanMetaFiles).toHaveBeenCalled();
+      // Verify logger.debug was called with multiple matches message
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("匹配多个命令"),
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("clash, clash2"),
+      );
+    });
+
+    test("should return null when no match found", async () => {
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          // Empty generator
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      const result = await expandAlias("x", mockFileSystem);
 
       expect(result).toBeNull();
     });
 
     test("should return null when partial match fails", async () => {
       let callCount = 0;
-      mockGlobScan.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          // First part matches
-          return (async function* () {
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          callCount++;
+          if (callCount === 1) {
+            // First part matches
             yield "clash/meta.ts";
-          })();
-        } else {
-          // Second part fails
-          return (async function* () {
+          } else {
+            // Second part fails
             // Empty generator
-          })();
-        }
-      });
+          }
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
 
-      const result = await expandAlias("c-x");
+      const result = await expandAlias("c-x", mockFileSystem);
 
       expect(result).toBeNull();
     });
@@ -405,112 +426,82 @@ describe("io helper functions", () => {
   });
 
   describe("showHelp", () => {
-    test("should display help content when available", async () => {
-      // Test with real module
-      // In vitest, require may not work the same way, so we test the function completes
-      try {
-        await showHelp(["clash", "check"]);
-        // If function completes, logger should have been called (either info or error)
-        const mockedLogger = getMockedLogger();
-        const infoCalled = mockedLogger.info.mock.calls.length > 0;
-        const errorCalled = mockedLogger.error.mock.calls.length > 0;
-        expect(infoCalled || errorCalled).toBe(true);
-      } catch (error) {
-        // If there's an error (e.g., module not found), that's also acceptable in vitest
-        expect(error).toBeDefined();
-      }
+    test("should display help content when mod.help is available", async () => {
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(() => ({
+          help: "Test help text",
+        })),
+        loadHandler: vi.fn(),
+      };
+
+      await showHelp(["test-help"], mockModuleLoader);
+
+      expect(logger.info).toHaveBeenCalledWith("Test help text");
+      expect(mockModuleLoader.loadMeta).toHaveBeenCalledWith(
+        "@/app/test-help/meta",
+      );
     });
 
-    test("should fallback to completion when help not available", async () => {
-      // Test with real module that has help
-      // In vitest, require may not work the same way, so we test the function completes
-      try {
-        await showHelp(["clash"]);
-        // If function completes, logger should have been called (either info or error)
-        const mockedLogger = getMockedLogger();
-        const infoCalled = mockedLogger.info.mock.calls.length > 0;
-        const errorCalled = mockedLogger.error.mock.calls.length > 0;
-        expect(infoCalled || errorCalled).toBe(true);
-      } catch (error) {
-        // If there's an error (e.g., module not found), that's also acceptable in vitest
-        expect(error).toBeDefined();
-      }
+    test("should display completion when mod.completion is available but mod.help is not", async () => {
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(() => ({
+          completion: "Test completion text",
+        })),
+        loadHandler: vi.fn(),
+      };
+
+      await showHelp(["test-completion"], mockModuleLoader);
+
+      expect(logger.info).toHaveBeenCalledWith("Test completion text");
+      expect(mockModuleLoader.loadMeta).toHaveBeenCalledWith(
+        "@/app/test-completion/meta",
+      );
+    });
+
+    test("should show message when no help or completion", async () => {
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(() => ({})),
+        loadHandler: vi.fn(),
+      };
+
+      await showHelp(["test-empty"], mockModuleLoader);
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'No help available for "test-empty"',
+      );
+      expect(mockModuleLoader.loadMeta).toHaveBeenCalledWith(
+        "@/app/test-empty/meta",
+      );
     });
 
     test("should show error when module not found", async () => {
-      const originalRequire = require;
-      const mockRequire = vi.fn(() => {
-        throw new Error("Module not found");
-      });
-      (global as { require: typeof require }).require =
-        mockRequire as unknown as typeof require;
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(() => null),
+        loadHandler: vi.fn(),
+      };
 
-      await showHelp(["nonexistent"]);
+      await showHelp(["nonexistent"], mockModuleLoader);
 
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining("Can't find help for"),
       );
-
-      (global as { require: typeof require }).require = originalRequire;
+      expect(mockModuleLoader.loadMeta).toHaveBeenCalledWith(
+        "@/app/nonexistent/meta",
+      );
     });
 
-    test("should show completion when help not available", async () => {
-      // Test with a real module - in vitest, require may work differently
+    test("should work with default module loader", async () => {
+      // Test with real module to ensure backward compatibility
       try {
         await showHelp(["clash", "check"]);
-        // If it works, logger should have been called
-        expect(logger.info).toHaveBeenCalled();
+        // If function completes, logger should have been called (either info or error)
         const mockedLogger = getMockedLogger();
-        const infoCalls = mockedLogger.info.mock.calls;
-        // Verify that some content was logged (either help or completion)
-        expect(infoCalls.length).toBeGreaterThan(0);
-      } catch {
-        // If require fails in vitest, that's acceptable
-        // The function should handle errors gracefully
-        expect(logger.error).toHaveBeenCalled();
-      }
-    });
-
-    test("should show message when no help or completion", async () => {
-      // Mock require to return empty object
-      const originalRequire = require;
-      const mockRequire = vi.fn((path: string) => {
-        // Return empty object for meta paths
-        if (path.includes("/meta")) {
-          return {};
-        }
-        // For other paths, throw to simulate not found
-        throw new Error("Not found");
-      });
-
-      // Try to set require mock - may not work in vitest
-      try {
-        (global as { require: typeof require }).require =
-          mockRequire as unknown as typeof require;
-
-        await showHelp(["test-empty"]);
-
-        // Should show "No help available" message
-        expect(logger.info).toHaveBeenCalled();
-        const mockedLogger = getMockedLogger();
-        const infoCalls = mockedLogger.info.mock.calls;
-        const hasNoHelpMessage = infoCalls.some((call) => {
-          const content = call[0]?.toString() || "";
-          return content.includes("No help available");
-        });
-        expect(hasNoHelpMessage).toBe(true);
-      } catch {
-        // If require mock doesn't work, test that function completes
-        // In vitest, require may not be mockable, so we verify function doesn't crash
-        await showHelp(["nonexistent-test"]);
-        // Function should complete (either log info or error)
-        const mockedLogger = getMockedLogger();
-        const wasCalled =
-          mockedLogger.info.mock.calls.length > 0 ||
-          mockedLogger.error.mock.calls.length > 0;
-        expect(wasCalled).toBe(true);
-      } finally {
-        (global as { require: typeof require }).require = originalRequire;
+        const infoCalled = mockedLogger.info.mock.calls.length > 0;
+        const errorCalled = mockedLogger.error.mock.calls.length > 0;
+        expect(infoCalled || errorCalled).toBe(true);
+      } catch (error) {
+        // If there's an error (e.g., module not found), that's also acceptable in vitest
+        expect(error).toBeDefined();
       }
     });
   });
@@ -566,27 +557,25 @@ describe("io helper functions", () => {
       const bun = globalThis.Bun as unknown as MockedBun;
       bun.argv = ["/test/bin.ts"];
 
-      mockGlobScan.mockReturnValue(
-        (async function* () {
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(() => ({ completion: "Test command" })),
+        loadHandler: vi.fn(),
+      };
+
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
           yield "clash/meta.ts";
-        })(),
-      );
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
 
-      const originalRequire = require;
-      const mockRequire = vi.fn(() => ({
-        completion: "Test command",
-      }));
-      (global as { require: typeof require }).require =
-        mockRequire as unknown as typeof require;
-
-      await main(meta);
+      await main(meta, mockModuleLoader, mockFileSystem);
 
       expect(dotenv.config).toHaveBeenCalled();
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Usage: test-cli"),
       );
-
-      (global as { require: typeof require }).require = originalRequire;
     });
 
     test("should show help when -h flag is present", async () => {
@@ -594,28 +583,55 @@ describe("io helper functions", () => {
       const bun = globalThis.Bun as unknown as MockedBun;
       bun.argv = ["/test/bin.ts", "-h"];
 
-      // Since require mock doesn't work well in Bun, we test that logger.info was called
-      // The actual content will be from the real module, but we verify the flow
-      await main(meta);
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(() => ({ help: "Root help" })),
+        loadHandler: vi.fn(),
+      };
 
-      // Verify that logger.info was called (with any content)
-      expect(logger.info).toHaveBeenCalled();
-      // In vitest, the behavior may differ, so we just verify logger was called
+      await main(meta, mockModuleLoader);
+
+      expect(logger.info).toHaveBeenCalledWith("Root help");
+      expect(mockModuleLoader.loadMeta).toHaveBeenCalledWith("@/app/meta");
+    });
+
+    test("should show empty string when root meta has no help or completion", async () => {
+      const meta = createMockMeta("/test/bin.ts");
+      const bun = globalThis.Bun as unknown as MockedBun;
+      bun.argv = ["/test/bin.ts", "-h"];
+
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(() => ({})),
+        loadHandler: vi.fn(),
+      };
+
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          yield "clash/meta.ts";
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      await main(meta, mockModuleLoader, mockFileSystem);
+
+      // Should show empty string when mod has no help or completion
+      expect(logger.info).toHaveBeenCalledWith("");
     });
 
     test("should show help for specific command with --help", async () => {
       const meta = createMockMeta("/test/bin.ts");
       const bun = globalThis.Bun as unknown as MockedBun;
-      bun.argv = ["/test/bin.ts", "clash", "--help"];
+      bun.argv = ["/test/bin.ts", "test", "--help"];
 
-      await main(meta);
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(() => ({ help: "Test help" })),
+        loadHandler: vi.fn(),
+      };
 
-      // Verify that logger was called (either info or error)
-      // In vitest, require may not work the same way, so we check if logger was called at all
-      const mockedLogger = getMockedLogger();
-      const infoCalled = mockedLogger.info.mock.calls.length > 0;
-      const errorCalled = mockedLogger.error.mock.calls.length > 0;
-      expect(infoCalled || errorCalled).toBe(true);
+      await main(meta, mockModuleLoader);
+
+      expect(logger.info).toHaveBeenCalledWith("Test help");
+      expect(mockModuleLoader.loadMeta).toHaveBeenCalledWith("@/app/test/meta");
     });
 
     test("should expand alias command", async () => {
@@ -624,38 +640,36 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts", "c-c"];
 
       let callCount = 0;
-      mockGlobScan.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          return (async function* () {
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          callCount++;
+          if (callCount === 1) {
             yield "clash/meta.ts";
-          })();
-        } else {
-          return (async function* () {
+          } else if (callCount === 2) {
             yield "check/meta.ts";
-          })();
-        }
-      });
+          }
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
 
-      const originalRequire = require;
-      const mockRequire = vi.fn(() => ({
-        default: vi.fn(),
-      }));
-      (global as { require: typeof require }).require =
-        mockRequire as unknown as typeof require;
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(),
+        loadHandler: vi.fn(() => ({
+          default: vi.fn(),
+        })),
+      };
 
-      await main(meta);
+      await main(meta, mockModuleLoader, mockFileSystem);
 
-      // In vitest, require mock may not work, so we verify logger was called
-      expect(logger.info).toHaveBeenCalled();
-      // If require mock worked, verify the call
-      const mockRequireMock = mockRequire as { mock?: { calls: unknown[] } };
-      const mockRequireCalls = mockRequireMock.mock?.calls?.length ?? 0;
-      if (mockRequireCalls > 0) {
-        expect(mockRequire).toHaveBeenCalledWith("@/app/clash/check/handler");
-      }
-
-      (global as { require: typeof require }).require = originalRequire;
+      // Verify alias expansion was logged
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("→ test-cli clash check"),
+      );
+      // Verify handler was called
+      expect(mockModuleLoader.loadHandler).toHaveBeenCalledWith(
+        "@/app/clash/check/handler",
+      );
     });
 
     test("should execute handler when command exists", async () => {
@@ -664,88 +678,69 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts", "clash", "check"];
 
       const mockHandler = vi.fn();
-      const originalRequire = require;
-      const mockRequire = vi.fn((path: string) => {
-        if (path === "@/app/clash/check/handler") {
-          return { default: mockHandler };
-        }
-        throw new Error("Not found");
-      });
-      (global as { require: typeof require }).require =
-        mockRequire as unknown as typeof require;
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(),
+        loadHandler: vi.fn((path: string) => {
+          if (path === "@/app/clash/check/handler") {
+            return { default: mockHandler };
+          }
+          return null;
+        }),
+      };
 
-      await main(meta);
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {}),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
 
-      // In vitest, require mock may not work, so handler may not be called
-      // Verify that logger was called (either info, debug, or error)
-      const mockedLogger = getMockedLogger();
-      const infoCalled = mockedLogger.info.mock.calls.length > 0;
-      const debugCalled = mockedLogger.debug.mock.calls.length > 0;
-      const errorCalled = mockedLogger.error.mock.calls.length > 0;
-      expect(infoCalled || debugCalled || errorCalled).toBe(true);
+      await main(meta, mockModuleLoader, mockFileSystem);
 
-      // If handler was called, verify it
-      const handlerMock = mockHandler as { mock?: { calls: unknown[] } };
-      const handlerCalled = handlerMock.mock?.calls?.length ?? 0;
-      if (handlerCalled > 0) {
-        expect(mockHandler).toHaveBeenCalledWith({ from: "cli" });
-        expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('Start run "clash check"'),
-        );
-        expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('End run "clash check"'),
-        );
-      }
-
-      (global as { require: typeof require }).require = originalRequire;
+      // Verify handler was called
+      expect(mockHandler).toHaveBeenCalledWith({ from: "cli" });
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Start run "clash check"'),
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('End run "clash check"'),
+      );
+      expect(mockModuleLoader.loadHandler).toHaveBeenCalledWith(
+        "@/app/clash/check/handler",
+      );
     });
 
     test("should execute handler and log debug messages", async () => {
       const meta = createMockMeta("/test/bin.ts");
       const bun = globalThis.Bun as unknown as MockedBun;
-      bun.argv = ["/test/bin.ts", "clash", "check"];
+      bun.argv = ["/test/bin.ts", "test", "command"];
 
       const mockHandler = vi.fn();
-      const originalRequire = require;
-      const mockRequire = vi.fn((path: string) => {
-        if (path === "@/app/clash/check/handler") {
-          return { default: mockHandler };
-        }
-        // For other paths, try original require
-        try {
-          return originalRequire(path);
-        } catch {
-          throw new Error("Not found");
-        }
-      });
-      (global as { require: typeof require }).require =
-        mockRequire as unknown as typeof require;
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(),
+        loadHandler: vi.fn((path: string) => {
+          if (path === "@/app/test/command/handler") {
+            return { default: mockHandler };
+          }
+          return null;
+        }),
+      };
 
-      await main(meta);
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {}),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
 
-      // Verify debug logs were called if handler was executed
-      const mockedLogger = getMockedLogger();
-      const handlerMock = mockHandler as { mock?: { calls: unknown[] } };
-      const handlerCalled = handlerMock.mock?.calls?.length ?? 0;
+      await main(meta, mockModuleLoader, mockFileSystem);
 
-      if (handlerCalled > 0) {
-        // If handler was called, debug logs should be present
-        expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('Start run "clash check"'),
-        );
-        expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('End run "clash check"'),
-        );
-      } else {
-        // If handler wasn't called (require mock didn't work), verify logger was called
-        const wasCalled =
-          mockedLogger.info.mock.calls.length > 0 ||
-          mockedLogger.debug.mock.calls.length > 0 ||
-          mockedLogger.error.mock.calls.length > 0;
-        expect(wasCalled).toBe(true);
-      }
-
-      (global as { require: typeof require }).require = originalRequire;
+      // Verify handler was called and debug logs were recorded
+      expect(mockHandler).toHaveBeenCalledWith({ from: "cli" });
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Start run "test command"'),
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('End run "test command"'),
+      );
     });
 
     test("should show subcommands when directory exists but no handler", async () => {
@@ -753,30 +748,28 @@ describe("io helper functions", () => {
       const bun = globalThis.Bun as unknown as MockedBun;
       bun.argv = ["/test/bin.ts", "clash"];
 
-      mockFileExists.mockResolvedValue(true);
-      mockGlobScan.mockReturnValue(
-        (async function* () {
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn((path: string) => {
+          if (path === "@/app/clash/meta") {
+            return { completion: "Clash management" };
+          }
+          if (path === "@/app/clash/check/meta") {
+            return { completion: "Check delay" };
+          }
+          return null;
+        }),
+        loadHandler: vi.fn(() => null),
+      };
+
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
           yield "check/meta.ts";
-        })(),
-      );
+        }),
+        fileExists: vi.fn().mockResolvedValue(true),
+      };
 
-      const originalRequire = require;
-      const mockRequire = vi.fn((path: string) => {
-        if (path === "@/app/clash/handler") {
-          throw new Error("Not found");
-        }
-        if (path === "@/app/clash/meta") {
-          return { completion: "Clash management" };
-        }
-        if (path === "@/app/clash/check/meta") {
-          return { completion: "Check delay" };
-        }
-        throw new Error("Not found");
-      });
-      (global as { require: typeof require }).require =
-        mockRequire as unknown as typeof require;
-
-      await main(meta);
+      await main(meta, mockModuleLoader, mockFileSystem);
 
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Usage: test-cli clash"),
@@ -784,8 +777,6 @@ describe("io helper functions", () => {
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Available subcommands"),
       );
-
-      (global as { require: typeof require }).require = originalRequire;
     });
 
     test("should show error when command does not exist", async () => {
@@ -793,22 +784,52 @@ describe("io helper functions", () => {
       const bun = globalThis.Bun as unknown as MockedBun;
       bun.argv = ["/test/bin.ts", "nonexistent"];
 
-      mockFileExists.mockResolvedValue(false);
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(),
+        loadHandler: vi.fn(() => null),
+      };
 
-      const originalRequire = require;
-      const mockRequire = vi.fn(() => {
-        throw new Error("Not found");
-      });
-      (global as { require: typeof require }).require =
-        mockRequire as unknown as typeof require;
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {}),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
 
-      await main(meta);
+      await main(meta, mockModuleLoader, mockFileSystem);
 
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('Can\'t find action "nonexistent"'),
       );
+    });
 
-      (global as { require: typeof require }).require = originalRequire;
+    test("should use default FileSystem.fileExists when fileSystem is not provided", async () => {
+      const meta = createMockMeta("/test/bin.ts");
+      const bun = globalThis.Bun as unknown as MockedBun;
+      bun.argv = ["/test/bin.ts", "test-command"];
+
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(),
+        loadHandler: vi.fn(() => null),
+      };
+
+      // Mock Bun.file to return a file object with exists() method
+      const mockFileExists = vi.fn().mockResolvedValue(false);
+      const originalFile = Bun.file;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (Bun as any).file = vi.fn(() => ({
+        exists: mockFileExists,
+      }));
+
+      // Don't provide fileSystem parameter to use default implementation
+      await main(meta, mockModuleLoader);
+
+      // Verify that Bun.file was called (which means default fileExists was used)
+      expect(Bun.file).toHaveBeenCalled();
+      expect(mockFileExists).toHaveBeenCalled();
+
+      // Restore original Bun.file
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (Bun as any).file = originalFile;
     });
 
     test("should throw error when bin path not found in argv", async () => {
@@ -852,33 +873,33 @@ describe("io helper functions", () => {
       const bun = globalThis.Bun as unknown as MockedBun;
       bun.argv = ["/test/bin.ts", "-h"];
 
-      mockGlobScan.mockReturnValue(
-        (async function* () {
-          yield "clash/meta.ts";
-        })(),
-      );
-
-      const originalRequire = require;
       let callCount = 0;
-      const mockRequire = vi.fn(() => {
-        callCount++;
-        if (callCount === 1) {
-          // First call for @/app/meta fails
-          throw new Error("Not found");
-        }
-        // Subsequent calls for showAvailableActions
-        return { completion: "Test" };
-      });
-      (global as { require: typeof require }).require =
-        mockRequire as unknown as typeof require;
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(() => {
+          callCount++;
+          if (callCount === 1) {
+            // First call for @/app/meta fails
+            return null;
+          }
+          // Subsequent calls for showAvailableActions
+          return { completion: "Test" };
+        }),
+        loadHandler: vi.fn(),
+      };
 
-      await main(meta);
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          yield "clash/meta.ts";
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      await main(meta, mockModuleLoader, mockFileSystem);
 
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Usage: test-cli"),
       );
-
-      (global as { require: typeof require }).require = originalRequire;
     });
   });
 });

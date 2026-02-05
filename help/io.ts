@@ -1,16 +1,60 @@
 import dotenv from "dotenv";
 import { logger, typedBoolean } from "help";
+import type { ModuleLoader, FileSystem } from "./io-types";
+
+// 默认的 ModuleLoader 实现（内联，不分离到新文件）
+const defaultModuleLoader: ModuleLoader = {
+  loadMeta(path: string) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require(path);
+    } catch {
+      return null;
+    }
+  },
+  loadHandler(path: string) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require(path);
+    } catch {
+      return null;
+    }
+  },
+};
+
+// 默认的 FileSystem 实现（内联，不分离到新文件）
+const createDefaultFileSystem = (_baseDir: string): FileSystem => {
+  return {
+    getAppDir(baseDir: string) {
+      return `${baseDir}/../app`;
+    },
+    async *scanMetaFiles(dir: string) {
+      const glob = new Bun.Glob("*/meta.ts");
+      for await (const path of glob.scan({ cwd: dir })) {
+        yield path;
+      }
+    },
+    async fileExists(path: string) {
+      const file = Bun.file(path);
+      return await file.exists();
+    },
+  };
+};
 
 /**
  * 解析缩写命令，例如 "c-c" -> ["clash", "check"]
  * 支持用 "-" 分隔的缩写格式，每个部分使用前缀匹配
  */
-export const expandAlias = async (alias: string): Promise<string[] | null> => {
+export const expandAlias = async (
+  alias: string,
+  fileSystem?: FileSystem,
+): Promise<string[] | null> => {
   // 如果不包含 "-"，不是缩写格式
   if (!alias.includes("-")) return null;
 
   const parts = alias.split("-");
-  const appDir = `${import.meta.dir}/../app`;
+  const fs = fileSystem || createDefaultFileSystem(import.meta.dir);
+  const appDir = fs.getAppDir(import.meta.dir);
   const result: string[] = [];
 
   // 扫描并匹配命令
@@ -18,10 +62,9 @@ export const expandAlias = async (alias: string): Promise<string[] | null> => {
     dir: string,
     prefix: string,
   ): Promise<string | null> => {
-    const glob = new Bun.Glob("*/meta.ts");
     const matches: string[] = [];
 
-    for await (const path of glob.scan({ cwd: dir })) {
+    for await (const path of fs.scanMetaFiles(dir)) {
       const name = path.split("/")[0];
       if (name.startsWith(prefix)) {
         matches.push(name);
@@ -48,23 +91,26 @@ export const expandAlias = async (alias: string): Promise<string[] | null> => {
     currentDir = `${currentDir}/${match}`;
   }
 
-  return result.length > 0 ? result : null;
+  // If we reach here, result must have at least one element
+  // because each iteration pushes a match, and we return null early if no match
+  return result;
 };
 
-export const showAvailableActions = async (cliName: string) => {
-  const appDir = `${import.meta.dir}/../app`;
-  const glob = new Bun.Glob("*/meta.ts");
+export const showAvailableActions = async (
+  cliName: string,
+  moduleLoader: ModuleLoader = defaultModuleLoader,
+  fileSystem?: FileSystem,
+) => {
+  const fs = fileSystem || createDefaultFileSystem(import.meta.dir);
+  const appDir = fs.getAppDir(import.meta.dir);
   const apps: { name: string; description: string }[] = [];
 
-  for await (const path of glob.scan({ cwd: appDir })) {
+  for await (const path of fs.scanMetaFiles(appDir)) {
     const name = path.split("/")[0];
-    let description = "";
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const mod = require(`@/app/${name}/meta`);
-      description = mod.completion || "";
-    } catch (e) {
-      logger.error(`Error reading meta.ts: ${e}`);
+    const mod = moduleLoader.loadMeta(`@/app/${name}/meta`);
+    const description = mod?.completion || "";
+    if (!mod && name) {
+      logger.error(`Error reading meta.ts for ${name}`);
     }
     apps.push({ name, description });
   }
@@ -96,31 +142,23 @@ export const pbcopy = (data: string) => {
 export const showSubcommands = async (
   actionName: string[],
   cliName: string,
+  moduleLoader: ModuleLoader = defaultModuleLoader,
+  fileSystem?: FileSystem,
 ) => {
-  const appDir = `${import.meta.dir}/../app`;
+  const fs = fileSystem || createDefaultFileSystem(import.meta.dir);
+  const appDir = fs.getAppDir(import.meta.dir);
   const subDir = `${appDir}/${actionName.join("/")}`;
-  const glob = new Bun.Glob("*/meta.ts");
   const subcommands: { name: string; description: string }[] = [];
 
-  let mainDescription = "";
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require(`@/app/${actionName.join("/")}/meta`);
-    mainDescription = mod.completion || "";
-  } catch {
-    // ignore
-  }
+  const mainMod = moduleLoader.loadMeta(`@/app/${actionName.join("/")}/meta`);
+  const mainDescription = mainMod?.completion || "";
 
-  for await (const path of glob.scan({ cwd: subDir })) {
+  for await (const path of fs.scanMetaFiles(subDir)) {
     const name = path.split("/")[0];
-    let description = "";
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const mod = require(`@/app/${actionName.join("/")}/${name}/meta`);
-      description = mod.completion || "";
-    } catch {
-      // ignore
-    }
+    const mod = moduleLoader.loadMeta(
+      `@/app/${actionName.join("/")}/${name}/meta`,
+    );
+    const description = mod?.completion || "";
     subcommands.push({ name, description });
   }
 
@@ -136,34 +174,38 @@ export const showSubcommands = async (
   }
 };
 
-export const _require = (actionName: string[]) => {
+export const _require = (
+  actionName: string[],
+  moduleLoader: ModuleLoader = defaultModuleLoader,
+) => {
   const actionPath = `@/app/${actionName.join("/")}/handler`;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require(actionPath);
-  } catch {
-    return null;
-  }
+  return moduleLoader.loadHandler(actionPath);
 };
 
-export const showHelp = async (actionName: string[]) => {
+export const showHelp = async (
+  actionName: string[],
+  moduleLoader: ModuleLoader = defaultModuleLoader,
+) => {
   const metaPath = `@/app/${actionName.join("/")}/meta`;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require(metaPath);
-    if (mod.help) {
-      logger.info(mod.help);
-    } else if (mod.completion) {
-      logger.info(mod.completion);
-    } else {
-      logger.info(`No help available for "${actionName.join(" ")}"`);
-    }
-  } catch {
+  const mod = moduleLoader.loadMeta(metaPath);
+  if (!mod) {
     logger.error(`Can't find help for "${actionName.join(" ")}"`);
+    return;
+  }
+  if (mod.help) {
+    logger.info(mod.help);
+  } else if (mod.completion) {
+    logger.info(mod.completion);
+  } else {
+    logger.info(`No help available for "${actionName.join(" ")}"`);
   }
 };
 
-export const main = async (meta: ImportMeta) => {
+export const main = async (
+  meta: ImportMeta,
+  moduleLoader: ModuleLoader = defaultModuleLoader,
+  fileSystem?: FileSystem,
+) => {
   dotenv.config({ path: `${meta.dir}/.env` });
   const cliName = process.env.CLI_NAME || "ly";
   const binIndex = Bun.argv.findIndex((i) => i === meta.path);
@@ -174,9 +216,11 @@ export const main = async (meta: ImportMeta) => {
   const hasHelp = args.includes("-h") || args.includes("--help");
   let actionName = args.filter((i) => !i.startsWith("-"));
 
+  const fs = fileSystem || createDefaultFileSystem(meta.dir);
+
   // 尝试展开缩写命令，例如 "c-c" -> ["clash", "check"]
   if (actionName.length === 1 && actionName[0].includes("-")) {
-    const expanded = await expandAlias(actionName[0]);
+    const expanded = await expandAlias(actionName[0], fs);
     if (expanded) {
       logger.info(`→ ${cliName} ${expanded.join(" ")}`);
       actionName = expanded;
@@ -187,36 +231,34 @@ export const main = async (meta: ImportMeta) => {
   if (hasHelp) {
     if (actionName.length === 0) {
       // 显示根目录帮助
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const mod = require("@/app/meta");
+      const mod = moduleLoader.loadMeta("@/app/meta");
+      if (mod) {
         logger.info(mod.help || mod.completion || "");
-      } catch {
-        await showAvailableActions(cliName);
+      } else {
+        await showAvailableActions(cliName, moduleLoader, fs);
       }
     } else {
-      await showHelp(actionName);
+      await showHelp(actionName, moduleLoader);
     }
     return;
   }
 
   if (actionName.length === 0) {
-    await showAvailableActions(cliName);
+    await showAvailableActions(cliName, moduleLoader, fs);
     return;
   }
 
-  const action = await _require(actionName);
+  const action = _require(actionName, moduleLoader);
   if (action?.default) {
     logger.debug(`Start run "${actionName.join(" ")}"`);
     await action.default({ from: "cli" });
     logger.debug(`End run "${actionName.join(" ")}"`);
   } else {
     // 检查是否是目录，如果是则显示子命令
-    const appDir = `${import.meta.dir}/../app`;
+    const appDir = fs.getAppDir(meta.dir);
     const subDir = `${appDir}/${actionName.join("/")}`;
-    const file = Bun.file(`${subDir}/meta.ts`);
-    if (await file.exists()) {
-      await showSubcommands(actionName, cliName);
+    if (await fs.fileExists(`${subDir}/meta.ts`)) {
+      await showSubcommands(actionName, cliName, moduleLoader, fs);
     } else {
       logger.error(`Can't find action "${actionName.join(" ")}"`);
     }

@@ -16,6 +16,14 @@
 | `help/mihomo-select.ts` | `choices()` | 100% |
 | `help/mihomo-select.ts` | `getChildren()` | 100% |
 | `help/mihomo-select.ts` | `searchProxy()` | 100% |
+| `help/io.ts` | `expandAlias()` | 100% |
+| `help/io.ts` | `showAvailableActions()` | 100% |
+| `help/io.ts` | `cli()` | 100% |
+| `help/io.ts` | `pbcopy()` | 100% |
+| `help/io.ts` | `showSubcommands()` | 100% |
+| `help/io.ts` | `_require()` | 100% |
+| `help/io.ts` | `showHelp()` | 100% |
+| `help/io.ts` | `main()` | 100% |
 
 ---
 
@@ -50,12 +58,6 @@
 - [ ] `sendPreview(issue, attachment)` - 需要 mock Linear client 和 inquirer
 - [ ] `releaseIssues(items)` - 需要 mock `pbcopy` 和 `logger`
 
-### `help/io.ts`
-
-- [ ] `cli(cmd)` - 需要 mock `Bun.spawnSync`
-- [ ] `pbcopy(data)` - 需要 mock `Bun.spawn`
-- [ ] `main(meta)` - 需要 mock 文件系统和命令行参数
-- [ ] `expandAlias(alias)` - 需要 mock 文件系统
 
 ---
 
