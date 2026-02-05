@@ -7,6 +7,14 @@
 | `help/format.ts` | `iconMap()` | 100% |
 | `help/index.ts` | `typedBoolean()` | 100% |
 | `help/linear.ts` | `buildCommentBody()` | 80% |
+| `help/mihomo.ts` | `findProxyChain()` | 100% |
+| `help/mihomo.ts` | `getProxyDelay()` | 100% |
+| `help/mihomo.ts` | `delayLevel()` | 100% |
+| `help/mihomo.ts` | `choices()` | 100% |
+| `help/mihomo.ts` | `getChildren()` | 100% |
+| `help/mihomo.ts` | `findCurrentProxy()` | 100% |
+| `help/mihomo.ts` | `pickProxy()` | 100% |
+| `help/mihomo.ts` | `getDelay()` | 100% |
 
 ---
 
@@ -14,13 +22,7 @@
 
 这些函数是纯函数，不依赖外部系统，可以直接测试。
 
-### `help/mihomo.ts`
-
-- [ ] `findProxyChain(current, proxies)` - 递归查找代理链
-- [ ] `getProxyDelay(proxy)` - 获取代理延迟
-- [ ] `delayLevel(delay)` - 根据延迟返回级别图标 key
-- [ ] `choices(proxies)` - 生成选择列表
-- [ ] `getChildren(proxy, proxies)` - 获取子代理列表
+（暂无）
 
 ---
 
@@ -56,8 +58,12 @@
 
 ### `help/mihomo.ts`
 
-- [ ] `findCurrentProxy()` - 需要 mock mihomo API
-- [ ] `pickProxy(option)` - 需要 mock mihomo API 和 inquirer
+- [x] `findCurrentProxy()` - 需要 mock mihomo API
+  - [x] `should find current proxy chain` - 需要 mock `@/fetch/mihomo`
+- [x] `pickProxy(option)` - 需要 mock mihomo API 和 inquirer
+  - [x] `should handle REFRESH option` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
+  - [x] `should handle RESET option` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
+  - [x] `should select proxy and update` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
 
 ---
 
