@@ -1,12 +1,17 @@
 const logLevel = Bun.env.LOG_LEVEL || "info";
 import pino, { type BaseLogger } from "pino";
 
-export let logger: BaseLogger;
+// 扩展 logger 类型，添加 plain 方法
+export interface ExtendedLogger extends BaseLogger {
+  plain: (...args: unknown[]) => void;
+}
+
+export let logger: ExtendedLogger;
 export const createLogger = () => {
   if (logger) return logger;
   // 将 logger 输出重定向到 stderr，避免与 inquirer 的 stdout 冲突
   // 使用 pino-pretty 格式化，通过 destination 选项输出到 stderr（文件描述符 2）
-  logger = pino({
+  const pinoLogger = pino({
     level: logLevel,
     transport: {
       target: "pino-pretty",
@@ -15,5 +20,13 @@ export const createLogger = () => {
       },
     },
   });
+
+  // 添加 plain 方法：直接输出，不带格式
+  logger = Object.assign(pinoLogger, {
+    plain: (...args: unknown[]) => {
+      console.log(...args);
+    },
+  }) as ExtendedLogger;
+
   return logger;
 };

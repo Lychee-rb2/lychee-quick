@@ -15,6 +15,7 @@ vi.mock("@/help/logger", () => ({
     info: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
+    plain: vi.fn(),
   },
 }));
 
@@ -52,6 +53,7 @@ type MockedLogger = {
   info: MockedFunction<typeof logger.info>;
   error: MockedFunction<typeof logger.error>;
   debug: MockedFunction<typeof logger.debug>;
+  plain: MockedFunction<typeof logger.plain>;
 };
 
 const getMockedLogger = (): MockedLogger => {

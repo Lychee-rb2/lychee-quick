@@ -39,7 +39,7 @@ export const sendPreview = async (issue: Issue, attachment: Attachment) => {
     Bun.env.PREVIEWS_COMMENT_FOOTER,
   );
 
-  body.markdown.forEach((i) => logger.info(i));
+  body.markdown.forEach((i) => logger.plain(i));
 
   const answer = await confirmSendComment(issue.identifier);
   if (!answer) return;
