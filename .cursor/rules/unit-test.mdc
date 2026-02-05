@@ -69,3 +69,39 @@ describe("模块名", () => {
   });
 });
 ```
+
+## 覆盖率要求
+
+目标：**100% 代码覆盖率**
+
+- 运行覆盖率检查：`npx vitest run --coverage`
+- 覆盖所有分支（if/else、switch、三元表达式）
+- 覆盖所有边界条件（空数组、null、undefined）
+- 覆盖所有错误处理路径（try/catch、Promise reject）
+
+```typescript
+// 确保覆盖所有分支
+test("should handle empty array", () => { ... });
+test("should handle null input", () => { ... });
+test("should throw error when invalid", () => { ... });
+```
+
+## 难以覆盖时考虑重构
+
+当某些代码难以测试时，**优先考虑重构代码**而非放弃覆盖率：
+
+- **依赖注入**：将外部依赖作为参数传入，便于 mock
+- **拆分函数**：将复杂逻辑拆分为可独立测试的小函数
+- **提取接口**：定义接口类型，便于创建测试替身
+
+```typescript
+// ❌ BAD - 难以测试，直接依赖全局对象
+function loadConfig() {
+  return Bun.file("config.json").json();
+}
+
+// ✅ GOOD - 依赖注入，易于测试
+function loadConfig(fileReader = Bun.file) {
+  return fileReader("config.json").json();
+}
+```
