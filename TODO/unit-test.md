@@ -18,8 +18,9 @@
 | `help/mihomo-select.ts` | `searchProxy()` | 100% |
 | `help/io.ts` | `expandAlias()` | 100% |
 | `help/io.ts` | `showAvailableActions()` | 100% |
-| `help/io.ts` | `cli()` | 100% |
-| `help/io.ts` | `pbcopy()` | 100% |
+| `help/cli.ts` | `cli()` | 100% |
+| `help/cli.ts` | `gitShowRef()` | 100% |
+| `help/util.ts` | `pbcopy()` | 100% |
 | `help/io.ts` | `showSubcommands()` | 100% |
 | `help/io.ts` | `_require()` | 100% |
 | `help/io.ts` | `showHelp()` | 100% |
@@ -53,7 +54,7 @@
 ### `help/linear.ts`
 
 - [ ] `sendPreview(issue, attachment)` - 需要 mock Linear client 和 inquirer
-- [ ] `releaseIssues(items)` - 需要 mock `pbcopy` 和 `logger`
+- [ ] `releaseIssues(items)` - 需要 mock `pbcopy` (util.ts) 和 `logger`
 
 
 ---

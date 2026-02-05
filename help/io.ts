@@ -123,13 +123,6 @@ export const showAvailableActions = async (
   logger.info(`\nRun '${cliName} <command>' to see available subcommands.`);
 };
 
-export const pbcopy = (data: string) => {
-  const proc = Bun.spawn(["pbcopy"], { stdin: "pipe" });
-  proc.stdin.write(data);
-  proc.stdin.end();
-  logger.info(`\n`);
-};
-
 export const showSubcommands = async (
   actionName: string[],
   cliName: string,

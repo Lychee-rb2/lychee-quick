@@ -1,5 +1,5 @@
 import { createClient } from "@/fetch/linear.ts";
-import { pbcopy } from "@/help/io.ts";
+import { pbcopy } from "@/help/util.ts";
 import { logger } from "@/help/logger.ts";
 import type { Attachment, GithubAttachmentMeta, Issue } from "@/types/linear";
 import { checkbox, confirm } from "@inquirer/prompts";
@@ -130,7 +130,7 @@ export const sendPreview = async (issue: Issue, attachment: Attachment) => {
   await $`open ${res.commentCreate.comment.url}`;
 };
 
-export const releaseIssues = (items: Issue[]) => {
+export const releaseIssues = async (items: Issue[]) => {
   if (items.length === 0) return;
   const today = format(new Date(), "yyyy-MM-dd");
   const markdown = [
@@ -154,6 +154,6 @@ export const releaseIssues = (items: Issue[]) => {
       )
       .join("\n"),
   ].join("\n");
-  pbcopy(markdown);
+  await pbcopy(markdown);
   logger.info(markdown);
 };

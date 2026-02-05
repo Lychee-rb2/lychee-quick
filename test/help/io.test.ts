@@ -8,7 +8,6 @@ import {
   type MockedFunction,
 } from "vitest";
 import {
-  pbcopy,
   main,
   expandAlias,
   showAvailableActions,
@@ -109,26 +108,6 @@ afterEach(() => {
 });
 
 describe("io helper functions", () => {
-  describe("pbcopy", () => {
-    test("should copy data to clipboard", () => {
-      const mockStdin = {
-        write: vi.fn(),
-        end: vi.fn(),
-      };
-      const mockProc = {
-        stdin: mockStdin,
-      };
-      mockSpawn.mockReturnValue(mockProc);
-
-      pbcopy("test data");
-
-      expect(mockSpawn).toHaveBeenCalledWith(["pbcopy"], { stdin: "pipe" });
-      expect(mockStdin.write).toHaveBeenCalledWith("test data");
-      expect(mockStdin.end).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith("\n");
-    });
-  });
-
   describe("expandAlias", () => {
     test("should return null when alias does not contain dash", async () => {
       const result = await expandAlias("clash");

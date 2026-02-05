@@ -28,7 +28,7 @@ export default async function handle() {
         };
       }),
   });
-  releaseIssues(answer);
+  await releaseIssues(answer);
   const releaseNote = process.env.RELEASE_NOTE_PAGE;
   if (releaseNote) {
     await $`open ${releaseNote}`;
