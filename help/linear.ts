@@ -1,9 +1,9 @@
 import { createClient } from "@/fetch/linear.ts";
 import { pbcopy } from "@/help/util.ts";
 import { logger } from "@/help/logger.ts";
+import { openUrl } from "@/help/cli.ts";
 import type { Attachment, GithubAttachmentMeta, Issue } from "@/types/linear";
 import { checkbox, confirm } from "@inquirer/prompts";
-import { $ } from "bun";
 import { format } from "date-fns";
 import { z } from "zod";
 
@@ -127,7 +127,7 @@ export const sendPreview = async (issue: Issue, attachment: Attachment) => {
   const res = await client.createComment({
     input: { issueId: issue.id, bodyData: body.linear },
   });
-  await $`open ${res.commentCreate.comment.url}`;
+  await openUrl(res.commentCreate.comment.url);
 };
 
 export const releaseIssues = async (items: Issue[]) => {

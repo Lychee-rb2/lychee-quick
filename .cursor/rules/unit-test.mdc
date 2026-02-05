@@ -1,0 +1,71 @@
+---
+description: 单元测试编写规范
+globs: "test/**/*.test.ts"
+alwaysApply: false
+---
+
+# 单元测试规范
+
+## 测试框架
+
+使用 **vitest** 运行测试，命令：`npx vitest run`
+
+## Mock 类型处理
+
+为 mock 定义专用类型和辅助函数，避免使用 `any` 或 `@ts-expect-error`：
+
+```typescript
+// ❌ BAD
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(Bun as any).file = mockFile;
+
+// ✅ GOOD - 定义 mock 类型和辅助函数
+interface MockedBun {
+  file: ReturnType<typeof vi.fn>;
+}
+
+const setBunMock = <K extends keyof MockedBun>(
+  key: K,
+  value: MockedBun[K],
+): void => {
+  (globalThis.Bun as unknown as MockedBun)[key] = value;
+};
+
+setBunMock("file", mockFile);
+```
+
+## 异步 Mock
+
+当 mock 异步函数时，使用 `mockResolvedValue` 或 `async` 函数：
+
+```typescript
+// ✅ GOOD
+const mockModuleLoader: ModuleLoader = {
+  loadMeta: vi.fn().mockResolvedValue({ help: "Test" }),
+  loadHandler: vi.fn().mockResolvedValue(null),
+};
+
+// ✅ GOOD - 需要动态返回值时
+loadMeta: vi.fn(async (path: string) => {
+  if (path === "@/app/test/meta") return { help: "Test" };
+  return null;
+}),
+```
+
+## 测试结构
+
+```typescript
+describe("模块名", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("函数名", () => {
+    test("should 行为描述", async () => {
+      // Arrange - 准备测试数据
+      // Act - 执行被测函数
+      // Assert - 验证结果
+    });
+  });
+});
+```

@@ -4,10 +4,12 @@
  */
 
 export interface ModuleLoader {
-  loadMeta(path: string): { help?: string; completion?: string } | null;
+  loadMeta(
+    path: string,
+  ): Promise<{ help?: string; completion?: string } | null>;
   loadHandler(
     path: string,
-  ): { default?: (...args: unknown[]) => void | Promise<void> } | null;
+  ): Promise<{ default?: (...args: unknown[]) => void | Promise<void> } | null>;
 }
 
 export interface FileSystem {

@@ -1,6 +1,6 @@
 import { logger } from "@/help";
 import { findCurrentProxy, getDelay } from "@/help/mihomo";
-import { $ } from "bun";
+import { echo } from "@/help/cli.ts";
 
 export default async function handle() {
   try {
@@ -11,8 +11,8 @@ export default async function handle() {
       return;
     }
     const delay = await getDelay({ proxy: lastProxy.name });
-    await $`echo "proxy: ${proxyChain.map((p) => p.name).join(" -> ")}"`;
-    await $`echo "delay: ${delay}ms"`;
+    await echo(`proxy: ${proxyChain.map((p) => p.name).join(" -> ")}`);
+    await echo(`delay: ${delay}ms`);
   } catch (error) {
     if (error instanceof Error) {
       logger.error(error.message);

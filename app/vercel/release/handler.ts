@@ -1,7 +1,7 @@
 import { getProjects } from "@/fetch/vercel.ts";
 import { DeployHook as _DeployHook, Project } from "@/types/vercel.ts";
 import { checkbox, select } from "@inquirer/prompts";
-import { $ } from "bun";
+import { openUrl } from "@/help/cli.ts";
 import { addMinutes, subMinutes } from "date-fns";
 
 type DeployHook = _DeployHook & {
@@ -49,5 +49,5 @@ export default async function handle() {
   const end = addMinutes(new Date(), 10).toISOString();
   query.append("range", JSON.stringify({ start, end }));
   const url = `https://vercel.com/${team}/~/deployments?${query.toString()}`;
-  await $`open ${url}`;
+  await openUrl(url);
 }

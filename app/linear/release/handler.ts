@@ -1,8 +1,8 @@
 import { getIssues } from "@/fetch/linear.ts";
 import { iconMap } from "@/help";
 import { releaseIssues } from "@/help/linear.ts";
+import { openUrl } from "@/help/cli.ts";
 import { checkbox } from "@inquirer/prompts";
-import { $ } from "bun";
 
 const issueStateMap = {
   started: "started",
@@ -31,6 +31,6 @@ export default async function handle() {
   await releaseIssues(answer);
   const releaseNote = process.env.RELEASE_NOTE_PAGE;
   if (releaseNote) {
-    await $`open ${releaseNote}`;
+    await openUrl(releaseNote);
   }
 }

@@ -47,12 +47,24 @@ type MockedDotenv = {
   config: MockedFunction<typeof dotenv.config>;
 };
 
-type MockedBun = typeof Bun & {
+interface MockedBun {
   spawnSync: ReturnType<typeof vi.fn>;
   spawn: ReturnType<typeof vi.fn>;
   Glob: ReturnType<typeof vi.fn>;
   file: ReturnType<typeof vi.fn>;
   argv: string[];
+}
+
+// 类型安全的 Bun mock 修改辅助函数
+const setBunMock = <K extends keyof MockedBun>(
+  key: K,
+  value: MockedBun[K],
+): void => {
+  (globalThis.Bun as unknown as MockedBun)[key] = value;
+};
+
+const getBunMock = (): MockedBun => {
+  return globalThis.Bun as unknown as MockedBun;
 };
 
 // Helper function to safely cast logger to MockedLogger
@@ -84,14 +96,11 @@ beforeEach(() => {
   // Override Bun methods and properties directly
   // Bun is already defined in test/setup.ts, so we modify its properties
   if (globalThis.Bun) {
-    const bun = globalThis.Bun as unknown as MockedBun;
-    bun.spawnSync = mockSpawnSync;
-    bun.spawn = mockSpawn;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (bun as any).Glob = mockGlob;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (bun as any).file = mockFile;
-    bun.argv = [];
+    setBunMock("spawnSync", mockSpawnSync);
+    setBunMock("spawn", mockSpawn);
+    setBunMock("Glob", mockGlob);
+    setBunMock("file", mockFile);
+    setBunMock("argv", []);
   }
 
   // Setup default mock implementations
@@ -116,7 +125,6 @@ describe("io helper functions", () => {
 
     test("should use default FileSystem when fileSystem parameter is undefined", async () => {
       // Mock Bun.Glob to return empty results
-      const bun = globalThis.Bun as unknown as MockedBun;
       const testGlobScan = vi.fn(() =>
         (async function* () {
           // Empty generator
@@ -125,8 +133,7 @@ describe("io helper functions", () => {
       const testGlob = vi.fn(() => ({
         scan: testGlobScan,
       }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (bun as any).Glob = testGlob;
+      setBunMock("Glob", testGlob);
 
       // Call expandAlias without fileSystem parameter to test default implementation branch
       const result = await expandAlias("c-x");
@@ -136,8 +143,7 @@ describe("io helper functions", () => {
       expect(testGlob).toHaveBeenCalled();
 
       // Restore original Glob mock
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (bun as any).Glob = mockGlob;
+      setBunMock("Glob", mockGlob);
     });
 
     test("should return null when result array is empty", async () => {
@@ -371,10 +377,10 @@ describe("io helper functions", () => {
   describe("showHelp", () => {
     test("should display help content when mod.help is available", async () => {
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(() => ({
+        loadMeta: vi.fn().mockResolvedValue({
           help: "Test help text",
-        })),
-        loadHandler: vi.fn(),
+        }),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       await showHelp(["test-help"], mockModuleLoader);
@@ -387,10 +393,10 @@ describe("io helper functions", () => {
 
     test("should display completion when mod.completion is available but mod.help is not", async () => {
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(() => ({
+        loadMeta: vi.fn().mockResolvedValue({
           completion: "Test completion text",
-        })),
-        loadHandler: vi.fn(),
+        }),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       await showHelp(["test-completion"], mockModuleLoader);
@@ -403,8 +409,8 @@ describe("io helper functions", () => {
 
     test("should show message when no help or completion", async () => {
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(() => ({})),
-        loadHandler: vi.fn(),
+        loadMeta: vi.fn().mockResolvedValue({}),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       await showHelp(["test-empty"], mockModuleLoader);
@@ -419,8 +425,8 @@ describe("io helper functions", () => {
 
     test("should show error when module not found", async () => {
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(() => null),
-        loadHandler: vi.fn(),
+        loadMeta: vi.fn().mockResolvedValue(null),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       await showHelp(["nonexistent"], mockModuleLoader);
@@ -450,10 +456,10 @@ describe("io helper functions", () => {
   });
 
   describe("_require", () => {
-    test("should return module when handler exists", () => {
+    test("should return module when handler exists", async () => {
       // Test with a real handler that exists in the codebase
       // Note: In vitest, this may return null if module resolution differs
-      const result = _require(["clash", "check"]);
+      const result = await _require(["clash", "check"]);
 
       // Should return a module object (not null) if handler exists
       // In vitest environment, module resolution may differ, so we check if result exists
@@ -467,8 +473,8 @@ describe("io helper functions", () => {
       }
     });
 
-    test("should return null when handler does not exist", () => {
-      const result = _require(["nonexistent", "command"]);
+    test("should return null when handler does not exist", async () => {
+      const result = await _require(["nonexistent", "command"]);
 
       expect(result).toBeNull();
     });
@@ -501,8 +507,8 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(() => ({ completion: "Test command" })),
-        loadHandler: vi.fn(),
+        loadMeta: vi.fn().mockResolvedValue({ completion: "Test command" }),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       const mockFileSystem: FileSystem = {
@@ -527,8 +533,8 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts", "-h"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(() => ({ help: "Root help" })),
-        loadHandler: vi.fn(),
+        loadMeta: vi.fn().mockResolvedValue({ help: "Root help" }),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       await main(meta, mockModuleLoader);
@@ -543,8 +549,8 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts", "-h"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(() => ({})),
-        loadHandler: vi.fn(),
+        loadMeta: vi.fn().mockResolvedValue({}),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       const mockFileSystem: FileSystem = {
@@ -567,8 +573,8 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts", "test", "--help"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(() => ({ help: "Test help" })),
-        loadHandler: vi.fn(),
+        loadMeta: vi.fn().mockResolvedValue({ help: "Test help" }),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       await main(meta, mockModuleLoader);
@@ -597,10 +603,10 @@ describe("io helper functions", () => {
       };
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(),
-        loadHandler: vi.fn(() => ({
+        loadMeta: vi.fn().mockResolvedValue(null),
+        loadHandler: vi.fn().mockResolvedValue({
           default: vi.fn(),
-        })),
+        }),
       };
 
       await main(meta, mockModuleLoader, mockFileSystem);
@@ -622,8 +628,8 @@ describe("io helper functions", () => {
 
       const mockHandler = vi.fn();
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(),
-        loadHandler: vi.fn((path: string) => {
+        loadMeta: vi.fn().mockResolvedValue(null),
+        loadHandler: vi.fn(async (path: string) => {
           if (path === "@/app/clash/check/handler") {
             return { default: mockHandler };
           }
@@ -659,8 +665,8 @@ describe("io helper functions", () => {
 
       const mockHandler = vi.fn();
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(),
-        loadHandler: vi.fn((path: string) => {
+        loadMeta: vi.fn().mockResolvedValue(null),
+        loadHandler: vi.fn(async (path: string) => {
           if (path === "@/app/test/command/handler") {
             return { default: mockHandler };
           }
@@ -692,7 +698,7 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts", "clash"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn((path: string) => {
+        loadMeta: vi.fn(async (path: string) => {
           if (path === "@/app/clash/meta") {
             return { completion: "Clash management" };
           }
@@ -701,7 +707,7 @@ describe("io helper functions", () => {
           }
           return null;
         }),
-        loadHandler: vi.fn(() => null),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       const mockFileSystem: FileSystem = {
@@ -728,8 +734,8 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts", "nonexistent"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(),
-        loadHandler: vi.fn(() => null),
+        loadMeta: vi.fn().mockResolvedValue(null),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       const mockFileSystem: FileSystem = {
@@ -747,32 +753,32 @@ describe("io helper functions", () => {
 
     test("should use default FileSystem.fileExists when fileSystem is not provided", async () => {
       const meta = createMockMeta("/test/bin.ts");
-      const bun = globalThis.Bun as unknown as MockedBun;
-      bun.argv = ["/test/bin.ts", "test-command"];
+      getBunMock().argv = ["/test/bin.ts", "test-command"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(),
-        loadHandler: vi.fn(() => null),
+        loadMeta: vi.fn().mockResolvedValue(null),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       // Mock Bun.file to return a file object with exists() method
-      const mockFileExists = vi.fn().mockResolvedValue(false);
-      const originalFile = Bun.file;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (Bun as any).file = vi.fn(() => ({
-        exists: mockFileExists,
-      }));
+      const mockFileExistsFn = vi.fn().mockResolvedValue(false);
+      const originalFile = getBunMock().file;
+      setBunMock(
+        "file",
+        vi.fn(() => ({
+          exists: mockFileExistsFn,
+        })),
+      );
 
       // Don't provide fileSystem parameter to use default implementation
       await main(meta, mockModuleLoader);
 
       // Verify that Bun.file was called (which means default fileExists was used)
-      expect(Bun.file).toHaveBeenCalled();
-      expect(mockFileExists).toHaveBeenCalled();
+      expect(getBunMock().file).toHaveBeenCalled();
+      expect(mockFileExistsFn).toHaveBeenCalled();
 
       // Restore original Bun.file
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (Bun as any).file = originalFile;
+      setBunMock("file", originalFile);
     });
 
     test("should throw error when bin path not found in argv", async () => {
@@ -818,7 +824,7 @@ describe("io helper functions", () => {
 
       let callCount = 0;
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn(() => {
+        loadMeta: vi.fn(async () => {
           callCount++;
           if (callCount === 1) {
             // First call for @/app/meta fails
@@ -827,7 +833,7 @@ describe("io helper functions", () => {
           // Subsequent calls for showAvailableActions
           return { completion: "Test" };
         }),
-        loadHandler: vi.fn(),
+        loadHandler: vi.fn().mockResolvedValue(null),
       };
 
       const mockFileSystem: FileSystem = {

@@ -4,18 +4,16 @@ import type { ModuleLoader, FileSystem } from "@/types/io";
 
 // 默认的 ModuleLoader 实现（内联，不分离到新文件）
 const defaultModuleLoader: ModuleLoader = {
-  loadMeta(path: string) {
+  async loadMeta(path: string) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require(path);
+      return await import(path);
     } catch {
       return null;
     }
   },
-  loadHandler(path: string) {
+  async loadHandler(path: string) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require(path);
+      return await import(path);
     } catch {
       return null;
     }
@@ -107,7 +105,7 @@ export const showAvailableActions = async (
 
   for await (const path of fs.scanMetaFiles(appDir)) {
     const name = path.split("/")[0];
-    const mod = moduleLoader.loadMeta(`@/app/${name}/meta`);
+    const mod = await moduleLoader.loadMeta(`@/app/${name}/meta`);
     const description = mod?.completion || "";
     if (!mod && name) {
       logger.error(`Error reading meta.ts for ${name}`);
@@ -134,12 +132,14 @@ export const showSubcommands = async (
   const subDir = `${appDir}/${actionName.join("/")}`;
   const subcommands: { name: string; description: string }[] = [];
 
-  const mainMod = moduleLoader.loadMeta(`@/app/${actionName.join("/")}/meta`);
+  const mainMod = await moduleLoader.loadMeta(
+    `@/app/${actionName.join("/")}/meta`,
+  );
   const mainDescription = mainMod?.completion || "";
 
   for await (const path of fs.scanMetaFiles(subDir)) {
     const name = path.split("/")[0];
-    const mod = moduleLoader.loadMeta(
+    const mod = await moduleLoader.loadMeta(
       `@/app/${actionName.join("/")}/${name}/meta`,
     );
     const description = mod?.completion || "";
@@ -158,12 +158,12 @@ export const showSubcommands = async (
   }
 };
 
-export const _require = (
+export const _require = async (
   actionName: string[],
   moduleLoader: ModuleLoader = defaultModuleLoader,
 ) => {
   const actionPath = `@/app/${actionName.join("/")}/handler`;
-  return moduleLoader.loadHandler(actionPath);
+  return await moduleLoader.loadHandler(actionPath);
 };
 
 export const showHelp = async (
@@ -171,7 +171,7 @@ export const showHelp = async (
   moduleLoader: ModuleLoader = defaultModuleLoader,
 ) => {
   const metaPath = `@/app/${actionName.join("/")}/meta`;
-  const mod = moduleLoader.loadMeta(metaPath);
+  const mod = await moduleLoader.loadMeta(metaPath);
   if (!mod) {
     logger.error(`Can't find help for "${actionName.join(" ")}"`);
     return;
@@ -215,7 +215,7 @@ export const main = async (
   if (hasHelp) {
     if (actionName.length === 0) {
       // 显示根目录帮助
-      const mod = moduleLoader.loadMeta("@/app/meta");
+      const mod = await moduleLoader.loadMeta("@/app/meta");
       if (mod) {
         logger.info(mod.help || mod.completion || "");
       } else {
@@ -232,7 +232,7 @@ export const main = async (
     return;
   }
 
-  const action = _require(actionName, moduleLoader);
+  const action = await _require(actionName, moduleLoader);
   if (action?.default) {
     logger.debug(`Start run "${actionName.join(" ")}"`);
     await action.default({ from: "cli" });

@@ -32,7 +32,7 @@ describe("git helper functions", () => {
   describe("findNextBranch", () => {
     test("should return branch name when branch does not exist", async () => {
       const mockGitShowRef = getMockedGitShowRef();
-      mockGitShowRef.mockReturnValue("");
+      mockGitShowRef.mockResolvedValue("");
 
       const result = await findNextBranch("my-branch");
 
@@ -43,7 +43,7 @@ describe("git helper functions", () => {
     test("should return branch-2 when branch exists but branch-2 does not", async () => {
       const mockGitShowRef = getMockedGitShowRef();
       let callCount = 0;
-      mockGitShowRef.mockImplementation(() => {
+      mockGitShowRef.mockImplementation(async () => {
         callCount++;
         if (callCount === 1) {
           // First call: branch exists
@@ -68,7 +68,7 @@ describe("git helper functions", () => {
     test("should return branch-4 when branch, branch-2, and branch-3 all exist", async () => {
       const mockGitShowRef = getMockedGitShowRef();
       let callCount = 0;
-      mockGitShowRef.mockImplementation(() => {
+      mockGitShowRef.mockImplementation(async () => {
         callCount++;
         if (callCount <= 3) {
           // First three calls: branches exist
@@ -101,7 +101,7 @@ describe("git helper functions", () => {
     test("should start from specified version when version parameter is provided", async () => {
       const mockGitShowRef = getMockedGitShowRef();
       let callCount = 0;
-      mockGitShowRef.mockImplementation(() => {
+      mockGitShowRef.mockImplementation(async () => {
         callCount++;
         if (callCount === 1) {
           // First call: branch-2 exists
@@ -128,7 +128,7 @@ describe("git helper functions", () => {
 
     test("should use default version 1 when version parameter is not provided", async () => {
       const mockGitShowRef = getMockedGitShowRef();
-      mockGitShowRef.mockReturnValue("");
+      mockGitShowRef.mockResolvedValue("");
 
       const result = await findNextBranch("my-branch");
 
@@ -141,7 +141,7 @@ describe("git helper functions", () => {
     test("should treat whitespace-only output as branch not existing", async () => {
       const mockGitShowRef = getMockedGitShowRef();
       // gitShowRef returns trimmed output, so mock should return empty string after trim
-      mockGitShowRef.mockReturnValue("");
+      mockGitShowRef.mockResolvedValue("");
 
       const result = await findNextBranch("my-branch");
 
@@ -151,7 +151,7 @@ describe("git helper functions", () => {
 
     test("should handle empty string output", async () => {
       const mockGitShowRef = getMockedGitShowRef();
-      mockGitShowRef.mockReturnValue("");
+      mockGitShowRef.mockResolvedValue("");
 
       const result = await findNextBranch("my-branch");
 
@@ -160,7 +160,7 @@ describe("git helper functions", () => {
 
     test("should handle branch names with special characters", async () => {
       const mockGitShowRef = getMockedGitShowRef();
-      mockGitShowRef.mockReturnValue("");
+      mockGitShowRef.mockResolvedValue("");
 
       const result = await findNextBranch("feature/my-branch");
 
@@ -173,7 +173,7 @@ describe("git helper functions", () => {
     test("should handle recursive calls correctly", async () => {
       const mockGitShowRef = getMockedGitShowRef();
       let callCount = 0;
-      mockGitShowRef.mockImplementation(() => {
+      mockGitShowRef.mockImplementation(async () => {
         callCount++;
         // All branches exist until branch-5
         if (callCount <= 4) {

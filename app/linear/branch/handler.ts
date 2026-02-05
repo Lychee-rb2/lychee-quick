@@ -1,7 +1,7 @@
 import { search, Separator } from "@inquirer/prompts";
 import { Issue } from "@/types/linear.ts";
 import { findNextBranch, iconMap } from "@/help";
-import { $ } from "bun";
+import { gitCheckout, gitPull, gitCheckoutBranch } from "@/help/cli.ts";
 import { getIssues } from "@/fetch/linear.ts";
 
 const sortBy = {
@@ -60,7 +60,7 @@ export default async function handle() {
     },
   });
   const branchName = await findNextBranch(issue.branchName);
-  await $`git checkout main`;
-  await $`git pull`;
-  await $`git checkout -b ${branchName}`;
+  await gitCheckout("main");
+  await gitPull();
+  await gitCheckoutBranch(branchName);
 }
