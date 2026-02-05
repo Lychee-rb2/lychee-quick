@@ -97,10 +97,6 @@ export const sendPreview = async (issue: Issue, attachment: Attachment) => {
   const mentions = await client
     .users({ filter: { email: { in: emails } } })
     .then((res) => res.users.nodes.map((i) => ({ id: i.id, label: i.name })));
-  const name = attachment.metadata.previewLinks[0]?.name;
-  if (name) {
-    console.log("name is fixed", name);
-  }
   const previewLinks = await checkbox({
     message: "Send which preview link?",
     loop: false,
