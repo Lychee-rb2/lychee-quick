@@ -1,6 +1,5 @@
-import { mihomo } from "@/fetch/mihomo";
 import { logger } from "@/help";
-import { findCurrentProxy } from "@/help/mihomo";
+import { findCurrentProxy, getDelay } from "@/help/mihomo";
 import { $ } from "bun";
 
 export default async function handle() {
@@ -10,13 +9,7 @@ export default async function handle() {
     logger.error("No proxy found");
     return;
   }
-  const qs = new URLSearchParams({
-    url: "https://www.gstatic.com/generate_204",
-    timeout: "5000",
-  });
-  const delay = await mihomo<{ delay: number }>(
-    `proxies/${encodeURIComponent(lastProxy.name)}/delay?${qs.toString()}`,
-  ).then((result) => result.delay);
+  const delay = await getDelay({ proxy: lastProxy.name });
   await $`echo "proxy: ${proxyChain.map((p) => p.name).join(" -> ")}"`;
   await $`echo "delay: ${delay}ms"`;
 }

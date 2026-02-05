@@ -72,11 +72,7 @@ export const pickProxy = async (option: {
     message: `Pick a proxy ${current?.name || process.env.MIHOMO_TOP_PROXY}`,
     source: async (searchTerm) => {
       if (!hasRefreshed && option?.refresh) {
-        const qs = new URLSearchParams({
-          url: "https://www.gstatic.com/generate_204",
-          timeout: "1000",
-        });
-        await mihomo(`group/GLOBAL/delay?${qs.toString()}`);
+        await getDelay();
         hasRefreshed = true;
       }
       if (!proxies) {
@@ -111,3 +107,26 @@ export const pickProxy = async (option: {
     await pickProxy({ data: { current: selected, proxies } });
   }
 };
+
+export function getDelay(options: {
+  timeout?: number;
+  proxy: string;
+}): Promise<number>;
+export function getDelay(options?: {
+  timeout?: number;
+}): Promise<Record<string, number>>;
+export async function getDelay(options?: { timeout?: number; proxy: string }) {
+  const proxy = options?.proxy;
+  const qs = new URLSearchParams({
+    url: "https://www.gstatic.com/generate_204",
+    timeout: `${options?.timeout || 1000}`,
+  });
+  if (proxy) {
+    return await mihomo<{ delay: number }>(
+      `proxies/${encodeURIComponent(proxy)}/delay?${qs.toString()}`,
+    ).then((result) => result.delay);
+  }
+  return await mihomo<Record<string, number>>(
+    `group/GLOBAL/delay?${qs.toString()}`,
+  );
+}

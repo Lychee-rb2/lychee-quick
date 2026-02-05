@@ -167,11 +167,11 @@ describe("mihomo helper functions", () => {
 
       expect(result).toHaveLength(3); // 1 proxy + Refresh + Reset
       expect(result[0]).toMatchObject({
-        name: expect.stringContaining("test-proxy"),
-        name: expect.stringContaining("-> selected-child"),
-        name: expect.stringContaining("(50ms)"),
         value: "test-proxy",
       });
+      expect(result[0].name).toContain("test-proxy");
+      expect(result[0].name).toContain("-> selected-child");
+      expect(result[0].name).toContain("(50ms)");
       expect(result[1]).toMatchObject({
         value: "REFRESH",
       });
@@ -187,8 +187,8 @@ describe("mihomo helper functions", () => {
             name: "regular-proxy",
             now: undefined,
             alive: true,
-            type: "URLTest" as const,
-          } as MihomoProxy,
+            type: "Selector",
+          } as unknown as MihomoProxy,
           delay: 150,
           index: 0,
         },
@@ -197,11 +197,11 @@ describe("mihomo helper functions", () => {
       const result = choices(proxies);
 
       expect(result[0]).toMatchObject({
-        name: expect.stringContaining("regular-proxy"),
-        name: expect.not.stringContaining("->"),
-        name: expect.stringContaining("(150ms)"),
         value: "regular-proxy",
       });
+      expect(result[0].name).toContain("regular-proxy");
+      expect(result[0].name).not.toContain("->");
+      expect(result[0].name).toContain("(150ms)");
     });
 
     test("should include Refresh and Reset options", () => {

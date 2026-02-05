@@ -20,5 +20,6 @@ declare namespace NodeJS {
     MIHOMO_URL?: string;
     MIHOMO_TOKEN?: string;
     MIHOMO_TOP_PROXY?: string;
+    MIHOMO_BOARD?: string;
   }
 }
