@@ -11,7 +11,7 @@ export const findCurrentProxy = async (): Promise<MihomoProxy[]> => {
   return findProxyChain(mihomoProxy, proxies.proxies);
 };
 
-function findProxyChain(
+export function findProxyChain(
   current: MihomoProxy,
   proxies: Record<string, MihomoProxy>,
 ): MihomoProxy[] {
@@ -20,16 +20,16 @@ function findProxyChain(
   }
   return [current];
 }
-function getProxyDelay(proxy: MihomoProxy) {
+export function getProxyDelay(proxy: MihomoProxy) {
   return proxy.history?.at(-1)?.delay;
 }
-function delayLevel(delay: number) {
+export function delayLevel(delay: number) {
   if (delay === 0) return "mihomo_delay_very_bad" as const;
   if (delay < 100) return "mihomo_delay_good" as const;
   if (delay < 300) return "mihomo_delay_normal" as const;
   return "mihomo_delay_bad" as const;
 }
-const choices = (
+export const choices = (
   proxies: { proxy: MihomoProxy; delay: number; index: number }[],
 ) => [
   ...proxies.map(({ proxy, delay, index }) => {
@@ -48,11 +48,11 @@ const choices = (
   { name: `${iconMap("mihomo_reset")} Reset`, value: "RESET" },
 ];
 
-const getChildren = (
+export const getChildren = (
   proxy: MihomoProxy,
   proxies: Record<string, MihomoProxy>,
 ) => {
-  return proxy.all.map((name, index) => {
+  return (proxy.all || []).map((name, index) => {
     const proxy = proxies[name];
     const delay = getProxyDelay(proxy);
     return { proxy, delay, index };
