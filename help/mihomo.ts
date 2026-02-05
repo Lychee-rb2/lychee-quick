@@ -1,6 +1,6 @@
 import { mihomo } from "@/fetch/mihomo";
 import { MihomoProxy } from "@/types/mihomo";
-import { searchProxy } from "./mihomo-search";
+import { searchProxy } from "./mihomo-select";
 
 export const findCurrentProxy = async (): Promise<MihomoProxy[]> => {
   const proxies = await mihomo<{ proxies: Record<string, MihomoProxy> }>(

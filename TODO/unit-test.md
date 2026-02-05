@@ -11,11 +11,11 @@
 | `help/mihomo.ts` | `findCurrentProxy()` | 100% |
 | `help/mihomo.ts` | `pickProxy()` | 100% |
 | `help/mihomo.ts` | `getDelay()` | 100% |
-| `help/mihomo-search.ts` | `getProxyDelay()` | 100% |
-| `help/mihomo-search.ts` | `delayLevel()` | 100% |
-| `help/mihomo-search.ts` | `choices()` | 100% |
-| `help/mihomo-search.ts` | `getChildren()` | 100% |
-| `help/mihomo-search.ts` | `searchProxy()` | 100% |
+| `help/mihomo-select.ts` | `getProxyDelay()` | 100% |
+| `help/mihomo-select.ts` | `delayLevel()` | 100% |
+| `help/mihomo-select.ts` | `choices()` | 100% |
+| `help/mihomo-select.ts` | `getChildren()` | 100% |
+| `help/mihomo-select.ts` | `searchProxy()` | 100% |
 
 ---
 
@@ -66,7 +66,7 @@
   - [x] `should handle RESET option` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
   - [x] `should select proxy and update` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
 
-### `help/mihomo-search.ts`
+### `help/mihomo-select.ts`
 
 - [x] `getProxyDelay()` - 纯函数，已测试
 - [x] `delayLevel()` - 纯函数，已测试

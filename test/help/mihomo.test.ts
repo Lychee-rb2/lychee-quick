@@ -17,13 +17,13 @@ vi.mock("@/fetch/mihomo", () => ({
   mihomo: vi.fn(),
 }));
 
-vi.mock("@/help/mihomo-search", () => ({
+vi.mock("@/help/mihomo-select", () => ({
   searchProxy: vi.fn(),
 }));
 
 // Import mocked modules
 import { mihomo } from "@/fetch/mihomo";
-import { searchProxy } from "@/help/mihomo-search";
+import { searchProxy } from "@/help/mihomo-select";
 
 // Note: We use vi.mocked() helper for type-safe access to mock functions
 // This is better than type assertions because it preserves the original function signature
