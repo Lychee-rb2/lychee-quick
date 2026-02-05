@@ -3,6 +3,7 @@ import {
   expect,
   test,
   beforeEach,
+  afterEach,
   vi,
   type MockedFunction,
 } from "vitest";

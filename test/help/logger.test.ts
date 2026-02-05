@@ -1,12 +1,4 @@
-import {
-  describe,
-  expect,
-  test,
-  beforeEach,
-  afterEach,
-  vi,
-  type MockedFunction,
-} from "vitest";
+import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
 
 // Mock pino module
 const mockLoggerInstance = {
