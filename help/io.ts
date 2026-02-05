@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { logger, typedBoolean } from "help";
-import type { ModuleLoader, FileSystem } from "./io-types";
+import type { ModuleLoader, FileSystem } from "@/types/io";
 
 // 默认的 ModuleLoader 实现（内联，不分离到新文件）
 const defaultModuleLoader: ModuleLoader = {
@@ -121,15 +121,6 @@ export const showAvailableActions = async (
     logger.info(`  ${app.name}${desc}`);
   }
   logger.info(`\nRun '${cliName} <command>' to see available subcommands.`);
-};
-
-export const cli = (cmd: string[]) => {
-  const proc = Bun.spawnSync(cmd);
-  if (!proc.success) {
-    logger.error(cmd);
-    throw new Error(proc.stderr.toString());
-  }
-  return proc;
 };
 
 export const pbcopy = (data: string) => {

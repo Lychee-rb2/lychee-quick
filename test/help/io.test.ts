@@ -8,7 +8,6 @@ import {
   type MockedFunction,
 } from "vitest";
 import {
-  cli,
   pbcopy,
   main,
   expandAlias,
@@ -17,7 +16,7 @@ import {
   showHelp,
   _require,
 } from "@/help/io";
-import type { ModuleLoader, FileSystem } from "@/help/io-types";
+import type { ModuleLoader, FileSystem } from "@/types/io";
 
 // Mock modules (must be called before imports)
 vi.mock("dotenv", () => ({
@@ -110,41 +109,6 @@ afterEach(() => {
 });
 
 describe("io helper functions", () => {
-  describe("cli", () => {
-    test("should return process object when command succeeds", () => {
-      const mockProc = {
-        success: true,
-        stdout: new TextEncoder().encode("output"),
-        stderr: new TextEncoder().encode(""),
-      };
-      mockSpawnSync.mockReturnValue(mockProc);
-
-      const result = cli(["echo", "test"]);
-
-      expect(result).toBe(mockProc);
-      expect(mockSpawnSync).toHaveBeenCalledWith(["echo", "test"]);
-    });
-
-    test("should throw error and log when command fails", () => {
-      const stderrBuffer = new TextEncoder().encode("command failed");
-      // Create a buffer-like object with toString method
-      const mockStderr = {
-        ...stderrBuffer,
-        toString: () => "command failed",
-      };
-      const mockProc = {
-        success: false,
-        stdout: new TextEncoder().encode(""),
-        stderr: mockStderr,
-      };
-      mockSpawnSync.mockReturnValue(mockProc);
-
-      expect(() => cli(["invalid", "command"])).toThrow("command failed");
-      expect(mockSpawnSync).toHaveBeenCalledWith(["invalid", "command"]);
-      expect(logger.error).toHaveBeenCalledWith(["invalid", "command"]);
-    });
-  });
-
   describe("pbcopy", () => {
     test("should copy data to clipboard", () => {
       const mockStdin = {

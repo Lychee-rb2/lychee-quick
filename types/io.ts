@@ -5,7 +5,9 @@
 
 export interface ModuleLoader {
   loadMeta(path: string): { help?: string; completion?: string } | null;
-  loadHandler(path: string): { default?: Function } | null;
+  loadHandler(
+    path: string,
+  ): { default?: (...args: unknown[]) => void | Promise<void> } | null;
 }
 
 export interface FileSystem {
