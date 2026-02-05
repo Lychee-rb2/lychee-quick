@@ -279,6 +279,58 @@ describe("io helper functions", () => {
       // Function should complete successfully
       expect(logger.info).toHaveBeenCalled();
     });
+
+    test("should log error when meta loading fails but name exists", async () => {
+      // This test covers lines 111-112: if (!mod && name) { logger.error(...) }
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn().mockResolvedValue(null), // Meta loading fails
+        loadHandler: vi.fn().mockResolvedValue(null),
+      };
+
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          yield "test-app/meta.ts"; // Has a name
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      await showAvailableActions("test-cli", mockModuleLoader, mockFileSystem);
+
+      // Verify error was logged for failed meta loading
+      expect(logger.error).toHaveBeenCalledWith(
+        "Error reading meta.ts for test-app",
+      );
+      // Should still show usage info
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("Usage: test-cli"),
+      );
+    });
+
+    test("should display command without description when completion is empty", async () => {
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn().mockResolvedValue({ completion: "" }), // Empty completion
+        loadHandler: vi.fn().mockResolvedValue(null),
+      };
+
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          yield "myapp/meta.ts";
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      await showAvailableActions("test-cli", mockModuleLoader, mockFileSystem);
+
+      // Should display command name without description
+      const mockedLogger = getMockedLogger();
+      const infoCalls = mockedLogger.info.mock.calls;
+      const hasCommandWithoutDesc = infoCalls.some(
+        (call) => call[0] === "  myapp",
+      );
+      expect(hasCommandWithoutDesc).toBe(true);
+    });
   });
 
   describe("showSubcommands", () => {
@@ -372,6 +424,130 @@ describe("io helper functions", () => {
 
       (global as { require: typeof require }).require = originalRequire;
     });
+
+    test("should handle when mainMod is null (line 138 branch)", async () => {
+      // This test covers line 138: mainMod?.completion || ""
+      // When mainMod is null, mainDescription should be empty string
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn().mockResolvedValue(null), // mainMod is null
+        loadHandler: vi.fn().mockResolvedValue(null),
+      };
+
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          yield "check/meta.ts";
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      await showSubcommands(
+        ["test"],
+        "test-cli",
+        mockModuleLoader,
+        mockFileSystem,
+      );
+
+      // Should display usage without main description
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining("Usage: test-cli test"),
+      );
+      // Main description should not be displayed (only 3 logger.info calls: usage, header, subcommand)
+      const mockedLogger = getMockedLogger();
+      // Check that we didn't log an extra line for main description
+      const infoCalls = mockedLogger.info.mock.calls;
+      const hasMainDescLine = infoCalls.some((call) => {
+        const content = call[0]?.toString() || "";
+        return (
+          content.length > 0 &&
+          !content.includes("Usage:") &&
+          !content.includes("Available") &&
+          !content.includes("check") &&
+          content !== ""
+        );
+      });
+      // Since mainMod is null, mainDescription is "", which won't be logged
+      expect(hasMainDescLine).toBe(false);
+    });
+
+    test("should handle when subcommand mod is null (line 145 branch)", async () => {
+      // This test covers line 145: mod?.completion || ""
+      // When subcommand mod is null, description should be empty string
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(async (path: string) => {
+          if (path === "@/app/test/meta") {
+            return { completion: "Main description" };
+          }
+          // Return null for subcommand meta
+          return null;
+        }),
+        loadHandler: vi.fn().mockResolvedValue(null),
+      };
+
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          yield "subcommand/meta.ts";
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      await showSubcommands(
+        ["test"],
+        "test-cli",
+        mockModuleLoader,
+        mockFileSystem,
+      );
+
+      // Should display subcommand without description
+      const mockedLogger = getMockedLogger();
+      const infoCalls = mockedLogger.info.mock.calls;
+      // Subcommand should be displayed without " - description"
+      const hasSubcmdWithoutDesc = infoCalls.some(
+        (call) => call[0] === "  subcommand",
+      );
+      expect(hasSubcmdWithoutDesc).toBe(true);
+    });
+
+    test("should display subcommand without description when completion is empty (line 156 branch)", async () => {
+      // This test covers line 156: cmd.description ? ` - ${cmd.description}` : ""
+      // When cmd.description is empty, desc should be empty string
+      const mockModuleLoader: ModuleLoader = {
+        loadMeta: vi.fn(async (path: string) => {
+          if (path === "@/app/test/meta") {
+            return { completion: "Main description" };
+          }
+          if (path === "@/app/test/subcmd/meta") {
+            return { completion: "" }; // Empty completion
+          }
+          return null;
+        }),
+        loadHandler: vi.fn().mockResolvedValue(null),
+      };
+
+      const mockFileSystem: FileSystem = {
+        getAppDir: vi.fn(() => "/test/app"),
+        scanMetaFiles: vi.fn(async function* () {
+          yield "subcmd/meta.ts";
+        }),
+        fileExists: vi.fn().mockResolvedValue(false),
+      };
+
+      await showSubcommands(
+        ["test"],
+        "test-cli",
+        mockModuleLoader,
+        mockFileSystem,
+      );
+
+      // Subcommand should be displayed without " - description"
+      const mockedLogger = getMockedLogger();
+      const infoCalls = mockedLogger.info.mock.calls;
+      const hasSubcmdWithoutDesc = infoCalls.some(
+        (call) => call[0] === "  subcmd",
+      );
+      expect(hasSubcmdWithoutDesc).toBe(true);
+    });
   });
 
   describe("showHelp", () => {
@@ -453,6 +629,17 @@ describe("io helper functions", () => {
         expect(error).toBeDefined();
       }
     });
+
+    test("should return null when default moduleLoader catches import error for loadMeta", async () => {
+      // This test covers lines 11-12: catch block in defaultModuleLoader.loadMeta
+      // Using an invalid module path will trigger the catch block
+      await showHelp(["nonexistent-module-path-xyz"]);
+
+      // When import fails, loadMeta returns null, and showHelp logs error
+      expect(logger.error).toHaveBeenCalledWith(
+        'Can\'t find help for "nonexistent-module-path-xyz"',
+      );
+    });
   });
 
   describe("_require", () => {
@@ -476,6 +663,19 @@ describe("io helper functions", () => {
     test("should return null when handler does not exist", async () => {
       const result = await _require(["nonexistent", "command"]);
 
+      expect(result).toBeNull();
+    });
+
+    test("should return null when default moduleLoader catches import error", async () => {
+      // This test uses the default moduleLoader which catches import errors
+      // Testing lines 11-12 and 17-18: catch blocks in defaultModuleLoader
+      // When import fails, it should return null instead of throwing
+      const result = await _require([
+        "invalid-path-that-does-not-exist",
+        "xyz",
+      ]);
+
+      // Default moduleLoader catches the error and returns null
       expect(result).toBeNull();
     });
   });
