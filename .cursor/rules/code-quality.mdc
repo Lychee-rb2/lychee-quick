@@ -1,0 +1,180 @@
+---
+description: 代码质量检查要求 - 每次生成代码后必须检查 TypeScript 和 lint 错误
+alwaysApply: true
+---
+
+# 代码质量检查要求
+
+## 强制要求
+
+**每次生成或修改代码后，必须立即检查并修复所有 TypeScript 和 lint 错误。**
+
+## 检查流程
+
+### 1. 生成代码后立即检查
+
+完成代码生成或修改后，**必须**执行以下步骤：
+
+```bash
+# 1. 检查 TypeScript 类型错误
+npx tsc --noEmit
+
+# 2. 检查 lint 错误
+npx eslint .
+
+# 3. 或者使用 IDE 的 lint 检查工具
+# 在 Cursor 中使用 read_lints 工具检查
+```
+
+### 2. 使用工具检查
+
+在生成代码后，**必须**使用 `read_lints` 工具检查所有相关文件：
+
+```typescript
+// ✅ GOOD - 生成代码后立即检查
+// 1. 生成代码
+write("path/to/file.ts", code);
+
+// 2. 立即检查 lint 错误
+read_lints({ paths: ["path/to/file.ts"] });
+
+// 3. 如果有错误，立即修复
+```
+
+### 3. 修复错误优先级
+
+发现错误时，按以下优先级处理：
+
+1. **TypeScript 类型错误** - 最高优先级，必须立即修复
+2. **ESLint 错误** - 高优先级，必须修复
+3. **ESLint 警告** - 中优先级，建议修复
+4. **格式化问题** - 低优先级，可以使用 `--fix` 自动修复
+
+### 4. 自动修复
+
+对于格式化问题，优先使用自动修复：
+
+```bash
+# ✅ GOOD - 使用自动修复
+npx eslint --fix path/to/file.ts
+
+# ❌ BAD - 手动修复格式化问题（浪费时间）
+```
+
+## 常见错误类型及修复方法
+
+### TypeScript 类型错误
+
+```typescript
+// ❌ BAD - 缺少类型导入
+test("should work", () => {
+  // 使用了 afterEach 但未导入
+  afterEach(() => { ... });
+});
+
+// ✅ GOOD - 正确导入所有使用的类型和函数
+import { describe, test, afterEach, vi } from "vitest";
+```
+
+### ESLint 未使用变量
+
+```typescript
+// ❌ BAD - 导入但未使用
+import { MockedFunction } from "vitest";
+// MockedFunction 未在代码中使用
+
+// ✅ GOOD - 移除未使用的导入
+import { describe, test, vi } from "vitest";
+```
+
+### 格式化错误
+
+```typescript
+// ❌ BAD - 格式不符合项目规范
+import {
+  describe,
+  test,
+} from "vitest";
+
+// ✅ GOOD - 符合项目格式规范（单行导入）
+import { describe, test } from "vitest";
+```
+
+## 检查清单
+
+在提交代码前，确保：
+
+- [ ] 运行 `read_lints` 检查所有修改的文件
+- [ ] 修复所有 TypeScript 类型错误
+- [ ] 修复所有 ESLint 错误
+- [ ] 运行 `npx eslint --fix` 修复格式化问题
+- [ ] 确认没有新的 lint 错误引入
+- [ ] 确认代码可以正常编译（`npx tsc --noEmit`）
+
+## 禁止行为
+
+**严禁**以下行为：
+
+1. ❌ 忽略 TypeScript 错误
+2. ❌ 忽略 ESLint 错误
+3. ❌ 使用 `eslint-disable` 绕过检查（除非用户明确要求）
+4. ❌ 提交包含错误的代码
+5. ❌ 假设代码没有问题而不检查
+
+## 工具使用
+
+### 在 Cursor 中使用
+
+```typescript
+// 1. 生成代码后
+write("file.ts", code);
+
+// 2. 立即检查
+read_lints({ paths: ["file.ts"] });
+
+// 3. 如果有错误，修复后再次检查
+search_replace(...);
+read_lints({ paths: ["file.ts"] }); // 再次确认
+```
+
+### 命令行检查
+
+```bash
+# 检查特定文件
+npx eslint path/to/file.ts
+npx tsc --noEmit path/to/file.ts
+
+# 检查所有文件
+npx eslint .
+npx tsc --noEmit
+
+# 自动修复格式化问题
+npx eslint --fix .
+```
+
+## 示例工作流
+
+```typescript
+// ✅ GOOD - 完整的工作流
+// 1. 生成代码
+write("test/example.test.ts", testCode);
+
+// 2. 立即检查错误
+const errors = read_lints({ paths: ["test/example.test.ts"] });
+
+// 3. 如果有错误，修复
+if (errors.length > 0) {
+  // 修复错误
+  search_replace(...);
+  
+  // 再次检查确认修复
+  read_lints({ paths: ["test/example.test.ts"] });
+}
+
+// 4. 运行测试确认功能正常
+run_terminal_cmd({ command: "bun run test" });
+```
+
+## 记住
+
+**代码质量不是可选项，而是必须项。** 每次生成代码后，检查错误应该是自动化的习惯，而不是可选的步骤。
