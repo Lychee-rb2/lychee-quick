@@ -2,124 +2,48 @@ import { createClient } from "@/fetch/linear.ts";
 import { pbcopy } from "@/help/util.ts";
 import { logger } from "@/help/logger.ts";
 import { openUrl } from "@/help/cli.ts";
-import type { Attachment, GithubAttachmentMeta, Issue } from "@/types/linear";
-import { checkbox, confirm } from "@inquirer/prompts";
+import { buildCommentBody } from "@/help/linear-content.ts";
+import {
+  selectPreviewLinks,
+  confirmSendComment,
+} from "@/help/linear-prompts.ts";
+import type { Attachment, Issue } from "@/types/linear";
 import { format } from "date-fns";
 import { z } from "zod";
 
-const buildMention = (mention: { id: string; label: string }) => [
-  {
-    type: "suggestion_userMentions",
-    attrs: { id: mention.id, label: mention.label },
-  },
-  { type: "text", text: ", " },
-];
-const buildHello = (mentions: { id: string; label: string }[]) => [
-  {
-    type: "paragraph",
-    content: [
-      { type: "text", text: "Hello " },
-      ...mentions.flatMap(buildMention),
-      { type: "text", text: "preview links👇" },
-    ],
-  },
-  { type: "horizontal_rule" },
-];
-
-const buildPreviews = (
-  previews: Pick<
-    GithubAttachmentMeta["previewLinks"][number],
-    // "url" | "name"
-    "url"
-  >[],
-  issueIdentifier: string,
-) => ({
-  type: "bullet_list",
-  content: previews.map((preview) => ({
-    type: "list_item",
-    content: [
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            marks: [{ type: "link", attrs: { href: preview.url } }],
-            text: `${issueIdentifier} ${preview.url}`,
-          },
-        ],
-      },
-    ],
-  })),
-});
-const buildFooter = (footer: string) => [
-  { type: "horizontal_rule" },
-  { type: "paragraph", content: [{ type: "text", text: footer }] },
-];
-export const buildCommentBody = (
-  issueIdentifier: string,
-  mentions: { id: string; label: string }[],
-  previews: Pick<
-    GithubAttachmentMeta["previewLinks"][number],
-    // "url" | "name"
-    "url"
-  >[],
-  footer?: string,
-) => {
-  return {
-    linear: {
-      type: "doc",
-      content: [
-        ...buildHello(mentions),
-        buildPreviews(previews, issueIdentifier),
-        ...(footer ? buildFooter(footer) : []),
-      ],
-    },
-    markdown: [
-      `# Hello ${mentions.map((i) => i.label).join(",")}, preview links👇`,
-      `---`,
-      ...previews.map((i) => `- [${issueIdentifier} ${i.url}](${i.url})`),
-      ...(footer ? [`---`, footer] : []),
-    ],
-  };
-};
+export { buildCommentBody } from "@/help/linear-content.ts";
 
 export const sendPreview = async (issue: Issue, attachment: Attachment) => {
   const client = createClient();
   const previewsCommentMentions = (
     Bun.env.PREVIEWS_COMMENT_MENTIONS || ""
   ).split(",");
-  const emails =
-    previewsCommentMentions
-      ?.map((i) => z.string().email().safeParse(i.trim()))
-      ?.filter((i) => i.success)
-      ?.map((i) => i.data) || [];
+
+  const emails = previewsCommentMentions.flatMap((i) => {
+    const result = z.string().email().safeParse(i.trim());
+    return result.success ? [result.data] : [];
+  });
 
   const mentions = await client
     .users({ filter: { email: { in: emails } } })
     .then((res) => res.users.nodes.map((i) => ({ id: i.id, label: i.name })));
-  const previewLinks = await checkbox({
-    message: "Send which preview link?",
-    loop: false,
-    choices: attachment.metadata.previewLinks.map((issue) => {
-      return {
-        name: `${issue.url}`,
-        value: issue,
-        short: issue.url,
-        checked: true,
-      };
-    }),
-  });
+
+  const previewLinks = await selectPreviewLinks(
+    attachment.metadata.previewLinks,
+  );
+
   const body = buildCommentBody(
     issue.identifier,
     mentions,
     previewLinks,
     Bun.env.PREVIEWS_COMMENT_FOOTER,
   );
+
   body.markdown.forEach((i) => console.log(i));
-  const answer = await confirm({
-    message: `Do you want to send preview comment to Linear issue ${issue.identifier}?`,
-  });
+
+  const answer = await confirmSendComment(issue.identifier);
   if (!answer) return;
+
   const res = await client.createComment({
     input: { issueId: issue.id, bodyData: body.linear },
   });

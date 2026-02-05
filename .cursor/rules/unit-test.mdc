@@ -1,9 +1,6 @@
 ---
-description: 单元测试编写规范
-globs: "test/**/*.test.ts"
-alwaysApply: false
+alwaysApply: true
 ---
-
 # 单元测试规范
 
 ## 测试框架

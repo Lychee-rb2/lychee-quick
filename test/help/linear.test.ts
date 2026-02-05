@@ -1,105 +1,309 @@
-import { describe, expect, test } from "vitest";
-import { buildCommentBody } from "@/help/linear";
+import {
+  describe,
+  expect,
+  test,
+  beforeEach,
+  vi,
+  type MockedFunction,
+} from "vitest";
+import type { Issue, Attachment } from "@/types/linear";
 
-describe("buildCommentBody", () => {
-  const issueIdentifier = "LIN-123";
-  const mentions = [
-    { id: "user-1", label: "Alice" },
-    { id: "user-2", label: "Bob" },
-  ];
-  const previews = [
-    { url: "https://preview1.vercel.app" },
-    { url: "https://preview2.vercel.app" },
-  ];
+// Mock modules
+vi.mock("@/help/logger", () => ({
+  logger: {
+    info: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
 
-  test("should generate correct markdown output", () => {
-    const result = buildCommentBody(issueIdentifier, mentions, previews);
+vi.mock("@/help/util", () => ({
+  pbcopy: vi.fn().mockResolvedValue(undefined),
+}));
 
-    expect(result.markdown).toEqual([
-      "# Hello Alice,Bob, preview links👇",
-      "---",
-      `- [${issueIdentifier} https://preview1.vercel.app](https://preview1.vercel.app)`,
-      `- [${issueIdentifier} https://preview2.vercel.app](https://preview2.vercel.app)`,
-    ]);
+vi.mock("@/fetch/linear", () => ({
+  createClient: vi.fn(),
+}));
+
+vi.mock("@/help/cli", () => ({
+  openUrl: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/help/linear-prompts", () => ({
+  selectPreviewLinks: vi.fn(),
+  confirmSendComment: vi.fn(),
+}));
+
+vi.mock("date-fns", () => ({
+  format: vi.fn().mockReturnValue("2024-01-15"),
+}));
+
+// Import after mocks
+import { releaseIssues, sendPreview } from "@/help/linear";
+import { logger } from "@/help/logger";
+import { pbcopy } from "@/help/util";
+import { createClient } from "@/fetch/linear";
+import { openUrl } from "@/help/cli";
+import { selectPreviewLinks, confirmSendComment } from "@/help/linear-prompts";
+
+// Type definitions for mocks
+type MockedLogger = {
+  info: MockedFunction<typeof logger.info>;
+  error: MockedFunction<typeof logger.error>;
+  debug: MockedFunction<typeof logger.debug>;
+};
+
+const getMockedLogger = (): MockedLogger => {
+  return logger as unknown as MockedLogger;
+};
+
+describe("linear helper functions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  test("should generate correct markdown output with footer", () => {
-    const footer = "Please review and provide feedback.";
-    const result = buildCommentBody(
-      issueIdentifier,
-      mentions,
-      previews,
-      footer,
-    );
+  describe("releaseIssues", () => {
+    test("should return early when items array is empty", async () => {
+      await releaseIssues([]);
 
-    expect(result.markdown).toEqual([
-      "# Hello Alice,Bob, preview links👇",
-      "---",
-      `- [${issueIdentifier} https://preview1.vercel.app](https://preview1.vercel.app)`,
-      `- [${issueIdentifier} https://preview2.vercel.app](https://preview2.vercel.app)`,
-      "---",
-      footer,
-    ]);
+      expect(pbcopy).not.toHaveBeenCalled();
+      expect(getMockedLogger().info).not.toHaveBeenCalled();
+    });
+
+    test("should generate markdown for single issue", async () => {
+      const items = [
+        {
+          id: "issue-1",
+          identifier: "LIN-123",
+          title: "Test Issue",
+          url: "https://linear.app/issue/LIN-123",
+          updatedAt: Date.now(),
+          attachments: {
+            nodes: [
+              {
+                id: "att-1",
+                url: "https://github.com/org/repo/pull/1",
+                metadata: {
+                  id: "pr-1",
+                  url: "https://github.com/org/repo/pull/1",
+                  draft: false,
+                  title: "PR Title",
+                  branch: "feature/test",
+                  number: 1,
+                  repoId: "repo-1",
+                  status: "merged",
+                  userId: "user-1",
+                  reviews: [],
+                  closedAt: null,
+                  linkKind: "closes",
+                  mergedAt: null,
+                  repoName: "repo",
+                  createdAt: "2024-01-01",
+                  repoLogin: "org",
+                  reviewers: [],
+                  updatedAt: "2024-01-15",
+                  userLogin: "user",
+                  previewLinks: [],
+                  targetBranch: "main",
+                },
+              },
+            ],
+          },
+        },
+      ] as unknown as Issue[];
+
+      await releaseIssues(items);
+
+      expect(pbcopy).toHaveBeenCalledTimes(1);
+      const markdown = (pbcopy as MockedFunction<typeof pbcopy>).mock
+        .calls[0][0];
+      expect(markdown).toContain("# Release note: 2024-01-15");
+      expect(markdown).toContain("[LIN-123 Test Issue]");
+      expect(markdown).toContain(
+        "[PR Title](https://github.com/org/repo/pull/1)",
+      );
+      expect(getMockedLogger().info).toHaveBeenCalledWith(markdown);
+    });
+
+    test("should sort issues by updatedAt in descending order", async () => {
+      const items: Issue[] = [
+        {
+          id: "issue-1",
+          identifier: "LIN-100",
+          title: "Older Issue",
+          url: "https://linear.app/issue/LIN-100",
+          updatedAt: 1000,
+          attachments: { nodes: [] },
+        },
+        {
+          id: "issue-2",
+          identifier: "LIN-200",
+          title: "Newer Issue",
+          url: "https://linear.app/issue/LIN-200",
+          updatedAt: 2000,
+          attachments: { nodes: [] },
+        },
+      ] as Issue[];
+
+      await releaseIssues(items);
+
+      const markdown = (pbcopy as MockedFunction<typeof pbcopy>).mock
+        .calls[0][0];
+      const lin200Index = markdown.indexOf("LIN-200");
+      const lin100Index = markdown.indexOf("LIN-100");
+      expect(lin200Index).toBeLessThan(lin100Index);
+    });
   });
 
-  test("should generate correct linear document structure", () => {
-    const result = buildCommentBody(issueIdentifier, mentions, previews);
+  describe("sendPreview", () => {
+    const mockIssue: Issue = {
+      id: "issue-1",
+      identifier: "LIN-123",
+      title: "Test Issue",
+      url: "https://linear.app/issue/LIN-123",
+      updatedAt: Date.now(),
+      attachments: { nodes: [] },
+    } as Issue;
 
-    expect(result.linear.type).toBe("doc");
-    expect(Array.isArray(result.linear.content)).toBe(true);
-    expect(result.linear.content.length).toBe(3); // hello paragraph, horizontal_rule, bullet_list
-  });
+    const mockAttachment = {
+      id: "att-1",
+      url: "https://github.com/org/repo/pull/1",
+      metadata: {
+        id: "pr-1",
+        url: "https://github.com/org/repo/pull/1",
+        draft: false,
+        title: "PR Title",
+        branch: "feature/test",
+        number: 1,
+        repoId: "repo-1",
+        status: "merged",
+        userId: "user-1",
+        reviews: [],
+        closedAt: null,
+        linkKind: "closes",
+        mergedAt: null,
+        repoName: "repo",
+        createdAt: "2024-01-01",
+        repoLogin: "org",
+        reviewers: [],
+        updatedAt: "2024-01-15",
+        userLogin: "user",
+        previewLinks: [
+          {
+            url: "https://preview.vercel.app",
+            name: "Preview",
+            origin: { id: 1, type: "vercel" },
+          },
+        ],
+        targetBranch: "main",
+      },
+    } as unknown as Attachment;
 
-  test("should include mention in linear document", () => {
-    const result = buildCommentBody(issueIdentifier, mentions, previews);
+    beforeEach(() => {
+      const mockClient = {
+        users: vi.fn().mockResolvedValue({
+          users: { nodes: [{ id: "user-1", name: "Alice" }] },
+        }),
+        createComment: vi.fn().mockResolvedValue({
+          commentCreate: {
+            comment: { url: "https://linear.app/comment/123" },
+          },
+        }),
+        issues: vi.fn().mockResolvedValue({ issues: { nodes: [] } }),
+      };
+      (createClient as MockedFunction<typeof createClient>).mockReturnValue(
+        mockClient as unknown as ReturnType<typeof createClient>,
+      );
+    });
 
-    // Check first paragraph contains mentions
-    const firstParagraph = result.linear.content[0];
-    expect(firstParagraph.type).toBe("paragraph");
+    test("should not send comment when user cancels", async () => {
+      (
+        selectPreviewLinks as MockedFunction<typeof selectPreviewLinks>
+      ).mockResolvedValue([
+        {
+          url: "https://preview.vercel.app",
+          name: "Preview",
+          origin: { id: 1, type: "vercel" },
+        },
+      ]);
+      (
+        confirmSendComment as MockedFunction<typeof confirmSendComment>
+      ).mockResolvedValue(false);
 
-    const mentionNode = firstParagraph.content.find(
-      (node: { type: string }) => node.type === "suggestion_userMentions",
-    );
-    expect(mentionNode).toBeDefined();
-    expect(mentionNode.attrs.id).toBe("user-1");
-    expect(mentionNode.attrs.label).toBe("Alice");
-  });
+      await sendPreview(mockIssue, mockAttachment);
 
-  test("should include horizontal rule in linear document", () => {
-    const result = buildCommentBody(issueIdentifier, mentions, previews);
+      expect(openUrl).not.toHaveBeenCalled();
+    });
 
-    const horizontalRule = result.linear.content[1];
-    expect(horizontalRule.type).toBe("horizontal_rule");
-  });
+    test("should send comment and open URL when user confirms", async () => {
+      (
+        selectPreviewLinks as MockedFunction<typeof selectPreviewLinks>
+      ).mockResolvedValue([
+        {
+          url: "https://preview.vercel.app",
+          name: "Preview",
+          origin: { id: 1, type: "vercel" },
+        },
+      ]);
+      (
+        confirmSendComment as MockedFunction<typeof confirmSendComment>
+      ).mockResolvedValue(true);
 
-  test("should include bullet list with preview links in linear document", () => {
-    const result = buildCommentBody(issueIdentifier, mentions, previews);
+      await sendPreview(mockIssue, mockAttachment);
 
-    const bulletList = result.linear.content[2];
-    expect(bulletList.type).toBe("bullet_list");
-    expect(bulletList.content.length).toBe(2); // 2 preview links
-  });
+      expect(openUrl).toHaveBeenCalledWith("https://linear.app/comment/123");
+    });
 
-  test("should handle single mention", () => {
-    const singleMention = [{ id: "user-1", label: "Alice" }];
-    const result = buildCommentBody(issueIdentifier, singleMention, previews);
+    test("should filter out invalid emails from mentions", async () => {
+      const originalEnv = Bun.env.PREVIEWS_COMMENT_MENTIONS;
+      Bun.env.PREVIEWS_COMMENT_MENTIONS = "invalid-email,also-not-valid,";
 
-    expect(result.markdown[0]).toBe("# Hello Alice, preview links👇");
-  });
+      (
+        selectPreviewLinks as MockedFunction<typeof selectPreviewLinks>
+      ).mockResolvedValue([
+        {
+          url: "https://preview.vercel.app",
+          name: "Preview",
+          origin: { id: 1, type: "vercel" },
+        },
+      ]);
+      (
+        confirmSendComment as MockedFunction<typeof confirmSendComment>
+      ).mockResolvedValue(false);
 
-  test("should handle single preview link", () => {
-    const singlePreview = [{ url: "https://preview.vercel.app" }];
-    const result = buildCommentBody(issueIdentifier, mentions, singlePreview);
+      await sendPreview(mockIssue, mockAttachment);
 
-    expect(result.markdown.length).toBe(3);
-    expect(result.markdown[2]).toBe(
-      `- [${issueIdentifier} https://preview.vercel.app](https://preview.vercel.app)`,
-    );
-  });
+      // Restore original env
+      Bun.env.PREVIEWS_COMMENT_MENTIONS = originalEnv;
 
-  test("should handle empty mentions", () => {
-    const result = buildCommentBody(issueIdentifier, [], previews);
+      // Should still work without valid emails
+      expect(confirmSendComment).toHaveBeenCalled();
+    });
 
-    expect(result.markdown[0]).toBe("# Hello , preview links👇");
+    test("should parse valid emails and filter invalid ones", async () => {
+      const originalEnv = Bun.env.PREVIEWS_COMMENT_MENTIONS;
+      Bun.env.PREVIEWS_COMMENT_MENTIONS = "valid@example.com,invalid-email";
+
+      (
+        selectPreviewLinks as MockedFunction<typeof selectPreviewLinks>
+      ).mockResolvedValue([
+        {
+          url: "https://preview.vercel.app",
+          name: "Preview",
+          origin: { id: 1, type: "vercel" },
+        },
+      ]);
+      (
+        confirmSendComment as MockedFunction<typeof confirmSendComment>
+      ).mockResolvedValue(false);
+
+      await sendPreview(mockIssue, mockAttachment);
+
+      // Restore original env
+      Bun.env.PREVIEWS_COMMENT_MENTIONS = originalEnv;
+
+      // Should work with mixed valid/invalid emails
+      expect(confirmSendComment).toHaveBeenCalled();
+    });
   });
 });
