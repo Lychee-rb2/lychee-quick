@@ -1,13 +1,14 @@
 import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
+// Import all exported functions for documentation purposes
+// Note: Some functions are re-imported dynamically after mocking to get the mocked versions
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   findProxyChain,
-  getProxyDelay,
-  delayLevel,
-  choices,
-  getChildren,
   findCurrentProxy,
   pickProxy,
+  getDelay,
 } from "@/help/mihomo";
+/* eslint-enable @typescript-eslint/no-unused-vars */
 import type { MihomoProxy } from "@/types/mihomo";
 
 describe("mihomo helper functions", () => {
@@ -77,285 +78,6 @@ describe("mihomo helper functions", () => {
       const result = findProxyChain(parentProxy, proxies);
 
       expect(result).toEqual([parentProxy, childProxy, grandchildProxy]);
-    });
-  });
-
-  describe("getProxyDelay", () => {
-    test("should return delay from last history entry", () => {
-      const proxy: MihomoProxy = {
-        name: "proxy1",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-        history: [
-          { delay: 100, time: "2024-01-01T00:00:00Z" },
-          { delay: 200, time: "2024-01-01T00:01:00Z" },
-          { delay: 50, time: "2024-01-01T00:02:00Z" },
-        ],
-      };
-
-      const result = getProxyDelay(proxy);
-
-      expect(result).toBe(50);
-    });
-
-    test("should return undefined when no history", () => {
-      const proxy: MihomoProxy = {
-        name: "proxy1",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-      };
-
-      const result = getProxyDelay(proxy);
-
-      expect(result).toBeUndefined();
-    });
-
-    test("should return undefined when history is empty array", () => {
-      const proxy: MihomoProxy = {
-        name: "proxy1",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-        history: [],
-      };
-
-      const result = getProxyDelay(proxy);
-
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe("delayLevel", () => {
-    test("should return very_bad for delay 0", () => {
-      expect(delayLevel(0)).toBe("mihomo_delay_very_bad");
-    });
-
-    test("should return good for delay less than 100", () => {
-      expect(delayLevel(50)).toBe("mihomo_delay_good");
-      expect(delayLevel(99)).toBe("mihomo_delay_good");
-    });
-
-    test("should return normal for delay between 100 and 299", () => {
-      expect(delayLevel(100)).toBe("mihomo_delay_normal");
-      expect(delayLevel(200)).toBe("mihomo_delay_normal");
-      expect(delayLevel(299)).toBe("mihomo_delay_normal");
-    });
-
-    test("should return bad for delay 300 or more", () => {
-      expect(delayLevel(300)).toBe("mihomo_delay_bad");
-      expect(delayLevel(500)).toBe("mihomo_delay_bad");
-      expect(delayLevel(1000)).toBe("mihomo_delay_bad");
-    });
-  });
-
-  describe("choices", () => {
-    test("should generate choices for URLTest proxy", () => {
-      const proxies = [
-        {
-          proxy: {
-            name: "test-proxy",
-            now: "selected-child",
-            alive: true,
-            type: "URLTest" as const,
-          } as MihomoProxy,
-          delay: 50,
-          index: 0,
-        },
-      ];
-
-      const result = choices(proxies);
-
-      expect(result).toHaveLength(3); // 1 proxy + Refresh + Reset
-      expect(result[0]).toMatchObject({
-        value: "test-proxy",
-      });
-      expect(result[0].name).toContain("test-proxy");
-      expect(result[0].name).toContain("-> selected-child");
-      expect(result[0].name).toContain("(50ms)");
-      expect(result[1]).toMatchObject({
-        value: "REFRESH",
-      });
-      expect(result[2]).toMatchObject({
-        value: "RESET",
-      });
-    });
-
-    test("should generate choices for non-URLTest proxy", () => {
-      const proxies = [
-        {
-          proxy: {
-            name: "regular-proxy",
-            now: undefined,
-            alive: true,
-            type: "Selector",
-          } as unknown as MihomoProxy,
-          delay: 150,
-          index: 0,
-        },
-      ];
-
-      const result = choices(proxies);
-
-      expect(result[0]).toMatchObject({
-        value: "regular-proxy",
-      });
-      expect(result[0].name).toContain("regular-proxy");
-      expect(result[0].name).not.toContain("->");
-      expect(result[0].name).toContain("(150ms)");
-    });
-
-    test("should include Refresh and Reset options", () => {
-      const proxies: { proxy: MihomoProxy; delay: number; index: number }[] =
-        [];
-
-      const result = choices(proxies);
-
-      expect(result).toHaveLength(2);
-      expect(result[0].value).toBe("REFRESH");
-      expect(result[1].value).toBe("RESET");
-    });
-
-    test("should handle multiple proxies", () => {
-      const proxies = [
-        {
-          proxy: {
-            name: "proxy1",
-            now: undefined,
-            alive: true,
-            type: "URLTest" as const,
-          } as MihomoProxy,
-          delay: 50,
-          index: 0,
-        },
-        {
-          proxy: {
-            name: "proxy2",
-            now: undefined,
-            alive: true,
-            type: "URLTest" as const,
-          } as MihomoProxy,
-          delay: 200,
-          index: 1,
-        },
-      ];
-
-      const result = choices(proxies);
-
-      expect(result).toHaveLength(4); // 2 proxies + Refresh + Reset
-      expect(result[0].value).toBe("proxy1");
-      expect(result[1].value).toBe("proxy2");
-      expect(result[2].value).toBe("REFRESH");
-      expect(result[3].value).toBe("RESET");
-    });
-  });
-
-  describe("getChildren", () => {
-    test("should return children with delay and index", () => {
-      const parentProxy: MihomoProxy = {
-        name: "parent",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-        all: ["child1", "child2"],
-      };
-      const child1: MihomoProxy = {
-        name: "child1",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-        history: [{ delay: 50, time: "2024-01-01T00:00:00Z" }],
-      };
-      const child2: MihomoProxy = {
-        name: "child2",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-        history: [{ delay: 200, time: "2024-01-01T00:00:00Z" }],
-      };
-      const proxies = {
-        parent: parentProxy,
-        child1,
-        child2,
-      };
-
-      const result = getChildren(parentProxy, proxies);
-
-      expect(result).toHaveLength(2);
-      expect(result[0]).toMatchObject({
-        proxy: child1,
-        delay: 50,
-        index: 0,
-      });
-      expect(result[1]).toMatchObject({
-        proxy: child2,
-        delay: 200,
-        index: 1,
-      });
-    });
-
-    test("should handle children without history", () => {
-      const parentProxy: MihomoProxy = {
-        name: "parent",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-        all: ["child1"],
-      };
-      const child1: MihomoProxy = {
-        name: "child1",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-      };
-      const proxies = {
-        parent: parentProxy,
-        child1,
-      };
-
-      const result = getChildren(parentProxy, proxies);
-
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
-        proxy: child1,
-        delay: undefined,
-        index: 0,
-      });
-    });
-
-    test("should handle empty all array", () => {
-      const parentProxy: MihomoProxy = {
-        name: "parent",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-        all: [],
-      };
-      const proxies = {
-        parent: parentProxy,
-      };
-
-      const result = getChildren(parentProxy, proxies);
-
-      expect(result).toHaveLength(0);
-    });
-
-    test("should handle undefined all", () => {
-      const parentProxy: MihomoProxy = {
-        name: "parent",
-        now: undefined,
-        alive: true,
-        type: "URLTest",
-        all: undefined,
-      };
-      const proxies = {
-        parent: parentProxy,
-      };
-
-      const result = getChildren(parentProxy, proxies);
-
-      expect(result).toHaveLength(0);
     });
   });
 
@@ -450,26 +172,27 @@ describe("mihomo helper functions", () => {
         return Promise.resolve({});
       });
 
-      const searchMock = mock(
-        (options: { source: (term: string) => unknown }) => {
-          callCount++;
-          // Call source function to trigger getDelay when refresh is true
-          if (callCount === 1) {
-            // First call: trigger source to call getDelay
-            options.source("");
-            return Promise.resolve("REFRESH");
-          }
-          // Second call (from recursive pickProxy) returns a proxy name to exit
-          return Promise.resolve("child");
-        },
-      );
+      const searchProxyMock = mock(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve({
+            answer: "REFRESH",
+            state: { proxies: mockProxies, current: topProxy },
+          });
+        }
+        // Second call (from recursive pickProxy) returns a proxy name to exit
+        return Promise.resolve({
+          answer: "child",
+          state: { proxies: mockProxies, current: topProxy },
+        });
+      });
 
       mock.module("@/fetch/mihomo", () => ({
         mihomo: mihomoMock,
       }));
 
-      mock.module("@inquirer/prompts", () => ({
-        search: searchMock,
+      mock.module("@/help/mihomo-search", () => ({
+        searchProxy: searchProxyMock,
       }));
 
       // Re-import to get the mocked version
@@ -480,12 +203,8 @@ describe("mihomo helper functions", () => {
         refresh: true,
       });
 
-      // REFRESH triggers recursive call, so search should be called at least twice
-      expect(searchMock).toHaveBeenCalledTimes(2);
-      // getDelay should be called when refresh is true (via group/GLOBAL/delay)
-      expect(mihomoMock).toHaveBeenCalledWith(
-        expect.stringContaining("group/GLOBAL/delay"),
-      );
+      // REFRESH triggers recursive call, so searchProxy should be called at least twice
+      expect(searchProxyMock).toHaveBeenCalledTimes(2);
     });
 
     test("should fetch proxies when proxies is null", async () => {
@@ -525,20 +244,19 @@ describe("mihomo helper functions", () => {
         },
       );
 
-      const searchMock = mock(
-        (options: { source: (term: string) => unknown }) => {
-          // Call source function to trigger proxy fetching when proxies is null
-          options.source("");
-          return Promise.resolve("child");
-        },
-      );
+      const searchProxyMock = mock(() => {
+        return Promise.resolve({
+          answer: "child",
+          state: { proxies: mockProxies, current: topProxy },
+        });
+      });
 
       mock.module("@/fetch/mihomo", () => ({
         mihomo: mihomoMock,
       }));
 
-      mock.module("@inquirer/prompts", () => ({
-        search: searchMock,
+      mock.module("@/help/mihomo-search", () => ({
+        searchProxy: searchProxyMock,
       }));
 
       const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
@@ -546,9 +264,14 @@ describe("mihomo helper functions", () => {
       // Call without data.proxies to trigger fetching
       await pickProxyMocked({});
 
-      // Should fetch proxies when proxies is null
-      expect(mihomoMock).toHaveBeenCalledWith("proxies");
-      expect(searchMock).toHaveBeenCalled();
+      expect(searchProxyMock).toHaveBeenCalled();
+      expect(mihomoMock).toHaveBeenCalledWith(
+        `proxies/${encodeURIComponent("TOP_PROXY")}`,
+        expect.objectContaining({
+          body: { name: "child" },
+          method: "PUT",
+        }),
+      );
     });
 
     test("should handle RESET option", async () => {
@@ -584,55 +307,39 @@ describe("mihomo helper functions", () => {
         return Promise.resolve({});
       });
 
-      const searchMock = mock(() => {
+      const searchProxyMock = mock(() => {
         searchCallCount++;
         // First call returns RESET, which triggers recursive call to pickProxy({ refresh: true })
-        // The recursive call will fetch proxies in source function before calling search
         // Second call (from recursive pickProxy) should return a valid proxy name
         if (searchCallCount === 1) {
-          return Promise.resolve("RESET");
+          return Promise.resolve({
+            answer: "RESET",
+            state: { proxies: mockProxies, current: topProxy },
+          });
         }
-        // In the recursive call, the source function will fetch proxies first
-        // So when search returns, proxies should be set in the new scope
-        // Return a proxy name that exists in mockProxies
-        // The child proxy doesn't have all property, so it won't trigger another recursive call
-        return Promise.resolve("child");
+        return Promise.resolve({
+          answer: "child",
+          state: { proxies: mockProxies, current: topProxy },
+        });
       });
 
       mock.module("@/fetch/mihomo", () => ({
         mihomo: mihomoMock,
       }));
 
-      mock.module("@inquirer/prompts", () => ({
-        search: searchMock,
+      mock.module("@/help/mihomo-search", () => ({
+        searchProxy: searchProxyMock,
       }));
 
       // Re-import to get the mocked version
       const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
 
-      // RESET will recursively call pickProxy({ refresh: true })
-      // The recursive call has its own scope with proxies = null initially
-      // The source function will fetch proxies before search returns
-      // The second search call will return "child", which will update the proxy
-      // Note: The issue is that in the recursive call, when search returns "child",
-      // the code tries to access proxies[answer], but proxies might not be set yet
-      // This is a bug in the actual code - proxies is set in source function, but
-      // search might return before source completes. However, in practice, search
-      // waits for source to complete, so proxies should be set.
-      // For testing, we'll verify that RESET triggers the recursive call
-      // The recursive call will have its own scope, so we expect search to be called twice
-      try {
-        await pickProxyMocked({
-          data: { current: topProxy, proxies: mockProxies },
-        });
-      } catch {
-        // If there's an error due to proxies not being set in the recursive call,
-        // that's expected because the recursive call has its own scope
-        // We still want to verify that RESET triggered the recursive call
-      }
+      await pickProxyMocked({
+        data: { current: topProxy, proxies: mockProxies },
+      });
 
-      // RESET triggers recursive call, so search should be called at least twice
-      expect(searchMock).toHaveBeenCalledTimes(2);
+      // RESET triggers recursive call, so searchProxy should be called at least twice
+      expect(searchProxyMock).toHaveBeenCalledTimes(2);
     });
 
     test("should select proxy and update", async () => {
@@ -672,14 +379,19 @@ describe("mihomo helper functions", () => {
         },
       );
 
-      const searchMock = mock(() => Promise.resolve("child"));
+      const searchProxyMock = mock(() =>
+        Promise.resolve({
+          answer: "child",
+          state: { proxies: mockProxies, current: topProxy },
+        }),
+      );
 
       mock.module("@/fetch/mihomo", () => ({
         mihomo: mihomoMock,
       }));
 
-      mock.module("@inquirer/prompts", () => ({
-        search: searchMock,
+      mock.module("@/help/mihomo-search", () => ({
+        searchProxy: searchProxyMock,
       }));
 
       // Re-import to get the mocked version
@@ -689,7 +401,7 @@ describe("mihomo helper functions", () => {
         data: { current: topProxy, proxies: mockProxies },
       });
 
-      expect(searchMock).toHaveBeenCalled();
+      expect(searchProxyMock).toHaveBeenCalled();
       expect(mihomoMock).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("TOP_PROXY")}`,
         expect.objectContaining({
@@ -725,7 +437,6 @@ describe("mihomo helper functions", () => {
         child2: childProxy2,
       };
 
-      const sourceCallCount = 0;
       const mihomoMock = mock(
         (
           uri: string,
@@ -744,20 +455,19 @@ describe("mihomo helper functions", () => {
         },
       );
 
-      const searchMock = mock(
-        (options: { source: (term: string) => unknown }) => {
-          // Simulate user typing "1" to search by index
-          const result = options.source("1");
-          return Promise.resolve("child2"); // Select child2 (index 1)
-        },
+      const searchProxyMock = mock(() =>
+        Promise.resolve({
+          answer: "child2",
+          state: { proxies: mockProxies, current: topProxy },
+        }),
       );
 
       mock.module("@/fetch/mihomo", () => ({
         mihomo: mihomoMock,
       }));
 
-      mock.module("@inquirer/prompts", () => ({
-        search: searchMock,
+      mock.module("@/help/mihomo-search", () => ({
+        searchProxy: searchProxyMock,
       }));
 
       const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
@@ -766,7 +476,7 @@ describe("mihomo helper functions", () => {
         data: { current: topProxy, proxies: mockProxies },
       });
 
-      expect(searchMock).toHaveBeenCalled();
+      expect(searchProxyMock).toHaveBeenCalled();
       expect(mihomoMock).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("TOP_PROXY")}`,
         expect.objectContaining({
@@ -820,20 +530,19 @@ describe("mihomo helper functions", () => {
         },
       );
 
-      const searchMock = mock(
-        (options: { source: (term: string) => unknown }) => {
-          // Simulate user typing "child2" to search by name
-          const result = options.source("child2");
-          return Promise.resolve("child2");
-        },
+      const searchProxyMock = mock(() =>
+        Promise.resolve({
+          answer: "child2",
+          state: { proxies: mockProxies, current: topProxy },
+        }),
       );
 
       mock.module("@/fetch/mihomo", () => ({
         mihomo: mihomoMock,
       }));
 
-      mock.module("@inquirer/prompts", () => ({
-        search: searchMock,
+      mock.module("@/help/mihomo-search", () => ({
+        searchProxy: searchProxyMock,
       }));
 
       const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
@@ -842,7 +551,7 @@ describe("mihomo helper functions", () => {
         data: { current: topProxy, proxies: mockProxies },
       });
 
-      expect(searchMock).toHaveBeenCalled();
+      expect(searchProxyMock).toHaveBeenCalled();
       expect(mihomoMock).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("TOP_PROXY")}`,
         expect.objectContaining({
@@ -859,13 +568,13 @@ describe("mihomo helper functions", () => {
         alive: true,
         type: "URLTest",
       };
-      const childProxy: MihomoProxy = {
+      const childProxy = {
         name: "child",
         now: undefined,
         alive: true,
-        type: "Selector",
+        type: "Selector" as const,
         all: ["grandchild"],
-      };
+      } as unknown as MihomoProxy;
       const topProxy: MihomoProxy = {
         name: "TOP_PROXY",
         now: "child",
@@ -901,22 +610,28 @@ describe("mihomo helper functions", () => {
         },
       );
 
-      const searchMock = mock(() => {
+      const searchProxyMock = mock(() => {
         searchCallCount++;
         // First call selects "child" proxy
         if (searchCallCount === 1) {
-          return Promise.resolve("child");
+          return Promise.resolve({
+            answer: "child",
+            state: { proxies: mockProxies, current: topProxy },
+          });
         }
         // Second call (recursive) selects "grandchild" proxy
-        return Promise.resolve("grandchild");
+        return Promise.resolve({
+          answer: "grandchild",
+          state: { proxies: mockProxies, current: childProxy },
+        });
       });
 
       mock.module("@/fetch/mihomo", () => ({
         mihomo: mihomoMock,
       }));
 
-      mock.module("@inquirer/prompts", () => ({
-        search: searchMock,
+      mock.module("@/help/mihomo-search", () => ({
+        searchProxy: searchProxyMock,
       }));
 
       const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
@@ -926,7 +641,7 @@ describe("mihomo helper functions", () => {
       });
 
       // Should be called twice: once for selecting child, once for selecting grandchild
-      expect(searchMock).toHaveBeenCalledTimes(2);
+      expect(searchProxyMock).toHaveBeenCalledTimes(2);
       // Should update TOP_PROXY to child
       expect(mihomoMock).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("TOP_PROXY")}`,
