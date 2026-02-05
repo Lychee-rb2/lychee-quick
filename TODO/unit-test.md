@@ -82,8 +82,7 @@ mihomoMock.mockResolvedValue({ proxies: {} });
 ## 运行测试
 
 ```bash
-bun test                    # 运行所有测试（带覆盖率）
-bun test:watch              # 监听模式
-bun test:ui                 # UI 模式
-vitest test/help/mihomo     # 运行指定测试文件
+bun run test                    # 运行所有测试（带覆盖率）
+bun run test:watch              # 监听模式
+bun run test:ui                 # UI 模式
 ```

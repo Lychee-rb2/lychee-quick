@@ -5,7 +5,7 @@ import { logger, typedBoolean } from "help";
  * 解析缩写命令，例如 "c-c" -> ["clash", "check"]
  * 支持用 "-" 分隔的缩写格式，每个部分使用前缀匹配
  */
-const expandAlias = async (alias: string): Promise<string[] | null> => {
+export const expandAlias = async (alias: string): Promise<string[] | null> => {
   // 如果不包含 "-"，不是缩写格式
   if (!alias.includes("-")) return null;
 
@@ -51,7 +51,7 @@ const expandAlias = async (alias: string): Promise<string[] | null> => {
   return result.length > 0 ? result : null;
 };
 
-const showAvailableActions = async (cliName: string) => {
+export const showAvailableActions = async (cliName: string) => {
   const appDir = `${import.meta.dir}/../app`;
   const glob = new Bun.Glob("*/meta.ts");
   const apps: { name: string; description: string }[] = [];
@@ -93,7 +93,10 @@ export const pbcopy = (data: string) => {
   logger.info(`\n`);
 };
 
-const showSubcommands = async (actionName: string[], cliName: string) => {
+export const showSubcommands = async (
+  actionName: string[],
+  cliName: string,
+) => {
   const appDir = `${import.meta.dir}/../app`;
   const subDir = `${appDir}/${actionName.join("/")}`;
   const glob = new Bun.Glob("*/meta.ts");
@@ -133,7 +136,7 @@ const showSubcommands = async (actionName: string[], cliName: string) => {
   }
 };
 
-const _require = (actionName: string[]) => {
+export const _require = (actionName: string[]) => {
   const actionPath = `@/app/${actionName.join("/")}/handler`;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -143,7 +146,7 @@ const _require = (actionName: string[]) => {
   }
 };
 
-const showHelp = async (actionName: string[]) => {
+export const showHelp = async (actionName: string[]) => {
   const metaPath = `@/app/${actionName.join("/")}/meta`;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
