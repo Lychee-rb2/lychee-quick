@@ -100,15 +100,15 @@ describe("mihomo helper functions", () => {
   });
 
   describe("findCurrentProxy", () => {
-    const originalEnv = process.env.MIHOMO_TOP_PROXY;
-
     beforeEach(() => {
-      process.env.MIHOMO_TOP_PROXY = "TOP_PROXY";
+      // Use stubEnv to properly manage environment variable
+      vi.stubEnv("MIHOMO_TOP_PROXY", "TOP_PROXY");
       vi.clearAllMocks();
     });
 
     afterEach(() => {
-      process.env.MIHOMO_TOP_PROXY = originalEnv;
+      // Clear environment variable stubs to prevent memory leaks
+      vi.unstubAllEnvs();
     });
 
     test("should find current proxy chain", async () => {
@@ -146,15 +146,15 @@ describe("mihomo helper functions", () => {
   });
 
   describe("pickProxy", () => {
-    const originalEnv = process.env.MIHOMO_TOP_PROXY;
-
     beforeEach(() => {
-      process.env.MIHOMO_TOP_PROXY = "TOP_PROXY";
+      // Use stubEnv to properly manage environment variable
+      vi.stubEnv("MIHOMO_TOP_PROXY", "TOP_PROXY");
       vi.clearAllMocks();
     });
 
     afterEach(() => {
-      process.env.MIHOMO_TOP_PROXY = originalEnv;
+      // Clear environment variable stubs to prevent memory leaks
+      vi.unstubAllEnvs();
     });
 
     test("should handle REFRESH option", async () => {
@@ -610,15 +610,15 @@ describe("mihomo helper functions", () => {
   });
 
   describe("getDelay", () => {
-    const originalEnv = process.env.MIHOMO_TOP_PROXY;
-
     beforeEach(() => {
-      process.env.MIHOMO_TOP_PROXY = "TOP_PROXY";
+      // Use stubEnv to properly manage environment variable
+      vi.stubEnv("MIHOMO_TOP_PROXY", "TOP_PROXY");
       vi.clearAllMocks();
     });
 
     afterEach(() => {
-      process.env.MIHOMO_TOP_PROXY = originalEnv;
+      // Clear environment variable stubs to prevent memory leaks
+      vi.unstubAllEnvs();
     });
 
     test("should get delay for specific proxy", async () => {

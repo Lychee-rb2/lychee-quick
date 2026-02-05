@@ -88,14 +88,34 @@ const mockFile = vi.fn(() => ({
   })),
 }));
 
+// Save original Bun properties to restore them after tests
+const originalBunProperties: Partial<MockedBun> = {};
+
 // Setup Bun mock before tests
 beforeEach(() => {
   // Reset all mocks
   vi.clearAllMocks();
 
-  // Override Bun methods and properties directly
-  // Bun is already defined in test/setup.ts, so we modify its properties
+  // Save original Bun properties before modifying them
   if (globalThis.Bun) {
+    const bun = globalThis.Bun as unknown as MockedBun;
+    if (!originalBunProperties.spawnSync && bun.spawnSync) {
+      originalBunProperties.spawnSync = bun.spawnSync;
+    }
+    if (!originalBunProperties.spawn && bun.spawn) {
+      originalBunProperties.spawn = bun.spawn;
+    }
+    if (!originalBunProperties.Glob && bun.Glob) {
+      originalBunProperties.Glob = bun.Glob;
+    }
+    if (!originalBunProperties.file && bun.file) {
+      originalBunProperties.file = bun.file;
+    }
+    if (!originalBunProperties.argv && bun.argv) {
+      originalBunProperties.argv = [...bun.argv];
+    }
+
+    // Override Bun methods and properties directly
     setBunMock("spawnSync", mockSpawnSync);
     setBunMock("spawn", mockSpawn);
     setBunMock("Glob", mockGlob);
@@ -114,6 +134,28 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+
+  // Restore original Bun properties to prevent memory leaks
+  if (globalThis.Bun && originalBunProperties) {
+    const bun = globalThis.Bun as unknown as MockedBun;
+    if (originalBunProperties.spawnSync !== undefined) {
+      bun.spawnSync = originalBunProperties.spawnSync as ReturnType<
+        typeof vi.fn
+      >;
+    }
+    if (originalBunProperties.spawn !== undefined) {
+      bun.spawn = originalBunProperties.spawn as ReturnType<typeof vi.fn>;
+    }
+    if (originalBunProperties.Glob !== undefined) {
+      bun.Glob = originalBunProperties.Glob as ReturnType<typeof vi.fn>;
+    }
+    if (originalBunProperties.file !== undefined) {
+      bun.file = originalBunProperties.file as ReturnType<typeof vi.fn>;
+    }
+    if (originalBunProperties.argv !== undefined) {
+      bun.argv = originalBunProperties.argv as string[];
+    }
+  }
 });
 
 describe("io helper functions", () => {
@@ -409,20 +451,23 @@ describe("io helper functions", () => {
       (global as { require: typeof require }).require =
         mockRequire as unknown as typeof require;
 
-      await showSubcommands(["clash"], "test-cli");
+      try {
+        await showSubcommands(["clash"], "test-cli");
 
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: test-cli clash"),
-      );
-      // Should not call logger.info with main description
-      const mockedLogger = getMockedLogger();
-      const infoCalls = mockedLogger.info.mock.calls;
-      const hasMainDesc = infoCalls.some((call) =>
-        call[0]?.toString().includes("Clash proxy management"),
-      );
-      expect(hasMainDesc).toBe(false);
-
-      (global as { require: typeof require }).require = originalRequire;
+        expect(logger.info).toHaveBeenCalledWith(
+          expect.stringContaining("Usage: test-cli clash"),
+        );
+        // Should not call logger.info with main description
+        const mockedLogger = getMockedLogger();
+        const infoCalls = mockedLogger.info.mock.calls;
+        const hasMainDesc = infoCalls.some((call) =>
+          call[0]?.toString().includes("Clash proxy management"),
+        );
+        expect(hasMainDesc).toBe(false);
+      } finally {
+        // Always restore original require, even if test fails
+        (global as { require: typeof require }).require = originalRequire;
+      }
     });
 
     test("should handle when mainMod is null (line 138 branch)", async () => {
@@ -1008,13 +1053,16 @@ describe("io helper functions", () => {
       (global as { require: typeof require }).require =
         mockRequire as unknown as typeof require;
 
-      await main(meta);
+      try {
+        await main(meta);
 
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: ly"),
-      );
-
-      (global as { require: typeof require }).require = originalRequire;
+        expect(logger.info).toHaveBeenCalledWith(
+          expect.stringContaining("Usage: ly"),
+        );
+      } finally {
+        // Always restore original require, even if test fails
+        (global as { require: typeof require }).require = originalRequire;
+      }
     });
 
     test("should fallback to showAvailableActions when root meta not found", async () => {

@@ -35,12 +35,6 @@ describe("logger helper functions", () => {
     // Clear all mocks
     vi.clearAllMocks();
     mockPino.mockClear();
-
-    // Reset modules to ensure fresh import
-    vi.resetModules();
-
-    // Reset Bun.env.LOG_LEVEL to undefined for default test
-    delete Bun.env.LOG_LEVEL;
   });
 
   afterEach(async () => {
@@ -51,8 +45,8 @@ describe("logger helper functions", () => {
       delete Bun.env.LOG_LEVEL;
     }
 
-    // Reset modules after each test to ensure clean state
-    vi.resetModules();
+    // Clear environment variable stubs to prevent memory leaks
+    vi.unstubAllEnvs();
   });
 
   describe("createLogger", () => {
@@ -60,7 +54,7 @@ describe("logger helper functions", () => {
       // Ensure LOG_LEVEL is not set
       delete Bun.env.LOG_LEVEL;
 
-      // Reset modules and import fresh
+      // Reset modules only when environment variable changes
       vi.resetModules();
       loggerModule = await import("@/help/logger");
 
@@ -80,10 +74,10 @@ describe("logger helper functions", () => {
     });
 
     test("should create logger with custom LOG_LEVEL from environment variable", async () => {
-      // Set custom LOG_LEVEL
-      Bun.env.LOG_LEVEL = "debug";
+      // Set custom LOG_LEVEL using stubEnv to properly manage environment variable
+      vi.stubEnv("LOG_LEVEL", "debug");
 
-      // Reset modules and import fresh to read new env var
+      // Reset modules to read new env var
       vi.resetModules();
       loggerModule = await import("@/help/logger");
 
@@ -103,8 +97,9 @@ describe("logger helper functions", () => {
     });
 
     test("should return the same logger instance on multiple calls (singleton pattern)", async () => {
-      // Reset modules and import fresh
+      // Reset modules to ensure fresh logger instance
       vi.resetModules();
+      mockPino.mockClear();
       loggerModule = await import("@/help/logger");
 
       const logger1 = loggerModule.createLogger();
@@ -115,8 +110,9 @@ describe("logger helper functions", () => {
     });
 
     test("should configure transport with pino-pretty and stderr destination", async () => {
-      // Reset modules and import fresh
+      // Reset modules to ensure fresh logger instance
       vi.resetModules();
+      mockPino.mockClear();
       loggerModule = await import("@/help/logger");
 
       loggerModule.createLogger();
@@ -137,10 +133,10 @@ describe("logger helper functions", () => {
       const logLevels = ["trace", "debug", "info", "warn", "error", "fatal"];
 
       for (const level of logLevels) {
-        // Set LOG_LEVEL
-        Bun.env.LOG_LEVEL = level;
+        // Use stubEnv to properly manage environment variable
+        vi.stubEnv("LOG_LEVEL", level);
 
-        // Reset modules and import fresh
+        // Reset modules to read new env var
         vi.resetModules();
         mockPino.mockClear();
         loggerModule = await import("@/help/logger");

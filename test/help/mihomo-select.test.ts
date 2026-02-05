@@ -333,15 +333,15 @@ describe("mihomo-select helper functions", () => {
   });
 
   describe("searchProxy", () => {
-    const originalEnv = process.env.MIHOMO_TOP_PROXY;
-
     beforeEach(() => {
       vi.clearAllMocks();
-      process.env.MIHOMO_TOP_PROXY = "TOP_PROXY";
+      // Use stubEnv to properly manage environment variable
+      vi.stubEnv("MIHOMO_TOP_PROXY", "TOP_PROXY");
     });
 
     afterEach(() => {
-      process.env.MIHOMO_TOP_PROXY = originalEnv;
+      // Clear environment variable stubs to prevent memory leaks
+      vi.unstubAllEnvs();
     });
 
     test("should use provided proxies and return selected answer", async () => {

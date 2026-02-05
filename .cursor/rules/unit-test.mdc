@@ -102,3 +102,166 @@ function loadConfig(fileReader = Bun.file) {
   return fileReader("config.json").json();
 }
 ```
+
+## 避免内存泄漏
+
+### 全局对象恢复
+
+修改全局对象（如 `globalThis.Bun`、`global.require`）时，必须在 `afterEach` 中恢复原始值：
+
+```typescript
+// ❌ BAD - 未恢复全局对象，导致内存泄漏
+beforeEach(() => {
+  globalThis.Bun.file = mockFile;
+});
+
+// ✅ GOOD - 保存并恢复原始值
+const originalBunProperties: Partial<MockedBun> = {};
+
+beforeEach(() => {
+  // 保存原始属性
+  if (globalThis.Bun && !originalBunProperties.file) {
+    originalBunProperties.file = globalThis.Bun.file;
+  }
+  // 设置 mock
+  globalThis.Bun.file = mockFile;
+});
+
+afterEach(() => {
+  // 恢复原始属性
+  if (originalBunProperties.file !== undefined) {
+    globalThis.Bun.file = originalBunProperties.file;
+  }
+});
+```
+
+### 环境变量管理
+
+使用 `vi.stubEnv()` 管理环境变量，并在 `afterEach` 中清理：
+
+```typescript
+// ❌ BAD - 直接修改环境变量，测试失败时无法恢复
+test("should use env var", () => {
+  Bun.env.MY_VAR = "value";
+  // 如果测试失败，环境变量不会被恢复
+  // ...
+  Bun.env.MY_VAR = originalValue; // 可能不会执行
+});
+
+// ❌ BAD - 模块级变量保存，只在文件加载时设置一次
+const originalEnv = process.env.MY_VAR; // 模块级
+
+beforeEach(() => {
+  process.env.MY_VAR = "value";
+});
+
+afterEach(() => {
+  process.env.MY_VAR = originalEnv; // 可能恢复到错误的值
+});
+
+// ✅ GOOD - 使用 vi.stubEnv() 和 vi.unstubAllEnvs()
+describe("my tests", () => {
+  beforeEach(() => {
+    vi.stubEnv("MY_VAR", "value");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs(); // 自动清理所有环境变量 stub
+  });
+
+  test("should use env var", () => {
+    // 测试代码
+  });
+});
+```
+
+### vi.resetModules() 使用规范
+
+**仅在必要时**调用 `vi.resetModules()`，避免过度使用导致内存泄漏：
+
+```typescript
+// ❌ BAD - 过度使用 resetModules，导致模块重复加载
+beforeEach(() => {
+  vi.resetModules(); // 每次测试都重置
+});
+
+afterEach(() => {
+  vi.resetModules(); // 每次测试后也重置
+});
+
+test("test 1", async () => {
+  vi.resetModules(); // 测试内部又重置
+  const module = await import("./module");
+});
+
+// ✅ GOOD - 只在需要改变环境变量时重置
+test("should use different env var", async () => {
+  vi.stubEnv("LOG_LEVEL", "debug");
+  vi.resetModules(); // 只在环境变量改变时重置
+  const module = await import("./module");
+  // ...
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs(); // 清理环境变量，而不是重置模块
+});
+```
+
+### 使用 try-finally 确保清理
+
+修改全局对象时，使用 `try-finally` 确保即使测试失败也能恢复：
+
+```typescript
+// ❌ BAD - 测试失败时不会恢复
+test("should work", () => {
+  const originalRequire = require;
+  global.require = mockRequire;
+  // 如果这里抛出异常，require 不会被恢复
+  doSomething();
+  global.require = originalRequire;
+});
+
+// ✅ GOOD - 使用 try-finally 确保恢复
+test("should work", () => {
+  const originalRequire = require;
+  global.require = mockRequire;
+  try {
+    doSomething();
+  } finally {
+    // 无论测试成功或失败，都会恢复
+    global.require = originalRequire;
+  }
+});
+```
+
+### 全局清理逻辑
+
+在 `test/setup.ts` 中添加全局 `afterEach` 钩子，确保所有测试后都清理：
+
+```typescript
+// test/setup.ts
+import { vi, afterEach } from "vitest";
+
+// 全局清理，防止内存泄漏
+afterEach(() => {
+  // 清理所有环境变量 stub
+  vi.unstubAllEnvs();
+  
+  // 清理所有定时器
+  vi.clearAllTimers();
+  
+  // 注意：vi.restoreAllMocks() 由各个测试文件调用
+  // 这里不调用，避免干扰测试特定的清理逻辑
+});
+```
+
+### 检查清单
+
+编写测试时，确保：
+
+- [ ] 修改的全局对象在 `afterEach` 中恢复
+- [ ] 环境变量使用 `vi.stubEnv()` 设置，`vi.unstubAllEnvs()` 清理
+- [ ] `vi.resetModules()` 只在必要时调用（如环境变量改变）
+- [ ] 修改全局对象时使用 `try-finally` 确保恢复
+- [ ] 不在模块级别保存环境变量原始值
+- [ ] 测试失败时也能正确清理资源

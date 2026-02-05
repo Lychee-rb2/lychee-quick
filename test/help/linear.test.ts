@@ -58,8 +58,21 @@ const getMockedLogger = (): MockedLogger => {
 };
 
 describe("linear helper functions", () => {
+  let originalPreviewsCommentMentions: string | undefined;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    // Save original environment variable
+    originalPreviewsCommentMentions = Bun.env.PREVIEWS_COMMENT_MENTIONS;
+  });
+
+  afterEach(() => {
+    // Restore original environment variable to prevent memory leaks
+    if (originalPreviewsCommentMentions !== undefined) {
+      Bun.env.PREVIEWS_COMMENT_MENTIONS = originalPreviewsCommentMentions;
+    } else {
+      delete Bun.env.PREVIEWS_COMMENT_MENTIONS;
+    }
   });
 
   describe("releaseIssues", () => {
@@ -255,8 +268,8 @@ describe("linear helper functions", () => {
     });
 
     test("should filter out invalid emails from mentions", async () => {
-      const originalEnv = Bun.env.PREVIEWS_COMMENT_MENTIONS;
-      Bun.env.PREVIEWS_COMMENT_MENTIONS = "invalid-email,also-not-valid,";
+      // Use stubEnv to properly manage environment variable
+      vi.stubEnv("PREVIEWS_COMMENT_MENTIONS", "invalid-email,also-not-valid,");
 
       (
         selectPreviewLinks as MockedFunction<typeof selectPreviewLinks>
@@ -272,17 +285,17 @@ describe("linear helper functions", () => {
       ).mockResolvedValue(false);
 
       await sendPreview(mockIssue, mockAttachment);
-
-      // Restore original env
-      Bun.env.PREVIEWS_COMMENT_MENTIONS = originalEnv;
 
       // Should still work without valid emails
       expect(confirmSendComment).toHaveBeenCalled();
     });
 
     test("should parse valid emails and filter invalid ones", async () => {
-      const originalEnv = Bun.env.PREVIEWS_COMMENT_MENTIONS;
-      Bun.env.PREVIEWS_COMMENT_MENTIONS = "valid@example.com,invalid-email";
+      // Use stubEnv to properly manage environment variable
+      vi.stubEnv(
+        "PREVIEWS_COMMENT_MENTIONS",
+        "valid@example.com,invalid-email",
+      );
 
       (
         selectPreviewLinks as MockedFunction<typeof selectPreviewLinks>
@@ -298,9 +311,6 @@ describe("linear helper functions", () => {
       ).mockResolvedValue(false);
 
       await sendPreview(mockIssue, mockAttachment);
-
-      // Restore original env
-      Bun.env.PREVIEWS_COMMENT_MENTIONS = originalEnv;
 
       // Should work with mixed valid/invalid emails
       expect(confirmSendComment).toHaveBeenCalled();
