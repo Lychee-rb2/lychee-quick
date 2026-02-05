@@ -1,15 +1,27 @@
-import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
+import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
 // Import all exported functions for documentation purposes
-// Note: Some functions are re-imported dynamically after mocking to get the mocked versions
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import {
   findProxyChain,
   findCurrentProxy,
   pickProxy,
   getDelay,
 } from "@/help/mihomo";
-/* eslint-enable @typescript-eslint/no-unused-vars */
+
 import type { MihomoProxy } from "@/types/mihomo";
+
+// Mock modules at the top level
+vi.mock("@/fetch/mihomo", () => ({
+  mihomo: vi.fn(),
+}));
+
+vi.mock("@/help/mihomo-search", () => ({
+  searchProxy: vi.fn(),
+}));
+
+// Import mocked modules
+import { mihomo } from "@/fetch/mihomo";
+import { searchProxy } from "@/help/mihomo-search";
 
 describe("mihomo helper functions", () => {
   describe("findProxyChain", () => {
@@ -86,6 +98,7 @@ describe("mihomo helper functions", () => {
 
     beforeEach(() => {
       process.env.MIHOMO_TOP_PROXY = "TOP_PROXY";
+      vi.clearAllMocks();
     });
 
     afterEach(() => {
@@ -110,24 +123,17 @@ describe("mihomo helper functions", () => {
         child: childProxy,
       };
 
-      const mihomoMock = mock(() => Promise.resolve({ proxies: mockProxies }));
+      (mihomo as ReturnType<typeof vi.fn>).mockResolvedValue({
+        proxies: mockProxies,
+      });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      // Re-import to get the mocked version
-      const { findCurrentProxy: findCurrentProxyMocked } = await import(
-        "@/help/mihomo"
-      );
-
-      const result = await findCurrentProxyMocked();
+      const result = await findCurrentProxy();
 
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual(topProxy);
       expect(result[1]).toEqual(childProxy);
-      expect(mihomoMock).toHaveBeenCalledTimes(1);
-      expect(mihomoMock).toHaveBeenCalledWith(`proxies`);
+      expect(mihomo).toHaveBeenCalledTimes(1);
+      expect(mihomo).toHaveBeenCalledWith(`proxies`);
     });
   });
 
@@ -136,6 +142,7 @@ describe("mihomo helper functions", () => {
 
     beforeEach(() => {
       process.env.MIHOMO_TOP_PROXY = "TOP_PROXY";
+      vi.clearAllMocks();
     });
 
     afterEach(() => {
@@ -161,20 +168,21 @@ describe("mihomo helper functions", () => {
         child: childProxy,
       };
 
-      let callCount = 0;
-      const mihomoMock = mock((uri: string) => {
+      const callCount = 0;
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
         if (uri === "proxies") {
-          return Promise.resolve({ proxies: mockProxies });
+          return Promise.resolve({ proxies: mockProxies } as any);
         }
         if (uri.includes("delay")) {
-          return Promise.resolve({ delay: 100 });
+          return Promise.resolve({ delay: 100 } as any);
         }
-        return Promise.resolve({});
+        return Promise.resolve({} as any);
       });
 
-      const searchProxyMock = mock(() => {
-        callCount++;
-        if (callCount === 1) {
+      let searchCallCount = 0;
+      (searchProxy as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        searchCallCount++;
+        if (searchCallCount === 1) {
           return Promise.resolve({
             answer: "REFRESH",
             state: { proxies: mockProxies, current: topProxy },
@@ -187,24 +195,13 @@ describe("mihomo helper functions", () => {
         });
       });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      mock.module("@/help/mihomo-search", () => ({
-        searchProxy: searchProxyMock,
-      }));
-
-      // Re-import to get the mocked version
-      const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
-
-      await pickProxyMocked({
+      await pickProxy({
         data: { current: topProxy, proxies: mockProxies },
         refresh: true,
       });
 
       // REFRESH triggers recursive call, so searchProxy should be called at least twice
-      expect(searchProxyMock).toHaveBeenCalledTimes(2);
+      expect(searchProxy).toHaveBeenCalledTimes(2);
     });
 
     test("should fetch proxies when proxies is null", async () => {
@@ -226,46 +223,34 @@ describe("mihomo helper functions", () => {
         child: childProxy,
       };
 
-      const mihomoMock = mock(
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies });
+            return Promise.resolve({ proxies: mockProxies } as any);
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 });
+            return Promise.resolve({ delay: 100 } as any);
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({});
+            return Promise.resolve({} as any);
           }
-          return Promise.resolve({});
+          return Promise.resolve({} as any);
         },
       );
 
-      const searchProxyMock = mock(() => {
-        return Promise.resolve({
-          answer: "child",
-          state: { proxies: mockProxies, current: topProxy },
-        });
+      (searchProxy as ReturnType<typeof vi.fn>).mockResolvedValue({
+        answer: "child",
+        state: { proxies: mockProxies, current: topProxy },
       });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      mock.module("@/help/mihomo-search", () => ({
-        searchProxy: searchProxyMock,
-      }));
-
-      const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
-
       // Call without data.proxies to trigger fetching
-      await pickProxyMocked({});
+      await pickProxy({});
 
-      expect(searchProxyMock).toHaveBeenCalled();
-      expect(mihomoMock).toHaveBeenCalledWith(
+      expect(searchProxy).toHaveBeenCalled();
+      expect(mihomo).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("TOP_PROXY")}`,
         expect.objectContaining({
           body: { name: "child" },
@@ -294,20 +279,20 @@ describe("mihomo helper functions", () => {
       };
 
       let searchCallCount = 0;
-      const mihomoMock = mock((uri: string) => {
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
         if (uri === "proxies") {
-          return Promise.resolve({ proxies: mockProxies });
+          return Promise.resolve({ proxies: mockProxies } as any);
         }
         if (uri.includes("delay")) {
-          return Promise.resolve({ delay: 100 });
+          return Promise.resolve({ delay: 100 } as any);
         }
         if (uri.includes("proxies/TOP_PROXY") && !uri.includes("delay")) {
-          return Promise.resolve({});
+          return Promise.resolve({} as any);
         }
-        return Promise.resolve({});
+        return Promise.resolve({} as any);
       });
 
-      const searchProxyMock = mock(() => {
+      (searchProxy as ReturnType<typeof vi.fn>).mockImplementation(() => {
         searchCallCount++;
         // First call returns RESET, which triggers recursive call to pickProxy({ refresh: true })
         // Second call (from recursive pickProxy) should return a valid proxy name
@@ -323,23 +308,12 @@ describe("mihomo helper functions", () => {
         });
       });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      mock.module("@/help/mihomo-search", () => ({
-        searchProxy: searchProxyMock,
-      }));
-
-      // Re-import to get the mocked version
-      const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
-
-      await pickProxyMocked({
+      await pickProxy({
         data: { current: topProxy, proxies: mockProxies },
       });
 
       // RESET triggers recursive call, so searchProxy should be called at least twice
-      expect(searchProxyMock).toHaveBeenCalledTimes(2);
+      expect(searchProxy).toHaveBeenCalledTimes(2);
     });
 
     test("should select proxy and update", async () => {
@@ -361,48 +335,35 @@ describe("mihomo helper functions", () => {
         child: childProxy,
       };
 
-      const mihomoMock = mock(
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies });
+            return Promise.resolve({ proxies: mockProxies } as any);
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 });
+            return Promise.resolve({ delay: 100 } as any);
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({});
+            return Promise.resolve({} as any);
           }
-          return Promise.resolve({});
+          return Promise.resolve({} as any);
         },
       );
 
-      const searchProxyMock = mock(() =>
-        Promise.resolve({
-          answer: "child",
-          state: { proxies: mockProxies, current: topProxy },
-        }),
-      );
+      (searchProxy as ReturnType<typeof vi.fn>).mockResolvedValue({
+        answer: "child",
+        state: { proxies: mockProxies, current: topProxy },
+      });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      mock.module("@/help/mihomo-search", () => ({
-        searchProxy: searchProxyMock,
-      }));
-
-      // Re-import to get the mocked version
-      const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
-
-      await pickProxyMocked({
+      await pickProxy({
         data: { current: topProxy, proxies: mockProxies },
       });
 
-      expect(searchProxyMock).toHaveBeenCalled();
-      expect(mihomoMock).toHaveBeenCalledWith(
+      expect(searchProxy).toHaveBeenCalled();
+      expect(mihomo).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("TOP_PROXY")}`,
         expect.objectContaining({
           body: { name: "child" },
@@ -437,47 +398,35 @@ describe("mihomo helper functions", () => {
         child2: childProxy2,
       };
 
-      const mihomoMock = mock(
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies });
+            return Promise.resolve({ proxies: mockProxies } as any);
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 });
+            return Promise.resolve({ delay: 100 } as any);
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({});
+            return Promise.resolve({} as any);
           }
-          return Promise.resolve({});
+          return Promise.resolve({} as any);
         },
       );
 
-      const searchProxyMock = mock(() =>
-        Promise.resolve({
-          answer: "child2",
-          state: { proxies: mockProxies, current: topProxy },
-        }),
-      );
+      (searchProxy as ReturnType<typeof vi.fn>).mockResolvedValue({
+        answer: "child2",
+        state: { proxies: mockProxies, current: topProxy },
+      });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      mock.module("@/help/mihomo-search", () => ({
-        searchProxy: searchProxyMock,
-      }));
-
-      const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
-
-      await pickProxyMocked({
+      await pickProxy({
         data: { current: topProxy, proxies: mockProxies },
       });
 
-      expect(searchProxyMock).toHaveBeenCalled();
-      expect(mihomoMock).toHaveBeenCalledWith(
+      expect(searchProxy).toHaveBeenCalled();
+      expect(mihomo).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("TOP_PROXY")}`,
         expect.objectContaining({
           body: { name: "child2" },
@@ -512,47 +461,35 @@ describe("mihomo helper functions", () => {
         child2: childProxy2,
       };
 
-      const mihomoMock = mock(
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies });
+            return Promise.resolve({ proxies: mockProxies } as any);
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 });
+            return Promise.resolve({ delay: 100 } as any);
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({});
+            return Promise.resolve({} as any);
           }
-          return Promise.resolve({});
+          return Promise.resolve({} as any);
         },
       );
 
-      const searchProxyMock = mock(() =>
-        Promise.resolve({
-          answer: "child2",
-          state: { proxies: mockProxies, current: topProxy },
-        }),
-      );
+      (searchProxy as ReturnType<typeof vi.fn>).mockResolvedValue({
+        answer: "child2",
+        state: { proxies: mockProxies, current: topProxy },
+      });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      mock.module("@/help/mihomo-search", () => ({
-        searchProxy: searchProxyMock,
-      }));
-
-      const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
-
-      await pickProxyMocked({
+      await pickProxy({
         data: { current: topProxy, proxies: mockProxies },
       });
 
-      expect(searchProxyMock).toHaveBeenCalled();
-      expect(mihomoMock).toHaveBeenCalledWith(
+      expect(searchProxy).toHaveBeenCalled();
+      expect(mihomo).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("TOP_PROXY")}`,
         expect.objectContaining({
           body: { name: "child2" },
@@ -589,28 +526,28 @@ describe("mihomo helper functions", () => {
       };
 
       let searchCallCount = 0;
-      const mihomoMock = mock(
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies });
+            return Promise.resolve({ proxies: mockProxies } as any);
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 });
+            return Promise.resolve({ delay: 100 } as any);
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({});
+            return Promise.resolve({} as any);
           }
           if (uri.includes("proxies/child") && options?.method === "PUT") {
-            return Promise.resolve({});
+            return Promise.resolve({} as any);
           }
-          return Promise.resolve({});
+          return Promise.resolve({} as any);
         },
       );
 
-      const searchProxyMock = mock(() => {
+      (searchProxy as ReturnType<typeof vi.fn>).mockImplementation(() => {
         searchCallCount++;
         // First call selects "child" proxy
         if (searchCallCount === 1) {
@@ -626,24 +563,14 @@ describe("mihomo helper functions", () => {
         });
       });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      mock.module("@/help/mihomo-search", () => ({
-        searchProxy: searchProxyMock,
-      }));
-
-      const { pickProxy: pickProxyMocked } = await import("@/help/mihomo");
-
-      await pickProxyMocked({
+      await pickProxy({
         data: { current: topProxy, proxies: mockProxies },
       });
 
       // Should be called twice: once for selecting child, once for selecting grandchild
-      expect(searchProxyMock).toHaveBeenCalledTimes(2);
+      expect(searchProxy).toHaveBeenCalledTimes(2);
       // Should update TOP_PROXY to child
-      expect(mihomoMock).toHaveBeenCalledWith(
+      expect(mihomo).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("TOP_PROXY")}`,
         expect.objectContaining({
           body: { name: "child" },
@@ -651,7 +578,7 @@ describe("mihomo helper functions", () => {
         }),
       );
       // Should update child to grandchild
-      expect(mihomoMock).toHaveBeenCalledWith(
+      expect(mihomo).toHaveBeenCalledWith(
         `proxies/${encodeURIComponent("child")}`,
         expect.objectContaining({
           body: { name: "grandchild" },
@@ -666,6 +593,7 @@ describe("mihomo helper functions", () => {
 
     beforeEach(() => {
       process.env.MIHOMO_TOP_PROXY = "TOP_PROXY";
+      vi.clearAllMocks();
     });
 
     afterEach(() => {
@@ -673,77 +601,59 @@ describe("mihomo helper functions", () => {
     });
 
     test("should get delay for specific proxy", async () => {
-      const mihomoMock = mock((uri: string) => {
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
         if (uri.includes("proxies/test-proxy/delay")) {
-          return Promise.resolve({ delay: 150 });
+          return Promise.resolve({ delay: 150 } as any);
         }
-        return Promise.resolve({});
+        return Promise.resolve({} as any);
       });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      const { getDelay: getDelayMocked } = await import("@/help/mihomo");
-
-      const result = await getDelayMocked({
+      const result = await getDelay({
         proxy: "test-proxy",
         timeout: 2000,
       });
 
       expect(result).toBe(150);
-      expect(mihomoMock).toHaveBeenCalledWith(
+      expect(mihomo).toHaveBeenCalledWith(
         expect.stringContaining("proxies/test-proxy/delay"),
       );
     });
 
     test("should get delay for all proxies in GLOBAL group", async () => {
-      const mihomoMock = mock((uri: string) => {
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
         if (uri.includes("group/GLOBAL/delay")) {
           return Promise.resolve({
             proxy1: 100,
             proxy2: 200,
             proxy3: 150,
-          });
+          } as any);
         }
-        return Promise.resolve({});
+        return Promise.resolve({} as any);
       });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
-
-      const { getDelay: getDelayMocked } = await import("@/help/mihomo");
-
-      const result = await getDelayMocked({ timeout: 3000 });
+      const result = await getDelay({ timeout: 3000 });
 
       expect(result).toEqual({
         proxy1: 100,
         proxy2: 200,
         proxy3: 150,
       });
-      expect(mihomoMock).toHaveBeenCalledWith(
+      expect(mihomo).toHaveBeenCalledWith(
         expect.stringContaining("group/GLOBAL/delay"),
       );
     });
 
     test("should use default timeout when not provided", async () => {
-      const mihomoMock = mock((uri: string) => {
+      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
         if (uri.includes("group/GLOBAL/delay")) {
-          return Promise.resolve({});
+          return Promise.resolve({} as any);
         }
-        return Promise.resolve({});
+        return Promise.resolve({} as any);
       });
 
-      mock.module("@/fetch/mihomo", () => ({
-        mihomo: mihomoMock,
-      }));
+      await getDelay();
 
-      const { getDelay: getDelayMocked } = await import("@/help/mihomo");
-
-      await getDelayMocked();
-
-      expect(mihomoMock).toHaveBeenCalledWith(
+      expect(mihomo).toHaveBeenCalledWith(
         expect.stringContaining("timeout=1000"),
       );
     });

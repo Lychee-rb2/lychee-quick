@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { buildCommentBody } from "@/help/linear";
 
 describe("buildCommentBody", () => {
@@ -46,7 +46,7 @@ describe("buildCommentBody", () => {
     const result = buildCommentBody(issueIdentifier, mentions, previews);
 
     expect(result.linear.type).toBe("doc");
-    expect(result.linear.content).toBeArray();
+    expect(Array.isArray(result.linear.content)).toBe(true);
     expect(result.linear.content.length).toBe(3); // hello paragraph, horizontal_rule, bullet_list
   });
 
