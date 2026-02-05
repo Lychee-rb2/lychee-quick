@@ -11,6 +11,8 @@ import {
 import type { MihomoProxy } from "@/types/mihomo";
 
 // Mock modules at the top level
+// vi.mock() must be called before imports - it declares which modules to mock
+// The factory function provides default mock implementations (vi.fn() creates empty mocks)
 vi.mock("@/fetch/mihomo", () => ({
   mihomo: vi.fn(),
 }));
@@ -22,6 +24,10 @@ vi.mock("@/help/mihomo-search", () => ({
 // Import mocked modules
 import { mihomo } from "@/fetch/mihomo";
 import { searchProxy } from "@/help/mihomo-search";
+
+// Note: We use vi.mocked() helper for type-safe access to mock functions
+// This is better than type assertions because it preserves the original function signature
+// Each test uses mockImplementation/mockResolvedValue to set test-specific behavior
 
 describe("mihomo helper functions", () => {
   describe("findProxyChain", () => {
@@ -123,9 +129,11 @@ describe("mihomo helper functions", () => {
         child: childProxy,
       };
 
-      (mihomo as ReturnType<typeof vi.fn>).mockResolvedValue({
+      // Use mockImplementation or mockResolvedValue to set test-specific behavior
+      // This is called AFTER vi.mock() declaration - each test can have different implementations
+      vi.mocked(mihomo).mockResolvedValue({
         proxies: mockProxies,
-      });
+      } as { proxies: Record<string, MihomoProxy> });
 
       const result = await findCurrentProxy();
 
@@ -168,19 +176,20 @@ describe("mihomo helper functions", () => {
         child: childProxy,
       };
 
-      const callCount = 0;
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
+      vi.mocked(mihomo).mockImplementation((uri: string) => {
         if (uri === "proxies") {
-          return Promise.resolve({ proxies: mockProxies } as any);
+          return Promise.resolve({ proxies: mockProxies } as {
+            proxies: Record<string, MihomoProxy>;
+          });
         }
         if (uri.includes("delay")) {
-          return Promise.resolve({ delay: 100 } as any);
+          return Promise.resolve({ delay: 100 } as { delay: number });
         }
-        return Promise.resolve({} as any);
+        return Promise.resolve({} as Record<string, never>);
       });
 
       let searchCallCount = 0;
-      (searchProxy as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      vi.mocked(searchProxy).mockImplementation(() => {
         searchCallCount++;
         if (searchCallCount === 1) {
           return Promise.resolve({
@@ -223,25 +232,27 @@ describe("mihomo helper functions", () => {
         child: childProxy,
       };
 
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
+      vi.mocked(mihomo).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies } as any);
+            return Promise.resolve({ proxies: mockProxies } as {
+              proxies: Record<string, MihomoProxy>;
+            });
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 } as any);
+            return Promise.resolve({ delay: 100 } as { delay: number });
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({} as any);
+            return Promise.resolve({} as Record<string, never>);
           }
-          return Promise.resolve({} as any);
+          return Promise.resolve({} as Record<string, never>);
         },
       );
 
-      (searchProxy as ReturnType<typeof vi.fn>).mockResolvedValue({
+      vi.mocked(searchProxy).mockResolvedValue({
         answer: "child",
         state: { proxies: mockProxies, current: topProxy },
       });
@@ -279,20 +290,22 @@ describe("mihomo helper functions", () => {
       };
 
       let searchCallCount = 0;
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
+      vi.mocked(mihomo).mockImplementation((uri: string) => {
         if (uri === "proxies") {
-          return Promise.resolve({ proxies: mockProxies } as any);
+          return Promise.resolve({ proxies: mockProxies } as {
+            proxies: Record<string, MihomoProxy>;
+          });
         }
         if (uri.includes("delay")) {
-          return Promise.resolve({ delay: 100 } as any);
+          return Promise.resolve({ delay: 100 } as { delay: number });
         }
         if (uri.includes("proxies/TOP_PROXY") && !uri.includes("delay")) {
-          return Promise.resolve({} as any);
+          return Promise.resolve({} as Record<string, never>);
         }
-        return Promise.resolve({} as any);
+        return Promise.resolve({} as Record<string, never>);
       });
 
-      (searchProxy as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      vi.mocked(searchProxy).mockImplementation(() => {
         searchCallCount++;
         // First call returns RESET, which triggers recursive call to pickProxy({ refresh: true })
         // Second call (from recursive pickProxy) should return a valid proxy name
@@ -335,25 +348,27 @@ describe("mihomo helper functions", () => {
         child: childProxy,
       };
 
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
+      vi.mocked(mihomo).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies } as any);
+            return Promise.resolve({ proxies: mockProxies } as {
+              proxies: Record<string, MihomoProxy>;
+            });
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 } as any);
+            return Promise.resolve({ delay: 100 } as { delay: number });
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({} as any);
+            return Promise.resolve({} as Record<string, never>);
           }
-          return Promise.resolve({} as any);
+          return Promise.resolve({} as Record<string, never>);
         },
       );
 
-      (searchProxy as ReturnType<typeof vi.fn>).mockResolvedValue({
+      vi.mocked(searchProxy).mockResolvedValue({
         answer: "child",
         state: { proxies: mockProxies, current: topProxy },
       });
@@ -398,25 +413,27 @@ describe("mihomo helper functions", () => {
         child2: childProxy2,
       };
 
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
+      vi.mocked(mihomo).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies } as any);
+            return Promise.resolve({ proxies: mockProxies } as {
+              proxies: Record<string, MihomoProxy>;
+            });
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 } as any);
+            return Promise.resolve({ delay: 100 } as { delay: number });
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({} as any);
+            return Promise.resolve({} as Record<string, never>);
           }
-          return Promise.resolve({} as any);
+          return Promise.resolve({} as Record<string, never>);
         },
       );
 
-      (searchProxy as ReturnType<typeof vi.fn>).mockResolvedValue({
+      vi.mocked(searchProxy).mockResolvedValue({
         answer: "child2",
         state: { proxies: mockProxies, current: topProxy },
       });
@@ -461,25 +478,27 @@ describe("mihomo helper functions", () => {
         child2: childProxy2,
       };
 
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
+      vi.mocked(mihomo).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies } as any);
+            return Promise.resolve({ proxies: mockProxies } as {
+              proxies: Record<string, MihomoProxy>;
+            });
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 } as any);
+            return Promise.resolve({ delay: 100 } as { delay: number });
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({} as any);
+            return Promise.resolve({} as Record<string, never>);
           }
-          return Promise.resolve({} as any);
+          return Promise.resolve({} as Record<string, never>);
         },
       );
 
-      (searchProxy as ReturnType<typeof vi.fn>).mockResolvedValue({
+      vi.mocked(searchProxy).mockResolvedValue({
         answer: "child2",
         state: { proxies: mockProxies, current: topProxy },
       });
@@ -526,28 +545,30 @@ describe("mihomo helper functions", () => {
       };
 
       let searchCallCount = 0;
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation(
+      vi.mocked(mihomo).mockImplementation(
         (
           uri: string,
           options?: Omit<RequestInit, "body"> & { body?: unknown },
         ) => {
           if (uri === "proxies") {
-            return Promise.resolve({ proxies: mockProxies } as any);
+            return Promise.resolve({ proxies: mockProxies } as {
+              proxies: Record<string, MihomoProxy>;
+            });
           }
           if (uri.includes("delay")) {
-            return Promise.resolve({ delay: 100 } as any);
+            return Promise.resolve({ delay: 100 } as { delay: number });
           }
           if (uri.includes("proxies/TOP_PROXY") && options?.method === "PUT") {
-            return Promise.resolve({} as any);
+            return Promise.resolve({} as Record<string, never>);
           }
           if (uri.includes("proxies/child") && options?.method === "PUT") {
-            return Promise.resolve({} as any);
+            return Promise.resolve({} as Record<string, never>);
           }
-          return Promise.resolve({} as any);
+          return Promise.resolve({} as Record<string, never>);
         },
       );
 
-      (searchProxy as ReturnType<typeof vi.fn>).mockImplementation(() => {
+      vi.mocked(searchProxy).mockImplementation(() => {
         searchCallCount++;
         // First call selects "child" proxy
         if (searchCallCount === 1) {
@@ -601,11 +622,11 @@ describe("mihomo helper functions", () => {
     });
 
     test("should get delay for specific proxy", async () => {
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
+      vi.mocked(mihomo).mockImplementation((uri: string) => {
         if (uri.includes("proxies/test-proxy/delay")) {
-          return Promise.resolve({ delay: 150 } as any);
+          return Promise.resolve({ delay: 150 } as { delay: number });
         }
-        return Promise.resolve({} as any);
+        return Promise.resolve({} as Record<string, never>);
       });
 
       const result = await getDelay({
@@ -620,15 +641,15 @@ describe("mihomo helper functions", () => {
     });
 
     test("should get delay for all proxies in GLOBAL group", async () => {
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
+      vi.mocked(mihomo).mockImplementation((uri: string) => {
         if (uri.includes("group/GLOBAL/delay")) {
           return Promise.resolve({
             proxy1: 100,
             proxy2: 200,
             proxy3: 150,
-          } as any);
+          } as Record<string, number>);
         }
-        return Promise.resolve({} as any);
+        return Promise.resolve({} as Record<string, never>);
       });
 
       const result = await getDelay({ timeout: 3000 });
@@ -644,11 +665,11 @@ describe("mihomo helper functions", () => {
     });
 
     test("should use default timeout when not provided", async () => {
-      (mihomo as ReturnType<typeof vi.fn>).mockImplementation((uri: string) => {
+      vi.mocked(mihomo).mockImplementation((uri: string) => {
         if (uri.includes("group/GLOBAL/delay")) {
-          return Promise.resolve({} as any);
+          return Promise.resolve({} as Record<string, never>);
         }
-        return Promise.resolve({} as any);
+        return Promise.resolve({} as Record<string, never>);
       });
 
       await getDelay();
