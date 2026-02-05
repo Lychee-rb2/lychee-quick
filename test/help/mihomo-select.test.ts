@@ -8,6 +8,8 @@ import {
 } from "@/help/mihomo-select";
 import type { MihomoProxy } from "@/types/mihomo";
 
+type Choice = { name: string; value: string };
+
 // Mock modules at the top level
 vi.mock("@/fetch/mihomo", () => ({
   mihomo: vi.fn(),
@@ -388,8 +390,11 @@ describe("mihomo-select helper functions", () => {
 
       const searchMock = vi.mocked(search);
       // Mock the source function to simulate user interaction
+      // @ts-expect-error - Mock function doesn't match exact type signature
       searchMock.mockImplementation(async (options) => {
-        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        const source = options.source as (
+          searchTerm: string,
+        ) => Promise<Choice[]>;
         // Call source with empty string to trigger proxy loading
         await source("");
         return "child1";
@@ -429,8 +434,11 @@ describe("mihomo-select helper functions", () => {
       getDelayMock.mockResolvedValue({});
 
       const searchMock = vi.mocked(search);
+      // @ts-expect-error - Mock function doesn't match exact type signature
       searchMock.mockImplementation(async (options) => {
-        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        const source = options.source as (
+          searchTerm: string,
+        ) => Promise<Choice[]>;
         // Call source with empty string to trigger refresh
         await source("");
         return "child1";
@@ -481,11 +489,14 @@ describe("mihomo-select helper functions", () => {
       };
 
       const searchMock = vi.mocked(search);
-      let sourceFunction: ((searchTerm: string) => Promise<any[]>) | undefined;
+      let sourceFunction:
+        | ((searchTerm: string) => Promise<Choice[]>)
+        | undefined;
+      // @ts-expect-error - Mock function doesn't match exact type signature
       searchMock.mockImplementation(async (options) => {
         sourceFunction = options.source as (
           searchTerm: string,
-        ) => Promise<any[]>;
+        ) => Promise<Choice[]>;
         // Simulate searching by index "1"
         const choices = await sourceFunction("1");
         expect(choices).toHaveLength(3); // 1 proxy + Refresh + Reset
@@ -535,8 +546,11 @@ describe("mihomo-select helper functions", () => {
       };
 
       const searchMock = vi.mocked(search);
+      // @ts-expect-error - Mock function doesn't match exact type signature
       searchMock.mockImplementation(async (options) => {
-        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        const source = options.source as (
+          searchTerm: string,
+        ) => Promise<Choice[]>;
         // Simulate searching by name "child"
         const choices = await source("child");
         // Should match child1 and child2
@@ -578,9 +592,12 @@ describe("mihomo-select helper functions", () => {
       mihomoMock.mockResolvedValue({ proxies });
 
       const searchMock = vi.mocked(search);
+      // @ts-expect-error - Mock function doesn't match exact type signature
       searchMock.mockImplementation(async (options) => {
         expect(options.message).toContain("TOP_PROXY");
-        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        const source = options.source as (
+          searchTerm: string,
+        ) => Promise<Choice[]>;
         await source("");
         return "child1";
       });
@@ -598,14 +615,17 @@ describe("mihomo-select helper functions", () => {
       mihomoMock.mockResolvedValue({ proxies: {} }); // Empty proxies - TOP_PROXY won't exist
 
       const searchMock = vi.mocked(search);
+      // @ts-expect-error - Mock function doesn't match exact type signature
       searchMock.mockImplementation(async (options) => {
-        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        const source = options.source as (
+          searchTerm: string,
+        ) => Promise<Choice[]>;
         // This should throw because TOP_PROXY doesn't exist in empty proxies
         try {
           await source("");
           throw new Error("Should have thrown");
-        } catch (error: any) {
-          expect(error.message).toBe("Failed to load proxies");
+        } catch (error: unknown) {
+          expect((error as Error).message).toBe("Failed to load proxies");
           throw error;
         }
       });
@@ -645,8 +665,11 @@ describe("mihomo-select helper functions", () => {
       };
 
       const searchMock = vi.mocked(search);
+      // @ts-expect-error - Mock function doesn't match exact type signature
       searchMock.mockImplementation(async (options) => {
-        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        const source = options.source as (
+          searchTerm: string,
+        ) => Promise<Choice[]>;
         // Call with empty string - should return all choices
         const choices = await source("");
         expect(choices).toHaveLength(4); // 2 proxies + Refresh + Reset

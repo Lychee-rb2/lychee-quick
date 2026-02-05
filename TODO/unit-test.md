@@ -2,8 +2,8 @@
 
 ## 已完成测试
 
-| 文件 | 函数 | 覆盖率 |
-|------|------|--------|
+| 文件                    | 函数              | 覆盖率 |
+| ----------------------- | ----------------- | ------ |
 | `help/format.ts` | `iconMap()` | 100% |
 | `help/index.ts` | `typedBoolean()` | 100% |
 | `help/linear.ts` | `buildCommentBody()` | 80% |
@@ -56,32 +56,6 @@
 - [ ] `pbcopy(data)` - 需要 mock `Bun.spawn`
 - [ ] `main(meta)` - 需要 mock 文件系统和命令行参数
 - [ ] `expandAlias(alias)` - 需要 mock 文件系统
-
-### `help/mihomo.ts`
-
-- [x] `findCurrentProxy()` - 需要 mock mihomo API
-  - [x] `should find current proxy chain` - 需要 mock `@/fetch/mihomo`
-- [x] `pickProxy(option)` - 需要 mock mihomo API 和 inquirer
-  - [x] `should handle REFRESH option` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
-  - [x] `should handle RESET option` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
-  - [x] `should select proxy and update` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
-
-### `help/mihomo-select.ts`
-
-- [x] `getProxyDelay()` - 纯函数，已测试
-- [x] `delayLevel()` - 纯函数，已测试
-- [x] `choices()` - 纯函数，已测试
-- [x] `getChildren()` - 纯函数，已测试
-- [x] `searchProxy(state, options)` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
-  - [x] `should use provided proxies and return selected answer` - 已测试
-  - [x] `should fetch proxies when proxies is null` - 已测试
-  - [x] `should call getDelay when refresh option is true` - 已测试
-  - [x] `should filter by index number when search term is a number` - 已测试
-  - [x] `should filter by proxy name when search term is a string` - 已测试
-  - [x] `should use environment variable when current is undefined` - 已测试
-  - [x] `should throw error when proxies cannot be loaded` - 已测试
-  - [x] `should return all choices when search term is empty` - 已测试
-  - [x] `should throw error when proxies or current is not available after search returns` - 已测试（覆盖第 95-96 行）
 
 ---
 
