@@ -24,6 +24,7 @@
 | `help/io.ts` | `_require()` | 100% |
 | `help/io.ts` | `showHelp()` | 100% |
 | `help/io.ts` | `main()` | 100% |
+| `help/git.ts` | `findNextBranch()` | 100% |
 
 ---
 
@@ -38,10 +39,6 @@
 ## 待测试 - 需要 Mock（优先级中）
 
 这些函数依赖外部系统，需要使用 `vitest` 的 mock 功能。
-
-### `help/git.ts`
-
-- [ ] `findNextBranch(branch, version)` - 需要 mock `cli()` 函数
 
 ### `help/logger.ts`
 
