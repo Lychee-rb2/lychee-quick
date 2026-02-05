@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import { logger, typedBoolean } from "help";
-const cliName = process.env.CLI_NAME;
 
 /**
  * 解析缩写命令，例如 "c-c" -> ["clash", "check"]
@@ -52,7 +51,7 @@ const expandAlias = async (alias: string): Promise<string[] | null> => {
   return result.length > 0 ? result : null;
 };
 
-const showAvailableActions = async () => {
+const showAvailableActions = async (cliName: string) => {
   const appDir = `${import.meta.dir}/../app`;
   const glob = new Bun.Glob("*/meta.ts");
   const apps: { name: string; description: string }[] = [];
@@ -94,7 +93,7 @@ export const pbcopy = (data: string) => {
   logger.info(`\n`);
 };
 
-const showSubcommands = async (actionName: string[]) => {
+const showSubcommands = async (actionName: string[], cliName: string) => {
   const appDir = `${import.meta.dir}/../app`;
   const subDir = `${appDir}/${actionName.join("/")}`;
   const glob = new Bun.Glob("*/meta.ts");
@@ -163,6 +162,7 @@ const showHelp = async (actionName: string[]) => {
 
 export const main = async (meta: ImportMeta) => {
   dotenv.config({ path: `${meta.dir}/.env` });
+  const cliName = process.env.CLI_NAME || "ly";
   const binIndex = Bun.argv.findIndex((i) => i === meta.path);
   if (binIndex === -1) {
     throw new Error("Parse argv fail");
@@ -189,7 +189,7 @@ export const main = async (meta: ImportMeta) => {
         const mod = require("@/app/meta");
         logger.info(mod.help || mod.completion || "");
       } catch {
-        await showAvailableActions();
+        await showAvailableActions(cliName);
       }
     } else {
       await showHelp(actionName);
@@ -198,7 +198,7 @@ export const main = async (meta: ImportMeta) => {
   }
 
   if (actionName.length === 0) {
-    await showAvailableActions();
+    await showAvailableActions(cliName);
     return;
   }
 
@@ -213,7 +213,7 @@ export const main = async (meta: ImportMeta) => {
     const subDir = `${appDir}/${actionName.join("/")}`;
     const file = Bun.file(`${subDir}/meta.ts`);
     if (await file.exists()) {
-      await showSubcommands(actionName);
+      await showSubcommands(actionName, cliName);
     } else {
       logger.error(`Can't find action "${actionName.join(" ")}"`);
     }
