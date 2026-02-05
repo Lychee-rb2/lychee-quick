@@ -6,7 +6,7 @@ import {
   vi,
   type MockedFunction,
 } from "vitest";
-import { pbcopy } from "@/help/util";
+import { pbcopy, typedBoolean } from "@/help/util";
 
 // Mock modules (must be called before imports)
 vi.mock("@/help/logger", () => ({
@@ -56,6 +56,54 @@ describe("util helper functions", () => {
 
       expect(mockWriteText).toHaveBeenCalledWith("test data");
       expect(getMockedLogger().info).toHaveBeenCalledWith("\n");
+    });
+  });
+
+  describe("typedBoolean", () => {
+    test("should return false for empty string", () => {
+      expect(typedBoolean("")).toBe(false);
+    });
+
+    test("should return false for 0", () => {
+      expect(typedBoolean(0)).toBe(false);
+    });
+
+    test("should return false for false", () => {
+      expect(typedBoolean(false)).toBe(false);
+    });
+
+    test("should return false for null", () => {
+      expect(typedBoolean(null)).toBe(false);
+    });
+
+    test("should return false for undefined", () => {
+      expect(typedBoolean(undefined)).toBe(false);
+    });
+
+    test("should return true for non-empty string", () => {
+      expect(typedBoolean("hello")).toBe(true);
+    });
+
+    test("should return true for non-zero number", () => {
+      expect(typedBoolean(1)).toBe(true);
+      expect(typedBoolean(-1)).toBe(true);
+      expect(typedBoolean(0.5)).toBe(true);
+    });
+
+    test("should return true for true", () => {
+      expect(typedBoolean(true)).toBe(true);
+    });
+
+    test("should return true for empty object", () => {
+      expect(typedBoolean({})).toBe(true);
+    });
+
+    test("should return true for empty array", () => {
+      expect(typedBoolean([])).toBe(true);
+    });
+
+    test("should return true for function", () => {
+      expect(typedBoolean(() => {})).toBe(true);
     });
   });
 });
