@@ -4,6 +4,7 @@
   "description": "Quick cli for Lychee",
   "version": "0.0.1",
   "publisher": "Lychee",
+  "type": "module",
   "repository": "https://github.com/Lychee-rb2/bun-help.git",
   "scripts": {
     "postinstall": "bun scripts/postinstall.ts",

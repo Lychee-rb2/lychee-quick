@@ -8,13 +8,14 @@
 | `help/index.ts` | `typedBoolean()` | 100% |
 | `help/linear.ts` | `buildCommentBody()` | 80% |
 | `help/mihomo.ts` | `findProxyChain()` | 100% |
-| `help/mihomo.ts` | `getProxyDelay()` | 100% |
-| `help/mihomo.ts` | `delayLevel()` | 100% |
-| `help/mihomo.ts` | `choices()` | 100% |
-| `help/mihomo.ts` | `getChildren()` | 100% |
 | `help/mihomo.ts` | `findCurrentProxy()` | 100% |
 | `help/mihomo.ts` | `pickProxy()` | 100% |
 | `help/mihomo.ts` | `getDelay()` | 100% |
+| `help/mihomo-search.ts` | `getProxyDelay()` | 100% |
+| `help/mihomo-search.ts` | `delayLevel()` | 100% |
+| `help/mihomo-search.ts` | `choices()` | 100% |
+| `help/mihomo-search.ts` | `getChildren()` | 100% |
+| `help/mihomo-search.ts` | `searchProxy()` | 100% |
 
 ---
 
@@ -28,7 +29,7 @@
 
 ## 待测试 - 需要 Mock（优先级中）
 
-这些函数依赖外部系统，需要使用 `bun:test` 的 mock 功能。
+这些函数依赖外部系统，需要使用 `vitest` 的 mock 功能。
 
 ### `help/git.ts`
 
@@ -65,20 +66,41 @@
   - [x] `should handle RESET option` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
   - [x] `should select proxy and update` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
 
+### `help/mihomo-search.ts`
+
+- [x] `getProxyDelay()` - 纯函数，已测试
+- [x] `delayLevel()` - 纯函数，已测试
+- [x] `choices()` - 纯函数，已测试
+- [x] `getChildren()` - 纯函数，已测试
+- [x] `searchProxy(state, options)` - 需要 mock `@/fetch/mihomo` 和 `@inquirer/prompts`
+  - [x] `should use provided proxies and return selected answer` - 已测试
+  - [x] `should fetch proxies when proxies is null` - 已测试
+  - [x] `should call getDelay when refresh option is true` - 已测试
+  - [x] `should filter by index number when search term is a number` - 已测试
+  - [x] `should filter by proxy name when search term is a string` - 已测试
+  - [x] `should use environment variable when current is undefined` - 已测试
+  - [x] `should throw error when proxies cannot be loaded` - 已测试
+  - [x] `should return all choices when search term is empty` - 已测试
+  - [x] `should throw error when proxies or current is not available after search returns` - 已测试（覆盖第 95-96 行）
+
 ---
 
 ## Mock 示例
 
 ```typescript
-import { describe, expect, test, mock, spyOn } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 
-// Mock 模块
-mock.module("@/fetch/mihomo", () => ({
-  mihomo: mock(() => Promise.resolve({ proxies: {} })),
+// Mock 模块（必须在导入之前调用）
+vi.mock("@/fetch/mihomo", () => ({
+  mihomo: vi.fn(),
 }));
 
-// Spy 函数
-const logSpy = spyOn(console, "log");
+// 导入 mock 模块
+import { mihomo } from "@/fetch/mihomo";
+
+// 在测试中使用 vi.mocked() 进行类型安全的访问
+const mihomoMock = vi.mocked(mihomo);
+mihomoMock.mockResolvedValue({ proxies: {} });
 ```
 
 ---
@@ -86,8 +108,8 @@ const logSpy = spyOn(console, "log");
 ## 运行测试
 
 ```bash
-bun test                    # 运行所有测试
-bun test --coverage         # 带覆盖率报告
-bun test --watch            # 监听模式
-bun test test/help/mihomo   # 运行指定测试
+bun test                    # 运行所有测试（带覆盖率）
+bun test:watch              # 监听模式
+bun test:ui                 # UI 模式
+vitest test/help/mihomo     # 运行指定测试文件
 ```

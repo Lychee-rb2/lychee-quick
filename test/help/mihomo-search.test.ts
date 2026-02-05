@@ -1,11 +1,30 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
 import {
   getProxyDelay,
   delayLevel,
   choices,
   getChildren,
+  searchProxy,
 } from "@/help/mihomo-search";
 import type { MihomoProxy } from "@/types/mihomo";
+
+// Mock modules at the top level
+vi.mock("@/fetch/mihomo", () => ({
+  mihomo: vi.fn(),
+}));
+
+vi.mock("@inquirer/prompts", () => ({
+  search: vi.fn(),
+}));
+
+vi.mock("@/help/mihomo", () => ({
+  getDelay: vi.fn(),
+}));
+
+// Import mocked modules
+import { mihomo } from "@/fetch/mihomo";
+import { search } from "@inquirer/prompts";
+import { getDelay } from "@/help/mihomo";
 
 describe("mihomo-search helper functions", () => {
   describe("getProxyDelay", () => {
@@ -284,6 +303,384 @@ describe("mihomo-search helper functions", () => {
       const result = getChildren(parentProxy, proxies);
 
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("searchProxy", () => {
+    const originalEnv = process.env.MIHOMO_TOP_PROXY;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      process.env.MIHOMO_TOP_PROXY = "TOP_PROXY";
+    });
+
+    afterEach(() => {
+      process.env.MIHOMO_TOP_PROXY = originalEnv;
+    });
+
+    test("should use provided proxies and return selected answer", async () => {
+      const currentProxy: MihomoProxy = {
+        name: "TOP_PROXY",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+        all: ["child1", "child2"],
+      };
+      const child1: MihomoProxy = {
+        name: "child1",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+        history: [{ delay: 50, time: "2024-01-01T00:00:00Z" }],
+      };
+      const child2: MihomoProxy = {
+        name: "child2",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+        history: [{ delay: 200, time: "2024-01-01T00:00:00Z" }],
+      };
+      const proxies = {
+        TOP_PROXY: currentProxy,
+        child1,
+        child2,
+      };
+
+      const searchMock = vi.mocked(search);
+      searchMock.mockResolvedValue("child1");
+
+      const result = await searchProxy({
+        proxies,
+        current: currentProxy,
+      });
+
+      expect(result.answer).toBe("child1");
+      expect(result.state.proxies).toEqual(proxies);
+      expect(result.state.current).toEqual(currentProxy);
+      expect(searchMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Pick a proxy TOP_PROXY",
+        }),
+      );
+    });
+
+    test("should fetch proxies when proxies is null", async () => {
+      const currentProxy: MihomoProxy = {
+        name: "TOP_PROXY",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+        all: ["child1"],
+      };
+      const child1: MihomoProxy = {
+        name: "child1",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const proxies = {
+        TOP_PROXY: currentProxy,
+        child1,
+      };
+
+      const mihomoMock = vi.mocked(mihomo);
+      mihomoMock.mockResolvedValue({ proxies });
+
+      const searchMock = vi.mocked(search);
+      // Mock the source function to simulate user interaction
+      searchMock.mockImplementation(async (options) => {
+        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        // Call source with empty string to trigger proxy loading
+        await source("");
+        return "child1";
+      });
+
+      const result = await searchProxy({
+        proxies: null,
+        current: undefined,
+      });
+
+      expect(result.answer).toBe("child1");
+      expect(result.state.proxies).toEqual(proxies);
+      expect(result.state.current).toEqual(currentProxy);
+      expect(mihomoMock).toHaveBeenCalledWith("proxies");
+    });
+
+    test("should call getDelay when refresh option is true", async () => {
+      const currentProxy: MihomoProxy = {
+        name: "TOP_PROXY",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+        all: ["child1"],
+      };
+      const child1: MihomoProxy = {
+        name: "child1",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const proxies = {
+        TOP_PROXY: currentProxy,
+        child1,
+      };
+
+      const getDelayMock = vi.mocked(getDelay);
+      getDelayMock.mockResolvedValue({});
+
+      const searchMock = vi.mocked(search);
+      searchMock.mockImplementation(async (options) => {
+        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        // Call source with empty string to trigger refresh
+        await source("");
+        return "child1";
+      });
+
+      await searchProxy(
+        {
+          proxies,
+          current: currentProxy,
+        },
+        { refresh: true },
+      );
+
+      expect(getDelayMock).toHaveBeenCalled();
+    });
+
+    test("should filter by index number when search term is a number", async () => {
+      const currentProxy: MihomoProxy = {
+        name: "TOP_PROXY",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+        all: ["child1", "child2", "child3"],
+      };
+      const child1: MihomoProxy = {
+        name: "child1",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const child2: MihomoProxy = {
+        name: "child2",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const child3: MihomoProxy = {
+        name: "child3",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const proxies = {
+        TOP_PROXY: currentProxy,
+        child1,
+        child2,
+        child3,
+      };
+
+      const searchMock = vi.mocked(search);
+      let sourceFunction: ((searchTerm: string) => Promise<any[]>) | undefined;
+      searchMock.mockImplementation(async (options) => {
+        sourceFunction = options.source as (
+          searchTerm: string,
+        ) => Promise<any[]>;
+        // Simulate searching by index "1"
+        const choices = await sourceFunction("1");
+        expect(choices).toHaveLength(3); // 1 proxy + Refresh + Reset
+        expect(choices[0].value).toBe("child2"); // index 1
+        return "child2";
+      });
+
+      const result = await searchProxy({
+        proxies,
+        current: currentProxy,
+      });
+
+      expect(result.answer).toBe("child2");
+    });
+
+    test("should filter by proxy name when search term is a string", async () => {
+      const currentProxy: MihomoProxy = {
+        name: "TOP_PROXY",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+        all: ["child1", "child2", "another-proxy"],
+      };
+      const child1: MihomoProxy = {
+        name: "child1",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const child2: MihomoProxy = {
+        name: "child2",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const anotherProxy: MihomoProxy = {
+        name: "another-proxy",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const proxies = {
+        TOP_PROXY: currentProxy,
+        child1,
+        child2,
+        "another-proxy": anotherProxy,
+      };
+
+      const searchMock = vi.mocked(search);
+      searchMock.mockImplementation(async (options) => {
+        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        // Simulate searching by name "child"
+        const choices = await source("child");
+        // Should match child1 and child2
+        expect(choices.length).toBeGreaterThanOrEqual(2);
+        const proxyValues = choices.map((c) => c.value);
+        expect(proxyValues).toContain("child1");
+        expect(proxyValues).toContain("child2");
+        return "child1";
+      });
+
+      const result = await searchProxy({
+        proxies,
+        current: currentProxy,
+      });
+
+      expect(result.answer).toBe("child1");
+    });
+
+    test("should use environment variable when current is undefined", async () => {
+      const currentProxy: MihomoProxy = {
+        name: "TOP_PROXY",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+        all: ["child1"],
+      };
+      const child1: MihomoProxy = {
+        name: "child1",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const proxies = {
+        TOP_PROXY: currentProxy,
+        child1,
+      };
+
+      const mihomoMock = vi.mocked(mihomo);
+      mihomoMock.mockResolvedValue({ proxies });
+
+      const searchMock = vi.mocked(search);
+      searchMock.mockImplementation(async (options) => {
+        expect(options.message).toContain("TOP_PROXY");
+        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        await source("");
+        return "child1";
+      });
+
+      await searchProxy({
+        proxies: null,
+        current: undefined,
+      });
+
+      expect(searchMock).toHaveBeenCalled();
+    });
+
+    test("should throw error when proxies cannot be loaded", async () => {
+      const mihomoMock = vi.mocked(mihomo);
+      mihomoMock.mockResolvedValue({ proxies: {} }); // Empty proxies - TOP_PROXY won't exist
+
+      const searchMock = vi.mocked(search);
+      searchMock.mockImplementation(async (options) => {
+        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        // This should throw because TOP_PROXY doesn't exist in empty proxies
+        try {
+          await source("");
+          throw new Error("Should have thrown");
+        } catch (error: any) {
+          expect(error.message).toBe("Failed to load proxies");
+          throw error;
+        }
+      });
+
+      await expect(
+        searchProxy({
+          proxies: null,
+          current: undefined,
+        }),
+      ).rejects.toThrow("Failed to load proxies");
+    });
+
+    test("should return all choices when search term is empty", async () => {
+      const currentProxy: MihomoProxy = {
+        name: "TOP_PROXY",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+        all: ["child1", "child2"],
+      };
+      const child1: MihomoProxy = {
+        name: "child1",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const child2: MihomoProxy = {
+        name: "child2",
+        now: undefined,
+        alive: true,
+        type: "URLTest",
+      };
+      const proxies = {
+        TOP_PROXY: currentProxy,
+        child1,
+        child2,
+      };
+
+      const searchMock = vi.mocked(search);
+      searchMock.mockImplementation(async (options) => {
+        const source = options.source as (searchTerm: string) => Promise<any[]>;
+        // Call with empty string - should return all choices
+        const choices = await source("");
+        expect(choices).toHaveLength(4); // 2 proxies + Refresh + Reset
+        expect(choices[0].value).toBe("child1");
+        expect(choices[1].value).toBe("child2");
+        expect(choices[2].value).toBe("REFRESH");
+        expect(choices[3].value).toBe("RESET");
+        return "child1";
+      });
+
+      const result = await searchProxy({
+        proxies,
+        current: currentProxy,
+      });
+
+      expect(result.answer).toBe("child1");
+    });
+
+    test("should throw error when proxies or current is not available after search returns", async () => {
+      // This test covers lines 95-96: the error check after search returns
+      // We need to simulate a scenario where search returns but proxies/current are still null/undefined
+      const searchMock = vi.mocked(search);
+      // Mock search to return immediately without calling source
+      // This simulates an edge case where search returns but proxies weren't loaded
+      searchMock.mockResolvedValue("some-answer");
+
+      // Since proxies is null and current is undefined, and search doesn't call source,
+      // the function should throw "Proxies or current proxy is not available"
+      await expect(
+        searchProxy({
+          proxies: null,
+          current: undefined,
+        }),
+      ).rejects.toThrow("Proxies or current proxy is not available");
     });
   });
 });
