@@ -1,5 +1,11 @@
 import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
-import { getNestedValue, type NestedMessages } from "@/i18n";
+import {
+  getNestedValue,
+  createI18n,
+  _resetI18n,
+  t,
+  type NestedMessages,
+} from "@/i18n";
 
 // Mock the JSON imports
 vi.mock("@/i18n/zh.json", () => ({
@@ -31,10 +37,12 @@ vi.mock("@/i18n/en.json", () => ({
 describe("i18n", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    _resetI18n();
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
+    _resetI18n();
   });
 
   describe("getNestedValue", () => {
@@ -92,83 +100,85 @@ describe("i18n", () => {
     });
   });
 
-  describe("t", () => {
-    test("should return flat key value with default zh locale", async () => {
+  describe("createI18n", () => {
+    test("should return the same instance on multiple calls", () => {
       vi.stubEnv("LOCALE", "zh");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
+
+      const instance1 = createI18n();
+      const instance2 = createI18n();
+
+      expect(instance1).toBe(instance2);
+    });
+
+    test("should re-read env after _resetI18n", () => {
+      vi.stubEnv("LOCALE", "zh");
+      createI18n();
+
+      _resetI18n();
+      vi.stubEnv("LOCALE", "en");
+      const messages = createI18n();
+
+      expect(getNestedValue(messages, "flat key")).toBe("flat value");
+    });
+  });
+
+  describe("t", () => {
+    test("should return flat key value with default zh locale", () => {
+      vi.stubEnv("LOCALE", "zh");
 
       expect(t("flat key")).toBe("扁平键值");
     });
 
-    test("should return flat key value with en locale", async () => {
+    test("should return flat key value with en locale", () => {
       vi.stubEnv("LOCALE", "en");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
 
       expect(t("flat key")).toBe("flat value");
     });
 
-    test("should return nested key value", async () => {
+    test("should return nested key value", () => {
       vi.stubEnv("LOCALE", "zh");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
 
       expect(t("nested.level1.level2")).toBe("嵌套值");
     });
 
-    test("should return nested key value with en locale", async () => {
+    test("should return nested key value with en locale", () => {
       vi.stubEnv("LOCALE", "en");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
 
       expect(t("nested.level1.level2")).toBe("nested value");
     });
 
-    test("should return key itself when key not found", async () => {
+    test("should return key itself when key not found", () => {
       vi.stubEnv("LOCALE", "zh");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
 
       expect(t("nonexistent.key")).toBe("nonexistent.key");
     });
 
-    test("should interpolate variables", async () => {
+    test("should interpolate variables", () => {
       vi.stubEnv("LOCALE", "zh");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
 
       expect(t("withVar", { value: "测试" })).toBe("变量 测试");
     });
 
-    test("should interpolate variables in nested key", async () => {
+    test("should interpolate variables in nested key", () => {
       vi.stubEnv("LOCALE", "en");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
 
       expect(t("nested.withVar", { name: "World" })).toBe("hello World");
     });
 
-    test("should keep placeholder when variable not provided", async () => {
+    test("should keep placeholder when variable not provided", () => {
       vi.stubEnv("LOCALE", "zh");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
 
       expect(t("withVar", {})).toBe("变量 {value}");
     });
 
-    test("should work without args parameter", async () => {
+    test("should work without args parameter", () => {
       vi.stubEnv("LOCALE", "zh");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
 
       expect(t("flat key")).toBe("扁平键值");
     });
 
-    test("should use zh locale when LOCALE env is not set", async () => {
+    test("should use zh locale when LOCALE env is not set", () => {
       vi.stubEnv("LOCALE", "");
-      vi.resetModules();
-      const { t } = await import("@/i18n");
 
       // Empty string is falsy, so it should default to zh
       expect(t("flat key")).toBe("扁平键值");

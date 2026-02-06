@@ -13,3 +13,8 @@ export const createRedisClient = () => {
   redis = new Redis({ url, token });
   return redis;
 };
+
+/** @internal 仅用于测试重置单例状态 */
+export const _resetRedisClient = () => {
+  redis = null;
+};

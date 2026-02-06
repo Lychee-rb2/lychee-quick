@@ -1,5 +1,6 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 import { ZodError } from "zod";
+import { createRedisClient, _resetRedisClient } from "@/fetch/redis";
 
 // vi.hoisted ensures these are available when vi.mock factory runs (both are hoisted)
 const { mockRedisInstance, MockRedisClass } = vi.hoisted(() => {
@@ -15,7 +16,7 @@ vi.mock("@upstash/redis", () => ({
 describe("fetch/redis - createRedisClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.resetModules();
+    _resetRedisClient();
     // Ensure env vars are clean before each test
     delete process.env.REDIS_URL;
     delete process.env.REDIS_TOKEN;
@@ -25,10 +26,9 @@ describe("fetch/redis - createRedisClient", () => {
     vi.unstubAllEnvs();
   });
 
-  test("should create a new Redis instance with env variables", async () => {
+  test("should create a new Redis instance with env variables", () => {
     vi.stubEnv("REDIS_URL", "https://redis.upstash.io");
     vi.stubEnv("REDIS_TOKEN", "test-token-123");
-    const { createRedisClient } = await import("@/fetch/redis");
     const client = createRedisClient();
 
     expect(client).toBeDefined();
@@ -39,10 +39,9 @@ describe("fetch/redis - createRedisClient", () => {
     expect(MockRedisClass).toHaveBeenCalledTimes(1);
   });
 
-  test("should return the same instance on subsequent calls (singleton)", async () => {
+  test("should return the same instance on subsequent calls (singleton)", () => {
     vi.stubEnv("REDIS_URL", "https://redis.upstash.io");
     vi.stubEnv("REDIS_TOKEN", "test-token-123");
-    const { createRedisClient } = await import("@/fetch/redis");
     const client1 = createRedisClient();
     const client2 = createRedisClient();
 
@@ -52,23 +51,19 @@ describe("fetch/redis - createRedisClient", () => {
     expect(MockRedisClass).toHaveBeenCalledTimes(1);
   });
 
-  test("should throw ZodError when REDIS_URL is missing", async () => {
+  test("should throw ZodError when REDIS_URL is missing", () => {
     vi.stubEnv("REDIS_TOKEN", "test-token-123");
-    const { createRedisClient } = await import("@/fetch/redis");
 
     expect(() => createRedisClient()).toThrow(ZodError);
   });
 
-  test("should throw ZodError when REDIS_TOKEN is missing", async () => {
+  test("should throw ZodError when REDIS_TOKEN is missing", () => {
     vi.stubEnv("REDIS_URL", "https://redis.upstash.io");
-    const { createRedisClient } = await import("@/fetch/redis");
 
     expect(() => createRedisClient()).toThrow(ZodError);
   });
 
-  test("should throw ZodError when both env vars are missing", async () => {
-    const { createRedisClient } = await import("@/fetch/redis");
-
+  test("should throw ZodError when both env vars are missing", () => {
     expect(() => createRedisClient()).toThrow(ZodError);
   });
 });

@@ -34,13 +34,29 @@ export const getNestedValue = (
   return typeof current === "string" ? current : undefined;
 };
 
+let messages: NestedMessages | null = null;
+
+const resolveMessages = (locale: string): NestedMessages =>
+  locale === "zh" ? (zh as NestedMessages) : (en as NestedMessages);
+
+export const createI18n = (): NestedMessages => {
+  if (messages) return messages;
+  const locale = Bun.env.LOCALE || "zh";
+  messages = resolveMessages(locale);
+  return messages;
+};
+
+/** @internal 仅用于测试重置单例状态 */
+export const _resetI18n = () => {
+  messages = null;
+};
+
 export const t = (
   key: MessageKeys | string,
   args: Record<string, string> = {},
 ): string => {
-  const locale = Bun.env.LOCALE || "zh";
-  const messages = locale === "zh" ? zh : en;
-  const message = getNestedValue(messages as NestedMessages, key);
+  const messages = createI18n();
+  const message = getNestedValue(messages, key);
 
   if (!message) {
     return key;

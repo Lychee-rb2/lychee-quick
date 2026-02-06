@@ -24,7 +24,7 @@ describe("fetch/mihomo", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    globalThis.fetch = mockFetch;
+    globalThis.fetch = mockFetch as unknown as typeof fetch;
     vi.stubEnv("MIHOMO_URL", "http://127.0.0.1:9090");
     vi.stubEnv("MIHOMO_TOKEN", "test-secret-token");
   });
