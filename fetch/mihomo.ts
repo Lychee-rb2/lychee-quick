@@ -1,13 +1,23 @@
+import { z } from "zod";
+
 export const mihomo = async <RES, T = unknown>(
   uri: string,
   { headers, body, ...options }: Omit<RequestInit, "body"> & { body: T } = {
     body: undefined,
   },
 ) => {
+  const validate = z.object({
+    mihomoUrl: z.string(),
+    mihomoToken: z.string(),
+  });
+  const { mihomoUrl, mihomoToken } = validate.parse({
+    mihomoUrl: Bun.env.MIHOMO_URL,
+    mihomoToken: Bun.env.MIHOMO_TOKEN,
+  });
   try {
-    const response = await fetch(`${process.env.MIHOMO_URL}/${uri}`, {
+    const response = await fetch(`${mihomoUrl}/${uri}`, {
       headers: {
-        authorization: `Bearer ${process.env.MIHOMO_TOKEN}`,
+        authorization: `Bearer ${mihomoToken}`,
         ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,

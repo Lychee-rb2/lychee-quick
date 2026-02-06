@@ -8,8 +8,8 @@ let client: Sdk | null = null;
 
 export const createClient = (): Sdk => {
   if (client) return client;
-  const gitToken = Bun.env.GIT_TOKEN;
-  if (!gitToken) throw new Error("GIT_TOKEN is not set");
+  const validate = z.object({ gitToken: z.string() });
+  const { gitToken } = validate.parse({ gitToken: Bun.env.GIT_TOKEN });
   client = getSdk(
     new GraphQLClient("https://api.github.com/graphql", {
       headers: { Authorization: `bearer ${gitToken}` },
@@ -20,12 +20,10 @@ export const createClient = (): Sdk => {
 
 export const getPullRequestBranches = () => {
   const validate = z.object({
-    githubToken: z.string(),
     githubOwner: z.string(),
     githubRepo: z.string(),
   });
   const { githubOwner, githubRepo } = validate.parse({
-    githubToken: Bun.env.GIT_TOKEN,
     githubOwner: Bun.env.GIT_ORGANIZATION,
     githubRepo: Bun.env.GIT_REPO,
   });

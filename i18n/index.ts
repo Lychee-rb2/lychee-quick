@@ -38,7 +38,7 @@ export const t = (
   key: MessageKeys | string,
   args: Record<string, string> = {},
 ): string => {
-  const locale = process.env.LOCALE || "zh";
+  const locale = Bun.env.LOCALE || "zh";
   const messages = locale === "zh" ? zh : en;
   const message = getNestedValue(messages as NestedMessages, key);
 

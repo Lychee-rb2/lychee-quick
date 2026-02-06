@@ -8,8 +8,8 @@ let client: Sdk | null = null;
 
 export const createClient = (): Sdk => {
   if (client) return client;
-  const key = Bun.env.LINEAR_API_KEY;
-  if (!key) throw new Error("LINEAR_API_KEY is not set");
+  const validate = z.object({ key: z.string() });
+  const { key } = validate.parse({ key: Bun.env.LINEAR_API_KEY });
   client = getSdk(
     new GraphQLClient("https://api.linear.app/graphql", {
       headers: { Authorization: key },

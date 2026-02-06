@@ -10,7 +10,7 @@ export default async function handle() {
   const answer = await pickIssueForRelease(issues);
 
   await releaseIssues(answer);
-  const releaseNote = process.env.RELEASE_NOTE_PAGE;
+  const releaseNote = Bun.env.RELEASE_NOTE_PAGE;
   if (releaseNote) {
     await openUrl(releaseNote);
   }
