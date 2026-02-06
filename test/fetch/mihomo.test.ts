@@ -1,6 +1,11 @@
 import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
 import { mihomo } from "@/fetch/mihomo";
 
+vi.mock("@/help/env", () => ({
+  MIHOMO_URL: () => "http://127.0.0.1:9090",
+  MIHOMO_TOKEN: () => "test-secret-token",
+}));
+
 // Helper to create a mock Response
 const createMockResponse = (
   body: unknown,
@@ -25,13 +30,10 @@ describe("fetch/mihomo", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     globalThis.fetch = mockFetch as unknown as typeof fetch;
-    vi.stubEnv("MIHOMO_URL", "http://127.0.0.1:9090");
-    vi.stubEnv("MIHOMO_TOKEN", "test-secret-token");
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
-    vi.unstubAllEnvs();
   });
 
   describe("successful responses", () => {

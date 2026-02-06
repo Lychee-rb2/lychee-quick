@@ -6,6 +6,7 @@ import {
   t,
   type NestedMessages,
 } from "@/i18n";
+import { LOCALE } from "@/help/env";
 
 // Mock the JSON imports
 vi.mock("@/i18n/zh.json", () => ({
@@ -34,14 +35,18 @@ vi.mock("@/i18n/en.json", () => ({
   },
 }));
 
+vi.mock("@/help/env", () => ({
+  LOCALE: vi.fn().mockReturnValue("zh"),
+}));
+
 describe("i18n", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(LOCALE).mockReturnValue("zh");
     _resetI18n();
   });
 
   afterEach(() => {
-    vi.unstubAllEnvs();
     _resetI18n();
   });
 
@@ -102,8 +107,6 @@ describe("i18n", () => {
 
   describe("createI18n", () => {
     test("should return the same instance on multiple calls", () => {
-      vi.stubEnv("LOCALE", "zh");
-
       const instance1 = createI18n();
       const instance2 = createI18n();
 
@@ -111,11 +114,10 @@ describe("i18n", () => {
     });
 
     test("should re-read env after _resetI18n", () => {
-      vi.stubEnv("LOCALE", "zh");
       createI18n();
 
       _resetI18n();
-      vi.stubEnv("LOCALE", "en");
+      vi.mocked(LOCALE).mockReturnValue("en");
       const messages = createI18n();
 
       expect(getNestedValue(messages, "flat key")).toBe("flat value");
@@ -124,63 +126,49 @@ describe("i18n", () => {
 
   describe("t", () => {
     test("should return flat key value with default zh locale", () => {
-      vi.stubEnv("LOCALE", "zh");
-
       expect(t("flat key")).toBe("扁平键值");
     });
 
     test("should return flat key value with en locale", () => {
-      vi.stubEnv("LOCALE", "en");
+      vi.mocked(LOCALE).mockReturnValue("en");
 
       expect(t("flat key")).toBe("flat value");
     });
 
     test("should return nested key value", () => {
-      vi.stubEnv("LOCALE", "zh");
-
       expect(t("nested.level1.level2")).toBe("嵌套值");
     });
 
     test("should return nested key value with en locale", () => {
-      vi.stubEnv("LOCALE", "en");
+      vi.mocked(LOCALE).mockReturnValue("en");
 
       expect(t("nested.level1.level2")).toBe("nested value");
     });
 
     test("should return key itself when key not found", () => {
-      vi.stubEnv("LOCALE", "zh");
-
       expect(t("nonexistent.key")).toBe("nonexistent.key");
     });
 
     test("should interpolate variables", () => {
-      vi.stubEnv("LOCALE", "zh");
-
       expect(t("withVar", { value: "测试" })).toBe("变量 测试");
     });
 
     test("should interpolate variables in nested key", () => {
-      vi.stubEnv("LOCALE", "en");
+      vi.mocked(LOCALE).mockReturnValue("en");
 
       expect(t("nested.withVar", { name: "World" })).toBe("hello World");
     });
 
     test("should keep placeholder when variable not provided", () => {
-      vi.stubEnv("LOCALE", "zh");
-
       expect(t("withVar", {})).toBe("变量 {value}");
     });
 
     test("should work without args parameter", () => {
-      vi.stubEnv("LOCALE", "zh");
-
       expect(t("flat key")).toBe("扁平键值");
     });
 
     test("should use zh locale when LOCALE env is not set", () => {
-      vi.stubEnv("LOCALE", "");
-
-      // Empty string is falsy, so it should default to zh
+      // LOCALE() defaults to "zh" when env var is empty (handled by env.ts)
       expect(t("flat key")).toBe("扁平键值");
     });
   });

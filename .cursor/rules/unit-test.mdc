@@ -1,5 +1,6 @@
 ---
-alwaysApply: true
+globs: */**/*.test.ts
+alwaysApply: false
 ---
 # 单元测试规范
 
@@ -137,42 +138,52 @@ afterEach(() => {
 
 ### 环境变量管理
 
-使用 `vi.stubEnv()` 管理环境变量，并在 `afterEach` 中清理：
+项目通过 `@/help/env` 模块统一管理环境变量。测试时**优先使用 `vi.mock("@/help/env")` mock 整个模块**，而非 `vi.stubEnv()` 直接修改环境变量：
 
 ```typescript
-// ❌ BAD - 直接修改环境变量，测试失败时无法恢复
-test("should use env var", () => {
-  Bun.env.MY_VAR = "value";
-  // 如果测试失败，环境变量不会被恢复
-  // ...
-  Bun.env.MY_VAR = originalValue; // 可能不会执行
-});
-
-// ❌ BAD - 模块级变量保存，只在文件加载时设置一次
-const originalEnv = Bun.env.MY_VAR; // 模块级
-
+// ❌ BAD - 使用 vi.stubEnv 依赖 env.ts 内部实现
 beforeEach(() => {
-  Bun.env.MY_VAR = "value";
+  vi.stubEnv("MIHOMO_URL", "http://127.0.0.1:9090");
+  vi.stubEnv("MIHOMO_TOKEN", "test-secret-token");
 });
 
 afterEach(() => {
-  Bun.env.MY_VAR = originalEnv; // 可能恢复到错误的值
+  vi.unstubAllEnvs();
 });
 
-// ✅ GOOD - 使用 vi.stubEnv() 和 vi.unstubAllEnvs()
-describe("my tests", () => {
-  beforeEach(() => {
-    vi.stubEnv("MY_VAR", "value");
-  });
-
-  afterEach(() => {
-    vi.unstubAllEnvs(); // 自动清理所有环境变量 stub
-  });
-
-  test("should use env var", () => {
-    // 测试代码
-  });
+// ❌ BAD - 直接修改环境变量，测试失败时无法恢复
+test("should use env var", () => {
+  Bun.env.MY_VAR = "value";
 });
+
+// ✅ GOOD - mock env 模块，与 env.ts 内部实现解耦
+vi.mock("@/help/env", () => ({
+  MIHOMO_URL: () => "http://127.0.0.1:9090",
+  MIHOMO_TOKEN: () => "test-secret-token",
+}));
+```
+
+**适用场景：**
+
+- 被测模块从 `@/help/env` 导入环境变量函数时，使用 `vi.mock("@/help/env")`
+- 仅在直接测试 `env.ts` 本身时，才使用 `vi.stubEnv()` 操控 `Bun.env`
+
+**不要测试环境变量缺失的场景：**
+
+mock `@/help/env` 后，env 函数一定返回有效值。环境变量缺失时的校验和报错是 `env.ts` 的职责，由 `env.test.ts` 覆盖。其他模块的测试**不需要**模拟 env 函数抛出错误：
+
+```typescript
+// ❌ BAD - 在非 env 模块中测试环境变量缺失，职责不属于这里
+mockedRedisUrl.mockImplementation(() => {
+  throw new Error("Missing required environment variable: REDIS_URL");
+});
+expect(() => createRedisClient()).toThrow();
+
+// ✅ GOOD - mock env 后只测试正常逻辑，env 校验交给 env.test.ts
+mockedRedisUrl.mockReturnValue("https://redis.upstash.io");
+mockedRedisToken.mockReturnValue("test-token-123");
+const client = createRedisClient();
+expect(client).toBeDefined();
 ```
 
 ### vi.resetModules() 使用规范
@@ -194,16 +205,14 @@ test("test 1", async () => {
   const module = await import("./module");
 });
 
-// ✅ GOOD - 只在需要改变环境变量时重置
-test("should use different env var", async () => {
-  vi.stubEnv("LOG_LEVEL", "debug");
-  vi.resetModules(); // 只在环境变量改变时重置
+// ✅ GOOD - 只在需要动态 import 并改变模块行为时重置
+test("should use different config", async () => {
+  vi.resetModules();
+  vi.mock("@/help/env", () => ({
+    LOG_LEVEL: () => "debug",
+  }));
   const module = await import("./module");
   // ...
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs(); // 清理环境变量，而不是重置模块
 });
 ```
 
@@ -244,9 +253,6 @@ import { vi, afterEach } from "vitest";
 
 // 全局清理，防止内存泄漏
 afterEach(() => {
-  // 清理所有环境变量 stub
-  vi.unstubAllEnvs();
-  
   // 清理所有定时器
   vi.clearAllTimers();
   
@@ -260,8 +266,9 @@ afterEach(() => {
 编写测试时，确保：
 
 - [ ] 修改的全局对象在 `afterEach` 中恢复
-- [ ] 环境变量使用 `vi.stubEnv()` 设置，`vi.unstubAllEnvs()` 清理
-- [ ] `vi.resetModules()` 只在必要时调用（如环境变量改变）
+- [ ] 环境变量通过 `vi.mock("@/help/env")` mock，而非 `vi.stubEnv()`
+- [ ] 仅测试 `env.ts` 本身时才使用 `vi.stubEnv()`
+- [ ] `vi.resetModules()` 只在必要时调用
 - [ ] 修改全局对象时使用 `try-finally` 确保恢复
 - [ ] 不在模块级别保存环境变量原始值
 - [ ] 测试失败时也能正确清理资源

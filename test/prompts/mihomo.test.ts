@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
+import { describe, expect, test, beforeEach, vi } from "vitest";
 import {
   getProxyDelay,
   delayLevel,
@@ -32,6 +32,10 @@ vi.mock("@inquirer/prompts", () => ({
 
 vi.mock("@/help/mihomo", () => ({
   getDelay: vi.fn(),
+}));
+
+vi.mock("@/help/env", () => ({
+  MIHOMO_TOP_PROXY: vi.fn().mockReturnValue("TOP_PROXY"),
 }));
 
 // Import mocked modules
@@ -336,13 +340,6 @@ describe("mihomo-prompts helper functions", () => {
   describe("searchProxy", () => {
     beforeEach(() => {
       vi.clearAllMocks();
-      // Use stubEnv to properly manage environment variable
-      vi.stubEnv("MIHOMO_TOP_PROXY", "TOP_PROXY");
-    });
-
-    afterEach(() => {
-      // Clear environment variable stubs to prevent memory leaks
-      vi.unstubAllEnvs();
     });
 
     test("should use provided proxies and return selected answer", async () => {

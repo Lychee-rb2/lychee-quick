@@ -1,6 +1,6 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
-import { ZodError } from "zod";
+import { describe, expect, test, vi, beforeEach } from "vitest";
 import { createRedisClient, _resetRedisClient } from "@/fetch/redis";
+import { REDIS_URL, REDIS_TOKEN } from "@/help/env";
 
 // vi.hoisted ensures these are available when vi.mock factory runs (both are hoisted)
 const { mockRedisInstance, MockRedisClass } = vi.hoisted(() => {
@@ -13,22 +13,23 @@ vi.mock("@upstash/redis", () => ({
   Redis: MockRedisClass,
 }));
 
+vi.mock("@/help/env", () => ({
+  REDIS_URL: vi.fn(),
+  REDIS_TOKEN: vi.fn(),
+}));
+
+const mockedRedisUrl = vi.mocked(REDIS_URL);
+const mockedRedisToken = vi.mocked(REDIS_TOKEN);
+
 describe("fetch/redis - createRedisClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     _resetRedisClient();
-    // Ensure env vars are clean before each test
-    delete Bun.env.REDIS_URL;
-    delete Bun.env.REDIS_TOKEN;
-  });
-
-  afterEach(() => {
-    vi.unstubAllEnvs();
   });
 
   test("should create a new Redis instance with env variables", () => {
-    vi.stubEnv("REDIS_URL", "https://redis.upstash.io");
-    vi.stubEnv("REDIS_TOKEN", "test-token-123");
+    mockedRedisUrl.mockReturnValue("https://redis.upstash.io");
+    mockedRedisToken.mockReturnValue("test-token-123");
     const client = createRedisClient();
 
     expect(client).toBeDefined();
@@ -40,8 +41,8 @@ describe("fetch/redis - createRedisClient", () => {
   });
 
   test("should return the same instance on subsequent calls (singleton)", () => {
-    vi.stubEnv("REDIS_URL", "https://redis.upstash.io");
-    vi.stubEnv("REDIS_TOKEN", "test-token-123");
+    mockedRedisUrl.mockReturnValue("https://redis.upstash.io");
+    mockedRedisToken.mockReturnValue("test-token-123");
     const client1 = createRedisClient();
     const client2 = createRedisClient();
 
@@ -49,21 +50,5 @@ describe("fetch/redis - createRedisClient", () => {
     expect(client1).toBe(mockRedisInstance);
     // Constructor should only have been called once
     expect(MockRedisClass).toHaveBeenCalledTimes(1);
-  });
-
-  test("should throw ZodError when REDIS_URL is missing", () => {
-    vi.stubEnv("REDIS_TOKEN", "test-token-123");
-
-    expect(() => createRedisClient()).toThrow(ZodError);
-  });
-
-  test("should throw ZodError when REDIS_TOKEN is missing", () => {
-    vi.stubEnv("REDIS_URL", "https://redis.upstash.io");
-
-    expect(() => createRedisClient()).toThrow(ZodError);
-  });
-
-  test("should throw ZodError when both env vars are missing", () => {
-    expect(() => createRedisClient()).toThrow(ZodError);
   });
 });

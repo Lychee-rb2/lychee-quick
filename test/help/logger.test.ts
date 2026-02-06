@@ -1,5 +1,6 @@
-import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
+import { describe, expect, test, beforeEach, vi } from "vitest";
 import { createLogger, _resetLogger } from "@/help/logger";
+import { LOG_LEVEL } from "@/help/env";
 
 // Mock console.log
 const mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -22,6 +23,10 @@ vi.mock("pino", () => ({
   default: mockPino,
 }));
 
+vi.mock("@/help/env", () => ({
+  LOG_LEVEL: vi.fn().mockReturnValue("info"),
+}));
+
 describe("logger helper functions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -29,15 +34,8 @@ describe("logger helper functions", () => {
     _resetLogger();
   });
 
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    mockConsoleLog.mockClear();
-  });
-
   describe("createLogger", () => {
     test("should create logger with default level 'info' when LOG_LEVEL is not set", () => {
-      delete Bun.env.LOG_LEVEL;
-
       const logger = createLogger();
 
       expect(logger).toBeDefined();
@@ -54,7 +52,7 @@ describe("logger helper functions", () => {
     });
 
     test("should create logger with custom LOG_LEVEL from environment variable", () => {
-      vi.stubEnv("LOG_LEVEL", "debug");
+      vi.mocked(LOG_LEVEL).mockReturnValue("debug");
 
       const logger = createLogger();
 
@@ -98,7 +96,7 @@ describe("logger helper functions", () => {
       const logLevels = ["trace", "debug", "info", "warn", "error", "fatal"];
 
       for (const level of logLevels) {
-        vi.stubEnv("LOG_LEVEL", level);
+        vi.mocked(LOG_LEVEL).mockReturnValue(level);
         _resetLogger();
         mockPino.mockClear();
 

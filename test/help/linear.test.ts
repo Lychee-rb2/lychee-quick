@@ -3,7 +3,6 @@ import {
   expect,
   test,
   beforeEach,
-  afterEach,
   vi,
   type MockedFunction,
 } from "vitest";
@@ -31,6 +30,11 @@ vi.mock("@/help/cli", () => ({
   openUrl: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("@/help/env", () => ({
+  PREVIEWS_COMMENT_MENTIONS: vi.fn().mockReturnValue(""),
+  PREVIEWS_COMMENT_FOOTER: vi.fn().mockReturnValue(undefined),
+}));
+
 vi.mock("@/prompts/linear", () => ({
   selectPreviewLinks: vi.fn(),
   confirmSendComment: vi.fn(),
@@ -47,6 +51,7 @@ import { pbcopy } from "@/help/util";
 import { createClient } from "@/fetch/linear";
 import { openUrl } from "@/help/cli";
 import { selectPreviewLinks, confirmSendComment } from "@/prompts/linear";
+import { PREVIEWS_COMMENT_MENTIONS } from "@/help/env";
 
 // Type definitions for mocks
 type MockedLogger = {
@@ -61,21 +66,8 @@ const getMockedLogger = (): MockedLogger => {
 };
 
 describe("linear helper functions", () => {
-  let originalPreviewsCommentMentions: string | undefined;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    // Save original environment variable
-    originalPreviewsCommentMentions = Bun.env.PREVIEWS_COMMENT_MENTIONS;
-  });
-
-  afterEach(() => {
-    // Restore original environment variable to prevent memory leaks
-    if (originalPreviewsCommentMentions !== undefined) {
-      Bun.env.PREVIEWS_COMMENT_MENTIONS = originalPreviewsCommentMentions;
-    } else {
-      delete Bun.env.PREVIEWS_COMMENT_MENTIONS;
-    }
   });
 
   describe("releaseIssues", () => {
@@ -271,8 +263,9 @@ describe("linear helper functions", () => {
     });
 
     test("should filter out invalid emails from mentions", async () => {
-      // Use stubEnv to properly manage environment variable
-      vi.stubEnv("PREVIEWS_COMMENT_MENTIONS", "invalid-email,also-not-valid,");
+      vi.mocked(PREVIEWS_COMMENT_MENTIONS).mockReturnValue(
+        "invalid-email,also-not-valid,",
+      );
 
       (
         selectPreviewLinks as MockedFunction<typeof selectPreviewLinks>
@@ -294,9 +287,7 @@ describe("linear helper functions", () => {
     });
 
     test("should parse valid emails and filter invalid ones", async () => {
-      // Use stubEnv to properly manage environment variable
-      vi.stubEnv(
-        "PREVIEWS_COMMENT_MENTIONS",
+      vi.mocked(PREVIEWS_COMMENT_MENTIONS).mockReturnValue(
         "valid@example.com,invalid-email",
       );
 

@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
+import { describe, expect, test, beforeEach, vi } from "vitest";
 // Import all exported functions for documentation purposes
 
 import {
@@ -19,6 +19,10 @@ vi.mock("@/fetch/mihomo", () => ({
 
 vi.mock("@/prompts/mihomo", () => ({
   searchProxy: vi.fn(),
+}));
+
+vi.mock("@/help/env", () => ({
+  MIHOMO_TOP_PROXY: vi.fn().mockReturnValue("TOP_PROXY"),
 }));
 
 // Import mocked modules
@@ -101,14 +105,7 @@ describe("mihomo helper functions", () => {
 
   describe("findCurrentProxy", () => {
     beforeEach(() => {
-      // Use stubEnv to properly manage environment variable
-      vi.stubEnv("MIHOMO_TOP_PROXY", "TOP_PROXY");
       vi.clearAllMocks();
-    });
-
-    afterEach(() => {
-      // Clear environment variable stubs to prevent memory leaks
-      vi.unstubAllEnvs();
     });
 
     test("should find current proxy chain", async () => {
@@ -147,14 +144,7 @@ describe("mihomo helper functions", () => {
 
   describe("pickProxy", () => {
     beforeEach(() => {
-      // Use stubEnv to properly manage environment variable
-      vi.stubEnv("MIHOMO_TOP_PROXY", "TOP_PROXY");
       vi.clearAllMocks();
-    });
-
-    afterEach(() => {
-      // Clear environment variable stubs to prevent memory leaks
-      vi.unstubAllEnvs();
     });
 
     test("should handle REFRESH option", async () => {
@@ -611,14 +601,7 @@ describe("mihomo helper functions", () => {
 
   describe("getDelay", () => {
     beforeEach(() => {
-      // Use stubEnv to properly manage environment variable
-      vi.stubEnv("MIHOMO_TOP_PROXY", "TOP_PROXY");
       vi.clearAllMocks();
-    });
-
-    afterEach(() => {
-      // Clear environment variable stubs to prevent memory leaks
-      vi.unstubAllEnvs();
     });
 
     test("should get delay for specific proxy", async () => {
