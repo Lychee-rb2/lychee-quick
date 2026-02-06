@@ -25,7 +25,7 @@
 
 ## Phase 2.1: fetch 模块
 
-### ⬜ `fetch/redis.ts`
+### ✅ `fetch/redis.ts`
 
 - **导出**: `createRedisClient()`
 - **测试点**:
@@ -33,7 +33,7 @@
   - 正确调用 `new Redis()` 并传入参数
 - **Mock**: `@upstash/redis`
 
-### ⬜ `fetch/mihomo.ts`
+### ✅ `fetch/mihomo.ts`
 
 - **导出**: `mihomo<RES, T>()`
 - **测试点**:
@@ -214,8 +214,8 @@ test/
 
 ## 执行顺序
 
-1. ⬜ `fetch/redis.ts` - 最简单，作为起点
-2. ⬜ `fetch/mihomo.ts` - HTTP 请求封装
+1. ✅ `fetch/redis.ts` - 最简单，作为起点
+2. ✅ `fetch/mihomo.ts` - HTTP 请求封装
 3. ⬜ `fetch/github.ts` + `fetch/linear.ts` - 结构相似
 4. ⬜ `fetch/vercel.ts` - 完成 fetch 模块
 5. ⬜ `app/clash/` handlers - 相对简单

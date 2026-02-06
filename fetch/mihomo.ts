@@ -27,7 +27,7 @@ export const mihomo = async <RES, T = unknown>(
         ) {
           errorMessage = String(errorDetails.message);
         } else {
-          errorMessage = errorText || response.statusText;
+          errorMessage = errorText;
         }
       } catch {
         errorMessage = errorText || response.statusText;
