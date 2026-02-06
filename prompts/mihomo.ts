@@ -3,7 +3,7 @@ import { MihomoConfig, MihomoProxy } from "@/types/mihomo";
 import { search } from "@inquirer/prompts";
 import { iconMap } from "@/help/format";
 import { getDelay } from "@/help/mihomo";
-import { z } from "zod";
+import { MIHOMO_TOP_PROXY } from "@/help/env";
 
 export function getProxyDelay(proxy: MihomoProxy) {
   return proxy.history?.at(-1)?.delay;
@@ -64,8 +64,7 @@ export const searchProxy = async (
 ): Promise<SearchProxyResult> => {
   let { proxies, current } = state;
   let hasRefreshed = false;
-  const validate = z.object({ topProxy: z.string() });
-  const { topProxy } = validate.parse({ topProxy: Bun.env.MIHOMO_TOP_PROXY });
+  const topProxy = MIHOMO_TOP_PROXY();
   const answer = await search({
     message: `Pick a proxy ${current?.name || topProxy}`,
     source: async (searchTerm) => {

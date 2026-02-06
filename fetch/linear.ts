@@ -1,15 +1,14 @@
 import { getSdk, type Sdk } from "@/graphql/linear/client.ts";
 import { GraphQLClient } from "graphql-request";
 import { upstashCache } from "@/help/redis.ts";
-import { z } from "zod";
 import { Issue } from "@/types/linear.ts";
+import { LINEAR_API_KEY, LINEAR_TEAM } from "@/help/env";
 
 let client: Sdk | null = null;
 
 export const createClient = (): Sdk => {
   if (client) return client;
-  const validate = z.object({ key: z.string() });
-  const { key } = validate.parse({ key: Bun.env.LINEAR_API_KEY });
+  const key = LINEAR_API_KEY();
   client = getSdk(
     new GraphQLClient("https://api.linear.app/graphql", {
       headers: { Authorization: key },
@@ -19,8 +18,7 @@ export const createClient = (): Sdk => {
 };
 
 export const getIssues = () => {
-  const validate = z.object({ team: z.string() });
-  const { team } = validate.parse({ team: Bun.env.LINEAR_TEAM });
+  const team = LINEAR_TEAM();
   const cache = upstashCache(
     async () =>
       await createClient()

@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { logger, typedBoolean } from "help";
 import type { ModuleLoader, FileSystem } from "@/types/io";
+import { CLI_NAME } from "@/help/env";
 
 // 默认的 ModuleLoader 实现（内联，不分离到新文件）
 const defaultModuleLoader: ModuleLoader = {
@@ -191,7 +192,7 @@ export const main = async (
   fileSystem?: FileSystem,
 ) => {
   dotenv.config({ path: `${meta.dir}/.env` });
-  const cliName = Bun.env.CLI_NAME || "ly";
+  const cliName = CLI_NAME();
   const binIndex = Bun.argv.findIndex((i) => i === meta.path);
   if (binIndex === -1) {
     throw new Error("Parse argv fail");

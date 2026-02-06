@@ -1,11 +1,10 @@
 import { mihomo } from "@/fetch/mihomo";
 import { MihomoProxy } from "@/types/mihomo";
 import { searchProxy } from "@/prompts/mihomo";
-import { z } from "zod";
+import { MIHOMO_TOP_PROXY } from "@/help/env";
 
 export const findCurrentProxy = async (): Promise<MihomoProxy[]> => {
-  const validate = z.object({ topProxy: z.string() });
-  const { topProxy } = validate.parse({ topProxy: Bun.env.MIHOMO_TOP_PROXY });
+  const topProxy = MIHOMO_TOP_PROXY();
   const proxies = await mihomo<{ proxies: Record<string, MihomoProxy> }>(
     `proxies`,
   );

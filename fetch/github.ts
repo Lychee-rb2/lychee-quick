@@ -1,15 +1,14 @@
 import { getSdk, Sdk } from "@/graphql/github/client.ts";
 import { GraphQLClient } from "graphql-request";
-import { z } from "zod";
 import { upstashCache } from "@/help/redis.ts";
 import { PullRequest } from "@/types/github.ts";
+import { GIT_TOKEN, GIT_ORGANIZATION, GIT_REPO } from "@/help/env";
 
 let client: Sdk | null = null;
 
 export const createClient = (): Sdk => {
   if (client) return client;
-  const validate = z.object({ gitToken: z.string() });
-  const { gitToken } = validate.parse({ gitToken: Bun.env.GIT_TOKEN });
+  const gitToken = GIT_TOKEN();
   client = getSdk(
     new GraphQLClient("https://api.github.com/graphql", {
       headers: { Authorization: `bearer ${gitToken}` },
@@ -19,14 +18,8 @@ export const createClient = (): Sdk => {
 };
 
 export const getPullRequestBranches = () => {
-  const validate = z.object({
-    githubOwner: z.string(),
-    githubRepo: z.string(),
-  });
-  const { githubOwner, githubRepo } = validate.parse({
-    githubOwner: Bun.env.GIT_ORGANIZATION,
-    githubRepo: Bun.env.GIT_REPO,
-  });
+  const githubOwner = GIT_ORGANIZATION();
+  const githubRepo = GIT_REPO();
   let pullRequest: PullRequest[] = [];
   const cache = upstashCache(() =>
     createClient()

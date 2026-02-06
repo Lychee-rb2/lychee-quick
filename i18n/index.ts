@@ -1,5 +1,6 @@
 import zh from "./zh.json";
 import en from "./en.json";
+import { LOCALE } from "@/help/env";
 
 export type NestedMessages = {
   [key: string]: string | NestedMessages;
@@ -41,7 +42,7 @@ const resolveMessages = (locale: string): NestedMessages =>
 
 export const createI18n = (): NestedMessages => {
   if (messages) return messages;
-  const locale = Bun.env.LOCALE || "zh";
+  const locale = LOCALE();
   messages = resolveMessages(locale);
   return messages;
 };

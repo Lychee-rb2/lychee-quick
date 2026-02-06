@@ -1,23 +1,12 @@
 import { logger } from "@/help";
 import { getDelay } from "@/help/mihomo";
 import { openUrl } from "@/help/cli.ts";
-import { z } from "zod";
+import { MIHOMO_URL, MIHOMO_TOKEN, MIHOMO_BOARD } from "@/help/env";
 
 export default async function handler() {
-  const validate = z.object({
-    mihomoUrl: z.string(),
-    mihomoToken: z.string(),
-    mihomoBoard: z.string(),
-  });
-  const {
-    mihomoUrl: mihomoUrlString,
-    mihomoToken,
-    mihomoBoard,
-  } = validate.parse({
-    mihomoUrl: Bun.env.MIHOMO_URL,
-    mihomoToken: Bun.env.MIHOMO_TOKEN,
-    mihomoBoard: Bun.env.MIHOMO_BOARD,
-  });
+  const mihomoUrlString = MIHOMO_URL();
+  const mihomoToken = MIHOMO_TOKEN();
+  const mihomoBoard = MIHOMO_BOARD();
   const mihomoUrl = new URL(mihomoUrlString);
   const url = new URL(mihomoBoard);
   url.searchParams.set("hostname", mihomoUrl.hostname);

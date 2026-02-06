@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { MIHOMO_URL, MIHOMO_TOKEN } from "@/help/env";
 
 export const mihomo = async <RES, T = unknown>(
   uri: string,
@@ -6,14 +6,8 @@ export const mihomo = async <RES, T = unknown>(
     body: undefined,
   },
 ) => {
-  const validate = z.object({
-    mihomoUrl: z.string(),
-    mihomoToken: z.string(),
-  });
-  const { mihomoUrl, mihomoToken } = validate.parse({
-    mihomoUrl: Bun.env.MIHOMO_URL,
-    mihomoToken: Bun.env.MIHOMO_TOKEN,
-  });
+  const mihomoUrl = MIHOMO_URL();
+  const mihomoToken = MIHOMO_TOKEN();
   try {
     const response = await fetch(`${mihomoUrl}/${uri}`, {
       headers: {

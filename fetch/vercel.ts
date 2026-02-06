@@ -2,23 +2,20 @@ import { Vercel } from "@vercel/sdk";
 
 import mapValues from "lodash-es/mapValues";
 import pick from "lodash-es/pick";
-import { z } from "zod";
 import { Deployment, Project } from "@/types/vercel.ts";
 import { upstashCache } from "@/help/redis.ts";
+import { VERCEL_PERSONAL_TOKEN, VERCEL_TEAM } from "@/help/env";
 
 let vercel: Vercel | null = null;
 export const createVercelClient = () => {
   if (vercel) return vercel;
-  vercel = new Vercel({
-    bearerToken: Bun.env.VERCEL_PERSONAL_TOKEN,
-    timeoutMs: 5000,
-  });
+  const bearerToken = VERCEL_PERSONAL_TOKEN();
+  vercel = new Vercel({ bearerToken, timeoutMs: 5000 });
   return vercel;
 };
 
 export const getProjects = () => {
-  const validate = z.object({ teamId: z.string() });
-  const { teamId } = validate.parse({ teamId: Bun.env.VERCEL_TEAM });
+  const teamId = VERCEL_TEAM();
   let project: Project[] = [];
 
   const cache = upstashCache(() =>
@@ -58,10 +55,7 @@ export const getProjects = () => {
 };
 
 export const getDeployments = (branch: string) => {
-  const validate = z.object({
-    teamId: z.string(),
-  });
-  const { teamId } = validate.parse({ teamId: Bun.env.VERCEL_TEAM });
+  const teamId = VERCEL_TEAM();
   const cache = upstashCache(
     async () =>
       await createVercelClient()

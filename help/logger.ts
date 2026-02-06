@@ -1,4 +1,5 @@
 import pino, { type BaseLogger } from "pino";
+import { LOG_LEVEL } from "@/help/env";
 
 // 扩展 logger 类型，添加 plain 方法
 export interface ExtendedLogger extends BaseLogger {
@@ -8,7 +9,7 @@ export interface ExtendedLogger extends BaseLogger {
 export let logger: ExtendedLogger;
 export const createLogger = () => {
   if (logger) return logger;
-  const logLevel = Bun.env.LOG_LEVEL || "info";
+  const logLevel = LOG_LEVEL();
   // 将 logger 输出重定向到 stderr，避免与 inquirer 的 stdout 冲突
   // 使用 pino-pretty 格式化，通过 destination 选项输出到 stderr（文件描述符 2）
   const pinoLogger = pino({

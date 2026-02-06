@@ -7,14 +7,13 @@ import { selectPreviewLinks, confirmSendComment } from "@/prompts/linear";
 import type { Attachment, Issue } from "@/types/linear";
 import { format } from "date-fns";
 import { z } from "zod";
+import { PREVIEWS_COMMENT_MENTIONS, PREVIEWS_COMMENT_FOOTER } from "@/help/env";
 
 export { buildCommentBody } from "@/help/linear-content.ts";
 
 export const sendPreview = async (issue: Issue, attachment: Attachment) => {
   const client = createClient();
-  const previewsCommentMentions = (
-    Bun.env.PREVIEWS_COMMENT_MENTIONS || ""
-  ).split(",");
+  const previewsCommentMentions = PREVIEWS_COMMENT_MENTIONS().split(",");
 
   const emails = previewsCommentMentions.flatMap((i) => {
     const result = z.string().email().safeParse(i.trim());
@@ -33,7 +32,7 @@ export const sendPreview = async (issue: Issue, attachment: Attachment) => {
     issue.identifier,
     mentions,
     previewLinks,
-    Bun.env.PREVIEWS_COMMENT_FOOTER,
+    PREVIEWS_COMMENT_FOOTER(),
   );
 
   body.markdown.forEach((i) => logger.plain(i));
