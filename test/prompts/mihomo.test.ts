@@ -105,18 +105,18 @@ describe("mihomo-prompts helper functions", () => {
       expect(delayLevel(0)).toBe("mihomo_delay_very_bad");
     });
 
-    test("should return good for delay less than 100", () => {
+    test("should return good for delay less than 200", () => {
       expect(delayLevel(50)).toBe("mihomo_delay_good");
       expect(delayLevel(199)).toBe("mihomo_delay_good");
     });
 
-    test("should return normal for delay between 100 and 299", () => {
+    test("should return normal for delay between 200 and 499", () => {
       expect(delayLevel(200)).toBe("mihomo_delay_normal");
       expect(delayLevel(400)).toBe("mihomo_delay_normal");
       expect(delayLevel(499)).toBe("mihomo_delay_normal");
     });
 
-    test("should return bad for delay 300 or more", () => {
+    test("should return bad for delay 500 or more", () => {
       expect(delayLevel(500)).toBe("mihomo_delay_bad");
       expect(delayLevel(1000)).toBe("mihomo_delay_bad");
     });
