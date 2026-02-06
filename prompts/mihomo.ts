@@ -78,7 +78,7 @@ export const searchProxy = async (
           `proxies`,
         );
         proxies = result.proxies;
-        current = proxies[process.env.MIHOMO_TOP_PROXY];
+        current = proxies[topProxy];
       }
       // At this point, proxies and current should be defined
       if (!proxies || !current) {
