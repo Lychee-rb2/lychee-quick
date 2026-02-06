@@ -735,7 +735,7 @@ describe("io helper functions", () => {
     };
 
     beforeEach(() => {
-      process.env.CLI_NAME = "test-cli";
+      Bun.env.CLI_NAME = "test-cli";
       const mockedDotenv = dotenv as unknown as MockedDotenv;
       mockedDotenv.config.mockReturnValue(
         {} as ReturnType<typeof dotenv.config>,
@@ -743,7 +743,7 @@ describe("io helper functions", () => {
     });
 
     afterEach(() => {
-      delete process.env.CLI_NAME;
+      delete Bun.env.CLI_NAME;
     });
 
     test("should show available actions when no arguments", async () => {
@@ -1035,7 +1035,7 @@ describe("io helper functions", () => {
     });
 
     test("should use default CLI_NAME when not set", async () => {
-      delete process.env.CLI_NAME;
+      delete Bun.env.CLI_NAME;
       const meta = createMockMeta("/test/bin.ts");
       const bun = globalThis.Bun as unknown as MockedBun;
       bun.argv = ["/test/bin.ts"];

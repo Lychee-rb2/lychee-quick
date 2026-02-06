@@ -18,8 +18,8 @@ describe("fetch/redis - createRedisClient", () => {
     vi.clearAllMocks();
     _resetRedisClient();
     // Ensure env vars are clean before each test
-    delete process.env.REDIS_URL;
-    delete process.env.REDIS_TOKEN;
+    delete Bun.env.REDIS_URL;
+    delete Bun.env.REDIS_TOKEN;
   });
 
   afterEach(() => {

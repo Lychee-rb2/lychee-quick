@@ -149,14 +149,14 @@ test("should use env var", () => {
 });
 
 // ❌ BAD - 模块级变量保存，只在文件加载时设置一次
-const originalEnv = process.env.MY_VAR; // 模块级
+const originalEnv = Bun.env.MY_VAR; // 模块级
 
 beforeEach(() => {
-  process.env.MY_VAR = "value";
+  Bun.env.MY_VAR = "value";
 });
 
 afterEach(() => {
-  process.env.MY_VAR = originalEnv; // 可能恢复到错误的值
+  Bun.env.MY_VAR = originalEnv; // 可能恢复到错误的值
 });
 
 // ✅ GOOD - 使用 vi.stubEnv() 和 vi.unstubAllEnvs()
