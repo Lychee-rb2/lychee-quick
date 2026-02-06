@@ -5,8 +5,10 @@ import {
   choices,
   getChildren,
   searchProxy,
+  formatMode,
+  pickMode,
 } from "@/prompts/mihomo";
-import type { MihomoProxy } from "@/types/mihomo";
+import type { MihomoProxy, MihomoConfig } from "@/types/mihomo";
 
 type Choice = { name: string; value: string };
 
@@ -689,6 +691,188 @@ describe("mihomo-prompts helper functions", () => {
           current: undefined,
         }),
       ).rejects.toThrow("Proxies or current proxy is not available");
+    });
+  });
+
+  describe("formatMode", () => {
+    const createMockConfig = (mode: MihomoConfig["mode"]): MihomoConfig => ({
+      mode,
+    });
+
+    test("should format rule mode correctly", () => {
+      const config = createMockConfig("rule");
+
+      const result = formatMode("rule", config);
+
+      expect(result.value).toBe("rule");
+      expect(result.name).toContain("rule");
+    });
+
+    test("should format direct mode correctly", () => {
+      const config = createMockConfig("direct");
+
+      const result = formatMode("direct", config);
+
+      expect(result.value).toBe("direct");
+      expect(result.name).toContain("direct");
+    });
+
+    test("should format global mode correctly", () => {
+      const config = createMockConfig("global");
+
+      const result = formatMode("global", config);
+
+      expect(result.value).toBe("global");
+      expect(result.name).toContain("global");
+    });
+
+    test("should show active icon when mode matches config.mode", () => {
+      const config = createMockConfig("rule");
+
+      const result = formatMode("rule", config);
+
+      // Active icon should be present - 🔥
+      expect(result.name).toContain("🔥");
+    });
+
+    test("should not show active icon when mode does not match config.mode", () => {
+      const config = createMockConfig("rule");
+
+      const directResult = formatMode("direct", config);
+      const globalResult = formatMode("global", config);
+
+      // Active icon should not be present
+      expect(directResult.name).not.toContain("🔥");
+      expect(globalResult.name).not.toContain("🔥");
+    });
+
+    test("should include mode icon in name", () => {
+      const config = createMockConfig("rule");
+
+      const ruleResult = formatMode("rule", config);
+      const directResult = formatMode("direct", config);
+      const globalResult = formatMode("global", config);
+
+      // Each mode should have its icon - 🔍, 🚫, 🌍
+      expect(ruleResult.name).toContain("🔍");
+      expect(directResult.name).toContain("🚫");
+      expect(globalResult.name).toContain("🌍");
+    });
+  });
+
+  describe("pickMode", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    const createMockConfig = (mode: MihomoConfig["mode"]): MihomoConfig => ({
+      mode,
+    });
+
+    test("should call search with correct message", async () => {
+      const mockConfig = createMockConfig("rule");
+      getMockedMihomo().mockResolvedValue(mockConfig);
+
+      mockSearchImpl(async (options) => {
+        expect(options.message).toBe("To which mode?");
+        await options.source("");
+        return "rule";
+      });
+
+      await pickMode();
+    });
+
+    test("should return all modes when search term is empty", async () => {
+      const mockConfig = createMockConfig("rule");
+      getMockedMihomo().mockResolvedValue(mockConfig);
+
+      mockSearchImpl(async (options) => {
+        const choices = await options.source("");
+        expect(choices).toHaveLength(3);
+        expect(choices.map((c) => c.value)).toEqual([
+          "rule",
+          "direct",
+          "global",
+        ]);
+        return "rule";
+      });
+
+      await pickMode();
+    });
+
+    test("should filter modes by search term", async () => {
+      const mockConfig = createMockConfig("rule");
+      getMockedMihomo().mockResolvedValue(mockConfig);
+
+      mockSearchImpl(async (options) => {
+        const choices = await options.source("dir");
+        expect(choices).toHaveLength(1);
+        expect(choices[0].value).toBe("direct");
+        return "direct";
+      });
+
+      const result = await pickMode();
+
+      expect(result).toBe("direct");
+    });
+
+    test("should filter modes case-insensitively", async () => {
+      const mockConfig = createMockConfig("rule");
+      getMockedMihomo().mockResolvedValue(mockConfig);
+
+      mockSearchImpl(async (options) => {
+        const choices = await options.source("GLOBAL");
+        expect(choices).toHaveLength(1);
+        expect(choices[0].value).toBe("global");
+        return "global";
+      });
+
+      await pickMode();
+    });
+
+    test("should cache config and not call mihomo multiple times", async () => {
+      const mockConfig = createMockConfig("rule");
+      const mihomoMock = getMockedMihomo();
+      mihomoMock.mockResolvedValue(mockConfig);
+
+      mockSearchImpl(async (options) => {
+        await options.source("");
+        await options.source("rule");
+        await options.source("direct");
+        return "rule";
+      });
+
+      await pickMode();
+
+      expect(mihomoMock).toHaveBeenCalledTimes(1);
+      expect(mihomoMock).toHaveBeenCalledWith("configs");
+    });
+
+    test("should return selected mode", async () => {
+      const mockConfig = createMockConfig("rule");
+      getMockedMihomo().mockResolvedValue(mockConfig);
+
+      mockSearchImpl(async (options) => {
+        await options.source("");
+        return "global";
+      });
+
+      const result = await pickMode();
+
+      expect(result).toBe("global");
+    });
+
+    test("should return empty array when no modes match search term", async () => {
+      const mockConfig = createMockConfig("rule");
+      getMockedMihomo().mockResolvedValue(mockConfig);
+
+      mockSearchImpl(async (options) => {
+        const choices = await options.source("xyz");
+        expect(choices).toHaveLength(0);
+        return "rule";
+      });
+
+      await pickMode();
     });
   });
 });
