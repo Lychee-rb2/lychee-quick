@@ -17,21 +17,11 @@ export const createVercelClient = () => {
 };
 
 export const getProjects = () => {
-  const validate = z.object({
-    teamId: z.string(),
-    token: z.string(),
-    redisUrl: z.string(),
-    redisToken: z.string(),
-  });
-  const { teamId, redisToken, redisUrl } = validate.parse({
-    teamId: Bun.env.VERCEL_TEAM,
-    token: Bun.env.VERCEL_PERSONAL_TOKEN,
-    redisUrl: Bun.env.REDIS_URL,
-    redisToken: Bun.env.REDIS_TOKEN,
-  });
+  const validate = z.object({ teamId: z.string() });
+  const { teamId } = validate.parse({ teamId: Bun.env.VERCEL_TEAM });
   let project: Project[] = [];
 
-  const cache = upstashCache(redisUrl, redisToken, () =>
+  const cache = upstashCache(() =>
     createVercelClient()
       .projects.getProjects({ teamId })
       .then((res) =>
@@ -70,18 +60,9 @@ export const getProjects = () => {
 export const getDeployments = (branch: string) => {
   const validate = z.object({
     teamId: z.string(),
-    redisUrl: z.string(),
-    redisToken: z.string(),
   });
-  const { teamId, redisToken, redisUrl } = validate.parse({
-    teamId: Bun.env.VERCEL_TEAM,
-    token: Bun.env.VERCEL_PERSONAL_TOKEN,
-    redisUrl: Bun.env.REDIS_URL,
-    redisToken: Bun.env.REDIS_TOKEN,
-  });
+  const { teamId } = validate.parse({ teamId: Bun.env.VERCEL_TEAM });
   const cache = upstashCache(
-    redisUrl,
-    redisToken,
     async () =>
       await createVercelClient()
         .deployments.getDeployments({ teamId, branch })

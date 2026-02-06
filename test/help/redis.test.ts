@@ -36,8 +36,6 @@ const getMockedRedis = (): MockedRedis => {
 };
 
 describe("upstashCache", () => {
-  const mockUrl = "https://test-redis.upstash.io";
-  const mockToken = "test-token";
   const mockFetch = vi.fn();
 
   beforeEach(() => {
@@ -52,7 +50,7 @@ describe("upstashCache", () => {
       const mockRedis = getMockedRedis();
       mockRedis.get.mockResolvedValue(cachedValue);
 
-      const cache = upstashCache(mockUrl, mockToken, mockFetch);
+      const cache = upstashCache(mockFetch);
       const result = await cache.get("test-key", 1000);
 
       expect(result).toEqual(cachedValue);
@@ -68,7 +66,7 @@ describe("upstashCache", () => {
       mockRedis.set.mockResolvedValue("OK");
       mockFetch.mockResolvedValue(fetchedValue);
 
-      const cache = upstashCache(mockUrl, mockToken, mockFetch);
+      const cache = upstashCache(mockFetch);
       const result = await cache.get("test-key", 5000);
 
       expect(result).toEqual(fetchedValue);
@@ -86,7 +84,7 @@ describe("upstashCache", () => {
       mockRedis.set.mockResolvedValue("OK");
       mockFetch.mockResolvedValue(fetchedValue);
 
-      const cache = upstashCache(mockUrl, mockToken, mockFetch);
+      const cache = upstashCache(mockFetch);
       const result = await cache.get("test-key", 3000);
 
       expect(result).toEqual(fetchedValue);
@@ -105,7 +103,7 @@ describe("upstashCache", () => {
       mockRedis.set.mockResolvedValue("OK");
       mockFetch.mockResolvedValue(fetchedValue);
 
-      const cache = upstashCache(mockUrl, mockToken, mockFetch);
+      const cache = upstashCache(mockFetch);
       const result = await cache.get("test-key", 2000, true);
 
       expect(result).toEqual(fetchedValue);
@@ -123,7 +121,7 @@ describe("upstashCache", () => {
       mockRedis.set.mockResolvedValue("OK");
       mockFetch.mockResolvedValue(fetchedValue);
 
-      const cache = upstashCache(mockUrl, mockToken, mockFetch);
+      const cache = upstashCache(mockFetch);
       await cache.get("test-key", 10000);
 
       expect(mockRedis.set).toHaveBeenCalledWith("test-key", fetchedValue, {
@@ -138,7 +136,7 @@ describe("upstashCache", () => {
       mockRedis.set.mockResolvedValue("OK");
       mockFetch.mockResolvedValue(stringValue);
 
-      const cache = upstashCache(mockUrl, mockToken, mockFetch);
+      const cache = upstashCache(mockFetch);
       const result = await cache.get("string-key", 1000);
 
       expect(result).toBe(stringValue);
@@ -153,7 +151,7 @@ describe("upstashCache", () => {
       const mockRedis = getMockedRedis();
       mockRedis.del.mockResolvedValue(1);
 
-      const cache = upstashCache(mockUrl, mockToken, mockFetch);
+      const cache = upstashCache(mockFetch);
       await cache.remove("test-key");
 
       expect(mockRedis.del).toHaveBeenCalledWith("test-key");
@@ -164,7 +162,7 @@ describe("upstashCache", () => {
       const mockRedis = getMockedRedis();
       mockRedis.del.mockResolvedValue(0);
 
-      const cache = upstashCache(mockUrl, mockToken, mockFetch);
+      const cache = upstashCache(mockFetch);
       await cache.remove("non-existent-key");
 
       expect(mockRedis.del).toHaveBeenCalledWith("non-existent-key");

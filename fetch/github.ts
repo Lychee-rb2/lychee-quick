@@ -23,18 +23,14 @@ export const getPullRequestBranches = () => {
     githubToken: z.string(),
     githubOwner: z.string(),
     githubRepo: z.string(),
-    redisUrl: z.string(),
-    redisToken: z.string(),
   });
-  const { githubOwner, githubRepo, redisToken, redisUrl } = validate.parse({
+  const { githubOwner, githubRepo } = validate.parse({
     githubToken: Bun.env.GIT_TOKEN,
     githubOwner: Bun.env.GIT_ORGANIZATION,
     githubRepo: Bun.env.GIT_REPO,
-    redisUrl: Bun.env.REDIS_URL,
-    redisToken: Bun.env.REDIS_TOKEN,
   });
   let pullRequest: PullRequest[] = [];
-  const cache = upstashCache(redisUrl, redisToken, () =>
+  const cache = upstashCache(() =>
     createClient()
       .pullRequest({ owner: githubOwner, name: githubRepo })
       .then((res) => res.repository.pullRequests.nodes),

@@ -19,19 +19,9 @@ export const createClient = (): Sdk => {
 };
 
 export const getIssues = () => {
-  const validate = z.object({
-    team: z.string(),
-    redisUrl: z.string(),
-    redisToken: z.string(),
-  });
-  const { team, redisToken, redisUrl } = validate.parse({
-    team: Bun.env.LINEAR_TEAM,
-    redisUrl: Bun.env.REDIS_URL,
-    redisToken: Bun.env.REDIS_TOKEN,
-  });
+  const validate = z.object({ team: z.string() });
+  const { team } = validate.parse({ team: Bun.env.LINEAR_TEAM });
   const cache = upstashCache(
-    redisUrl,
-    redisToken,
     async () =>
       await createClient()
         .issues({ team })

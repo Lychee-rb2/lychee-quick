@@ -1,11 +1,7 @@
 import { createRedisClient } from "@/fetch/redis.ts";
 
-export const upstashCache = <T>(
-  url: string,
-  token: string,
-  fetch: () => Promise<T>,
-) => {
-  const redis = createRedisClient(url, token);
+export const upstashCache = <T>(fetch: () => Promise<T>) => {
+  const redis = createRedisClient();
   return {
     get: async (key: string, cacheTime: number, force = false) => {
       if (force) {
