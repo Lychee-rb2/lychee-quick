@@ -15,11 +15,11 @@
 | `help/mihomo.ts`        | `findCurrentProxy()` | 100% |
 | `help/mihomo.ts`        | `pickProxy()`      | 100%   |
 | `help/mihomo.ts`        | `getDelay()`       | 100%   |
-| `help/mihomo-select.ts`  | `getProxyDelay()`  | 100%   |
-| `help/mihomo-select.ts`  | `delayLevel()`     | 100%   |
-| `help/mihomo-select.ts`  | `choices()`        | 100%   |
-| `help/mihomo-select.ts`  | `getChildren()`    | 100%   |
-| `help/mihomo-select.ts`  | `searchProxy()`    | 100%   |
+| `help/mihomo-prompts.ts`  | `getProxyDelay()`  | 100%   |
+| `help/mihomo-prompts.ts`  | `delayLevel()`     | 100%   |
+| `help/mihomo-prompts.ts`  | `choices()`        | 100%   |
+| `help/mihomo-prompts.ts`  | `getChildren()`    | 100%   |
+| `help/mihomo-prompts.ts`  | `searchProxy()`    | 100%   |
 | `help/io.ts`            | `expandAlias()`    | 100%   |
 | `help/io.ts`            | `showAvailableActions()` | 100% |
 | `help/cli.ts`            | `cli()`            | 100%   |

@@ -5,7 +5,7 @@ import {
   choices,
   getChildren,
   searchProxy,
-} from "@/help/mihomo-select";
+} from "@/help/mihomo-prompts";
 import type { MihomoProxy } from "@/types/mihomo";
 
 type Choice = { name: string; value: string };
@@ -52,7 +52,7 @@ const getMockedMihomo = (): ReturnType<typeof vi.fn> =>
 const getMockedGetDelay = (): ReturnType<typeof vi.fn> =>
   getDelay as unknown as ReturnType<typeof vi.fn>;
 
-describe("mihomo-select helper functions", () => {
+describe("mihomo-prompts helper functions", () => {
   describe("getProxyDelay", () => {
     test("should return delay from last history entry", () => {
       const proxy: MihomoProxy = {
