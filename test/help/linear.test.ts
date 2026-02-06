@@ -31,7 +31,7 @@ vi.mock("@/help/cli", () => ({
   openUrl: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@/help/linear-prompts", () => ({
+vi.mock("@/prompts/linear", () => ({
   selectPreviewLinks: vi.fn(),
   confirmSendComment: vi.fn(),
 }));
@@ -46,7 +46,7 @@ import { logger } from "@/help/logger";
 import { pbcopy } from "@/help/util";
 import { createClient } from "@/fetch/linear";
 import { openUrl } from "@/help/cli";
-import { selectPreviewLinks, confirmSendComment } from "@/help/linear-prompts";
+import { selectPreviewLinks, confirmSendComment } from "@/prompts/linear";
 
 // Type definitions for mocks
 type MockedLogger = {

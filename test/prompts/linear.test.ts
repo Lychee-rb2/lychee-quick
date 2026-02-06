@@ -13,7 +13,7 @@ vi.mock("@inquirer/prompts", () => ({
   confirm: vi.fn(),
 }));
 
-import { selectPreviewLinks, confirmSendComment } from "@/help/linear-prompts";
+import { selectPreviewLinks, confirmSendComment } from "@/prompts/linear";
 import { checkbox, confirm } from "@inquirer/prompts";
 
 describe("linear-prompts", () => {

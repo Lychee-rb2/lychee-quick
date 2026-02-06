@@ -1,8 +1,8 @@
 import { mihomo } from "@/fetch/mihomo";
 import { MihomoProxy } from "@/types/mihomo";
 import { search } from "@inquirer/prompts";
-import { iconMap } from ".";
-import { getDelay } from "./mihomo";
+import { iconMap } from "@/help/format";
+import { getDelay } from "@/help/mihomo";
 
 export function getProxyDelay(proxy: MihomoProxy) {
   return proxy.history?.at(-1)?.delay;

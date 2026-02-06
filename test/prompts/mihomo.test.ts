@@ -5,7 +5,7 @@ import {
   choices,
   getChildren,
   searchProxy,
-} from "@/help/mihomo-prompts";
+} from "@/prompts/mihomo";
 import type { MihomoProxy } from "@/types/mihomo";
 
 type Choice = { name: string; value: string };

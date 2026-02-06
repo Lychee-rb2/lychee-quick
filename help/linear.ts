@@ -3,10 +3,7 @@ import { pbcopy } from "@/help/util.ts";
 import { logger } from "@/help/logger.ts";
 import { openUrl } from "@/help/cli.ts";
 import { buildCommentBody } from "@/help/linear-content.ts";
-import {
-  selectPreviewLinks,
-  confirmSendComment,
-} from "@/help/linear-prompts.ts";
+import { selectPreviewLinks, confirmSendComment } from "@/prompts/linear";
 import type { Attachment, Issue } from "@/types/linear";
 import { format } from "date-fns";
 import { z } from "zod";
