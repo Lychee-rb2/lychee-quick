@@ -363,6 +363,54 @@ describe("linear-prompts", () => {
 
       await pickIssueForBranch();
     });
+
+    test("should sort non-special groups by issue count (length fallback)", async () => {
+      // Test case where both groups are not in SORT_BY, covering the || fallback branch
+      const issuesWithMultipleOtherAssignees: Issue[] = [
+        createMockIssue({
+          identifier: "LIN-10",
+          title: "Alice Issue 1",
+          state: createMockState("started"),
+          assignee: { isMe: false, displayName: "Alice" },
+        }),
+        createMockIssue({
+          identifier: "LIN-11",
+          title: "Alice Issue 2",
+          state: createMockState("started"),
+          assignee: { isMe: false, displayName: "Alice" },
+        }),
+        createMockIssue({
+          identifier: "LIN-12",
+          title: "Alice Issue 3",
+          state: createMockState("started"),
+          assignee: { isMe: false, displayName: "Alice" },
+        }),
+        createMockIssue({
+          identifier: "LIN-20",
+          title: "Bob Issue 1",
+          state: createMockState("started"),
+          assignee: { isMe: false, displayName: "Bob" },
+        }),
+      ];
+      const mockGet = vi
+        .fn()
+        .mockResolvedValue(issuesWithMultipleOtherAssignees);
+      getMockedGetIssues().mockReturnValue({ get: mockGet });
+
+      mockSearchImpl(async (options) => {
+        const choices = await options.source("");
+        const separators = choices.filter(
+          (c) => "type" in c && c.type === "separator",
+        ) as { type: string; separator: string }[];
+        // Alice has 3 issues, Bob has 1 issue
+        // When both groups are not in SORT_BY, sort by length (more issues first)
+        expect(separators[0].separator).toBe("Alice");
+        expect(separators[1].separator).toBe("Bob");
+        return issuesWithMultipleOtherAssignees[0];
+      });
+
+      await pickIssueForBranch();
+    });
   });
 
   describe("pickIssueForPreview", () => {
