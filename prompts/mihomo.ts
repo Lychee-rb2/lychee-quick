@@ -1,5 +1,5 @@
 import { mihomo } from "@/fetch/mihomo";
-import { MihomoProxy } from "@/types/mihomo";
+import { MihomoConfig, MihomoProxy } from "@/types/mihomo";
 import { search } from "@inquirer/prompts";
 import { iconMap } from "@/help/format";
 import { getDelay } from "@/help/mihomo";
@@ -10,8 +10,8 @@ export function getProxyDelay(proxy: MihomoProxy) {
 
 export function delayLevel(delay: number) {
   if (delay === 0) return "mihomo_delay_very_bad" as const;
-  if (delay < 100) return "mihomo_delay_good" as const;
-  if (delay < 300) return "mihomo_delay_normal" as const;
+  if (delay < 200) return "mihomo_delay_good" as const;
+  if (delay < 500) return "mihomo_delay_normal" as const;
   return "mihomo_delay_bad" as const;
 }
 
@@ -102,4 +102,27 @@ export const searchProxy = async (
       current,
     },
   };
+};
+
+export function formatMode(mode: MihomoConfig["mode"], config: MihomoConfig) {
+  return {
+    name: `${iconMap(`mihomo_${mode}`)}${mode}${
+      mode === config.mode ? iconMap("mihomo_active") : ``
+    }`,
+    value: mode,
+  };
+}
+const modes = ["rule", "direct", "global"] as const;
+export const pickMode = async (): Promise<MihomoConfig["mode"]> => {
+  let config: MihomoConfig;
+  return await search({
+    message: "To which mode?",
+    source: async (searchTerm) => {
+      config = config || (await mihomo<MihomoConfig>(`configs`));
+      if (!searchTerm) return modes.map((mode) => formatMode(mode, config));
+      return modes
+        .filter((mode) => mode.includes(searchTerm.toLowerCase()))
+        .map((mode) => formatMode(mode, config));
+    },
+  });
 };

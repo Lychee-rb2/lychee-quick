@@ -1,21 +1,9 @@
-import { getPullRequestBranches } from "@/fetch/github.ts";
-import { select } from "@inquirer/prompts";
 import { getDeployments } from "@/fetch/vercel.ts";
 import { Deployment } from "@/types/vercel.ts";
+import { pickBranchForCheck } from "@/prompts/vercel";
 
 export default async function handle() {
-  const { get } = getPullRequestBranches();
-  const branches = await get();
-  const branch = await select({
-    message: "Check which branch?",
-    choices: branches.map((branch) => ({
-      name: branch.headRefName,
-      value: branch,
-      description: branch.title,
-      short: branch.headRefName,
-    })),
-    loop: false,
-  });
+  const branch = await pickBranchForCheck();
   const deploymentCache = getDeployments(branch.headRefName);
   const deployments = await deploymentCache.get();
   deployments.reduce<
@@ -28,9 +16,7 @@ export default async function handle() {
     >
   >((pre, cur) => {
     const sha = cur.meta?.githubCommitRef;
-    if (sha) {
-      return pre;
-    }
+    if (sha) return pre;
     pre[sha] = pre[sha] || {
       githubCommitMessage: cur.meta.githubCommitMessage,
       deployments: {},
