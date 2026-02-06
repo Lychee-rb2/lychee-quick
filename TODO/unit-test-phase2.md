@@ -15,6 +15,12 @@
 - `graphql/*/client.ts` - 自动生成的代码
 - `types/*.ts` - 纯类型定义
 
+**Phase 1 已完成模块：**
+
+- ✅ `help/` - 所有工具函数已测试
+- ✅ `i18n/` - 国际化模块已测试
+- ✅ `prompts/` - 交互式提示函数已测试（linear, vercel, mihomo）
+
 ---
 
 ## Phase 2.1: fetch 模块
@@ -67,6 +73,8 @@
 ## Phase 2.2: app handlers
 
 handler 文件依赖交互式 CLI 提示，需要 mock `@inquirer/prompts`。
+
+**注意**: `prompts/` 模块的测试已完成（Phase 1），可作为参考实现。
 
 ### Clash 模块
 
@@ -172,15 +180,19 @@ meta.ts 文件只导出 `completion` 和 `help` 常量，使用快照测试确�
 
 ```
 test/
-├── help/           # ✅ 已完成
-├── i18n/           # ✅ 已完成
-├── fetch/          # Phase 2.1
+├── help/           # ✅ Phase 1 - 已完成
+├── i18n/           # ✅ Phase 1 - 已完成
+├── prompts/        # ✅ Phase 1 - 已完成
+│   ├── linear.test.ts
+│   ├── vercel.test.ts
+│   └── mihomo.test.ts
+├── fetch/          # ⬜ Phase 2.1 - 待完成
 │   ├── redis.test.ts
 │   ├── mihomo.test.ts
 │   ├── github.test.ts
 │   ├── linear.test.ts
 │   └── vercel.test.ts
-├── app/            # Phase 2.2 & 2.3
+├── app/            # ⬜ Phase 2.2 & 2.3 - 待完成
 │   ├── meta.test.ts
 │   ├── clash/
 │   │   ├── board.test.ts
@@ -193,7 +205,7 @@ test/
 │   └── vercel/
 │       ├── check.test.ts
 │       └── release.test.ts
-└── scripts/        # Phase 2.4
+└── scripts/        # ⬜ Phase 2.4 - 待完成
     ├── postinstall.test.ts
     └── codegen.test.ts
 ```
