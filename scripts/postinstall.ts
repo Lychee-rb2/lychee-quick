@@ -1,5 +1,4 @@
 import { resolve } from "node:path";
-import { unlink, symlink } from "node:fs/promises";
 
 const root = resolve(import.meta.dir, "..");
 const appDir = resolve(root, "app");
@@ -30,18 +29,29 @@ declare namespace NodeJS {
 
 // Install CLI with custom name from CLI_NAME env var (default: ly)
 const installCli = async () => {
-  const binPath = resolve(root, "bin.ts");
-  const bunBinDir = resolve(home, ".bun", "bin");
-  const linkPath = resolve(bunBinDir, cliName);
+  const pkgPath = resolve(root, "package.json");
+  const pkg = await Bun.file(pkgPath).json();
 
+  // Remove old CLI link if name changed
+  const oldName = pkg.bin ? Object.keys(pkg.bin)[0] : undefined;
+  if (oldName && oldName !== cliName) {
+    const oldLinkPath = resolve(home, ".bun", "bin", oldName);
+    await Bun.$`rm -f ${oldLinkPath}`.quiet();
+    console.log(`Removed old CLI link: ${oldName}`);
+  }
+
+  // Dynamically set bin field based on CLI_NAME
+  const expectedBin = { [cliName]: "./bin.ts" };
+  if (JSON.stringify(pkg.bin) !== JSON.stringify(expectedBin)) {
+    pkg.bin = expectedBin;
+    await Bun.write(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+    console.log(`package.json bin updated: ${cliName} -> ./bin.ts`);
+  }
+
+  // Use bun link to install globally
   try {
-    // Remove existing symlink if exists
-    if (await Bun.file(linkPath).exists()) {
-      await unlink(linkPath);
-    }
-    // Create new symlink
-    await symlink(binPath, linkPath);
-    console.log(`CLI installed: ${cliName} -> ${binPath}`);
+    await Bun.$`bun link`.quiet();
+    console.log(`CLI installed via bun link: ${cliName}`);
   } catch (err) {
     console.error(`Failed to install CLI:`, err);
   }
