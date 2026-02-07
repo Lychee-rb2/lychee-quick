@@ -221,9 +221,8 @@ test/
 5. ⬜ `app/clash/` handlers - 相对简单
 6. ⬜ `app/linear/` handlers - 中等复杂度
 7. ⬜ `app/vercel/` handlers - 中等复杂度
-8. ⬜ `app/meta.ts` 批量测试 - 低优先级
-9. ⬜ `scripts/postinstall.ts` - 复杂但重要
-10. ⬜ `scripts/codegen.ts` - 最后完成
+8. ⬜ `scripts/postinstall.ts` - 复杂但重要
+9. ⬜ `scripts/codegen.ts` - 最后完成
 
 ---
 

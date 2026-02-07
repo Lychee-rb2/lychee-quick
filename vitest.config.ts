@@ -20,6 +20,7 @@ export default defineConfig({
         "**/types/**",
         "global-env.d.ts",
         "bin.ts",
+        "**/meta.ts",
       ],
     },
   },
