@@ -21,7 +21,7 @@ const {
     deployments: { getDeployments: mockGetDeploymentsFn },
   }));
   const mockCacheGet = vi.fn();
-  const mockUpstashCache = vi.fn(() => ({
+  const mockUpstashCache = vi.fn((_fetch: () => Promise<unknown>) => ({
     get: mockCacheGet,
     remove: vi.fn(),
   }));
@@ -204,7 +204,7 @@ describe("fetch/vercel", () => {
     test("upstashCache fetch function should transform project data correctly", async () => {
       getProjects();
 
-      const fetchFn = mockUpstashCache.mock.calls[0][0];
+      const fetchFn = mockUpstashCache.mock.calls[0]![0];
 
       // Mock raw Vercel SDK response with extra fields
       const rawResponse = {
@@ -261,7 +261,7 @@ describe("fetch/vercel", () => {
     test("upstashCache fetch function should call SDK with teamId", async () => {
       getProjects();
 
-      const fetchFn = mockUpstashCache.mock.calls[0][0];
+      const fetchFn = mockUpstashCache.mock.calls[0]![0];
 
       mockGetProjectsFn.mockResolvedValue({ projects: [] });
       await fetchFn();
@@ -336,9 +336,7 @@ describe("fetch/vercel", () => {
     });
 
     test("get() should reset and re-fetch when force flag is present", async () => {
-      const updatedDeployments = [
-        { ...mockDeployments[0], state: "BUILDING" },
-      ];
+      const updatedDeployments = [{ ...mockDeployments[0], state: "BUILDING" }];
       mockCacheGet
         .mockResolvedValueOnce(mockDeployments)
         .mockResolvedValueOnce(updatedDeployments);
@@ -360,7 +358,7 @@ describe("fetch/vercel", () => {
     test("upstashCache fetch function should transform deployment data correctly", async () => {
       getDeployments("main", "abc123");
 
-      const fetchFn = mockUpstashCache.mock.calls[0][0];
+      const fetchFn = mockUpstashCache.mock.calls[0]![0];
 
       // Mock raw Vercel SDK response with extra fields
       const rawResponse = {
@@ -415,7 +413,7 @@ describe("fetch/vercel", () => {
     test("upstashCache fetch function should call SDK with teamId, branch and sha", async () => {
       getDeployments("feature-x", "sha789");
 
-      const fetchFn = mockUpstashCache.mock.calls[0][0];
+      const fetchFn = mockUpstashCache.mock.calls[0]![0];
 
       mockGetDeploymentsFn.mockResolvedValue({ deployments: [] });
       await fetchFn();

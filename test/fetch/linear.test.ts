@@ -14,7 +14,7 @@ const {
   const mockGetSdk = vi.fn(() => mockSdk);
   const MockGraphQLClient = vi.fn();
   const mockCacheGet = vi.fn();
-  const mockUpstashCache = vi.fn(() => ({
+  const mockUpstashCache = vi.fn((_fetch: () => Promise<unknown>) => ({
     get: mockCacheGet,
     remove: vi.fn(),
   }));
@@ -201,7 +201,7 @@ describe("fetch/linear", () => {
     test("upstashCache fetch function should call client.issues with team param", async () => {
       getIssues();
 
-      const fetchFn = mockUpstashCache.mock.calls[0][0];
+      const fetchFn = mockUpstashCache.mock.calls[0]![0];
 
       const mockResponse = {
         issues: { nodes: mockIssues },

@@ -1,5 +1,9 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
-import { createClient, getPullRequestBranches, _resetClient } from "@/fetch/github";
+import {
+  createClient,
+  getPullRequestBranches,
+  _resetClient,
+} from "@/fetch/github";
 
 // vi.hoisted ensures these are available when vi.mock factory runs
 const {
@@ -14,7 +18,7 @@ const {
   const mockGetSdk = vi.fn(() => mockSdk);
   const MockGraphQLClient = vi.fn();
   const mockCacheGet = vi.fn();
-  const mockUpstashCache = vi.fn(() => ({
+  const mockUpstashCache = vi.fn((_fetch: () => Promise<unknown>) => ({
     get: mockCacheGet,
     remove: vi.fn(),
   }));
@@ -206,7 +210,7 @@ describe("fetch/github", () => {
       getPullRequestBranches();
 
       // Get the fetch function passed to upstashCache
-      const fetchFn = mockUpstashCache.mock.calls[0][0];
+      const fetchFn = mockUpstashCache.mock.calls[0]![0];
 
       // Mock the response from client.pullRequest
       const mockResponse = {
