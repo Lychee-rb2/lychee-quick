@@ -13,7 +13,6 @@ export default defineConfig({
         "**/graphql/**",
         "node_modules/**",
         "**/*.config.*",
-        "**/scripts/**",
         "**/test/**",
         "**/types/**",
         "global-env.d.ts",

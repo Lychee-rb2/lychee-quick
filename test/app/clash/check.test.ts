@@ -1,13 +1,14 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import handler from "@/app/clash/check/handler";
 
-const { mockFindCurrentProxy, mockGetDelay, mockEcho, mockLogger } =
-  vi.hoisted(() => ({
+const { mockFindCurrentProxy, mockGetDelay, mockEcho, mockLogger } = vi.hoisted(
+  () => ({
     mockFindCurrentProxy: vi.fn(),
     mockGetDelay: vi.fn(),
     mockEcho: vi.fn(),
     mockLogger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
-  }));
+  }),
+);
 
 vi.mock("@/help/mihomo", () => ({
   findCurrentProxy: mockFindCurrentProxy,

@@ -1,7 +1,8 @@
 import { resolve } from "node:path";
-import { buildGlobalEnv } from "./buildGlobalEnv";
-import { installCli } from "./installCli";
-import { installZshCompletion } from "./installZshCompletion";
+import buildGlobalEnv from "./utils/buildGlobalEnv";
+import installCli from "./utils/installCli";
+import { installZshCompletion } from "./utils/installZshCompletion";
+
 const root = resolve(import.meta.dir, "..");
 
 await buildGlobalEnv(root);
