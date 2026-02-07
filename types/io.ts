@@ -6,7 +6,10 @@
 export interface ModuleLoader {
   loadMeta(
     path: string,
-  ): Promise<{ help?: string; completion?: string } | null>;
+  ): Promise<{
+    help?: string | (() => string);
+    completion?: string | (() => string);
+  } | null>;
   loadHandler(
     path: string,
   ): Promise<{ default?: (...args: unknown[]) => void | Promise<void> } | null>;

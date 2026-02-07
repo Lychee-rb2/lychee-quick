@@ -2,22 +2,22 @@ import getCompletions from "@/scripts/utils/getCompletions";
 import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("/root/foo/meta.ts", () => ({
-  completion: "function foo",
+  completion: () => "function foo",
 }));
 vi.mock("/root/foo/foo/meta.ts", () => ({
-  completion: "function foo/foo",
+  completion: () => "function foo/foo",
 }));
 vi.mock("/root/foo/bar/meta.ts", () => ({
-  completion: "function foo/bar",
+  completion: () => "function foo/bar",
 }));
 vi.mock("/root/bar/meta.ts", () => ({
-  completion: "function bar",
+  completion: () => "function bar",
 }));
 vi.mock("/root/bar/foo/meta.ts", () => ({
-  completion: "function bar/foo",
+  completion: () => "function bar/foo",
 }));
 vi.mock("/root/bar/bar/meta.ts", () => ({
-  completion: "function bar/bar",
+  completion: () => "function bar/bar",
 }));
 
 interface MockedBun {
@@ -99,7 +99,7 @@ describe("getCompletions", () => {
 
   test("should skip command without completion", async () => {
     vi.mock("/root/baz/meta.ts", () => ({
-      completion: "function baz",
+      completion: () => "function baz",
     }));
     vi.mock("/root/baz/nope/meta.ts", () => ({
       completion: undefined,
@@ -137,7 +137,7 @@ describe("getCompletions", () => {
 
   test("should handle deeply nested meta.ts", async () => {
     vi.mock("/root/foo/bar/baz/meta.ts", () => ({
-      completion: "function foo/bar/baz",
+      completion: () => "function foo/bar/baz",
     }));
 
     mockScan.mockImplementation(function* () {
@@ -170,7 +170,7 @@ describe("getCompletions", () => {
 
   test("should skip root meta.ts (no command parts)", async () => {
     vi.mock("/root/meta.ts", () => ({
-      completion: "root",
+      completion: () => "root",
     }));
 
     mockScan.mockImplementation(function* () {

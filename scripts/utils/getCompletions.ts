@@ -33,7 +33,9 @@ const getCompletions = async (appDir: string): Promise<CommandNode[]> => {
     }
 
     const mod = await import(`${appDir}/${path}`);
-    if (!mod.completion) continue;
+    const completion =
+      typeof mod.completion === "function" ? mod.completion() : mod.completion;
+    if (!completion) continue;
 
     // Navigate down the tree, ensuring intermediate nodes exist
     let currentLevel = root;
@@ -43,7 +45,7 @@ const getCompletions = async (appDir: string): Promise<CommandNode[]> => {
 
     // Set the leaf node's completion
     const leaf = ensureNode(currentLevel, commandParts.at(-1)!);
-    leaf.completion = mod.completion;
+    leaf.completion = completion;
   }
 
   return root;

@@ -1,6 +1,4 @@
-export const completion = "延迟测试";
-export const help = `延迟测试
+import { t } from "@/i18n";
 
-测试当前使用的代理节点延迟，使用 gstatic.com/generate_204 进行测试。
-
-输出格式: <代理名称> -> <延迟>ms`;
+export const completion = () => t("app.clash.check.completion");
+export const help = () => t("app.clash.check.help");

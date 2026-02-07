@@ -1,3 +1,51 @@
 {
+  "app": {
+    "completion": "Personal dev workflow CLI",
+    "help": "Lychee Quick CLI - Personal Dev Workflow Tool\n\nA CLI tool built with Bun, integrating Linear, Vercel, GitHub, and Mihomo proxy management.\n\nCommands:\n  clash   - Mihomo/Clash proxy management\n  linear  - Linear project management\n  vercel  - Vercel deployment management\n\nOptions:\n  -h, --help  Show help information\n\nExamples:\n  {cli} clash now        Check current proxy status\n  {cli} linear branch    Create branch from Issue\n  {cli} vercel release   Trigger Vercel deployment\n\nRun '{cli} <command> -h' to see subcommand help.",
+    "clash": {
+      "completion": "Mihomo/Clash proxy management",
+      "help": "Mihomo/Clash Proxy Management\n\nManage Mihomo (Clash) proxy operations, including status check, proxy switching, and delay testing.\n\nRequired environment variables:\n  MIHOMO_URL        - Mihomo API address\n  MIHOMO_TOKEN      - Mihomo API token\n  MIHOMO_TOP_PROXY  - Mihomo Top Proxy\n  MIHOMO_BOARD      - Mihomo web dashboard URL",
+      "board": {
+        "completion": "Mihomo web dashboard",
+        "help": "Open Mihomo web dashboard"
+      },
+      "check": {
+        "completion": "Delay test",
+        "help": "Delay Test\n\nTest the latency of the current proxy node using gstatic.com/generate_204.\n\nOutput format: <proxy name> -> <latency>ms"
+      },
+      "toggle": {
+        "completion": "Toggle proxy mode",
+        "help": "Toggle Proxy Mode\n\nSwitch between rule, direct, and global modes.\n\nMode description:\n  rule   - Rule mode, proxy based on rules\n  direct - Direct mode, all traffic goes direct\n  global - Global mode, all traffic goes through proxy"
+      }
+    },
+    "linear": {
+      "completion": "Linear project management",
+      "help": "Linear Project Management\n\nIntegrate with Linear project management tool, supporting branch creation from Issues, sending preview comments, etc.\n\nOptions:\n  -f  Force refresh Issue cache\n\nRequired environment variables:\n  LINEAR_API_KEY  - Linear API key\n  LINEAR_TEAM     - Linear team identifier",
+      "branch": {
+        "completion": "Create branch from Issue",
+        "help": "Create Branch from Issue\n\nCreate a Git branch from a Linear Issue, automatically pulling the latest main branch.\n\nOptions:\n  -f  Force refresh Issue cache\n\nFeatures:\n  - Search and filter Issues (type M for mine, N for unassigned)\n  - Group by assignee\n  - Auto-generate branch name and handle duplicates\n  - Execute git checkout main && git pull && git checkout -b <branch>"
+      },
+      "preview": {
+        "completion": "Send preview comment",
+        "help": "Send Preview Comment\n\nSend a preview link comment to a Linear Issue.\n\nOptions:\n  -f  Force refresh Issue cache\n\nFeatures:\n  - Show Issues with PR associations\n  - Select PR to send preview link as Issue comment"
+      },
+      "release": {
+        "completion": "Release Issues",
+        "help": "Release Issues\n\nBatch release Linear Issues, update status and open release notes page.\n\nOptions:\n  -f  Force refresh Issue cache\n\nFeatures:\n  - Show Issues in started and completed status\n  - Multi-select Issues to release\n  - Auto-open RELEASE_NOTE_PAGE (if configured)"
+      }
+    },
+    "vercel": {
+      "completion": "Vercel deployment management",
+      "help": "Vercel Deployment Management\n\nManage Vercel deployments, including checking deployment status and triggering deployments.\n\nOptions:\n  -f  Force refresh cache\n\nRequired environment variables:\n  VERCEL_PERSONAL_TOKEN  - Vercel personal token\n  VERCEL_TEAM            - Vercel team name\n  VERCEL_PROJECT         - Vercel project name",
+      "check": {
+        "completion": "Check deployment status",
+        "help": "Check Deployment Status\n\nCheck the Vercel deployment status for a specific branch.\n\nOptions:\n  -f  Force refresh PR branches and deployment cache\n\nFeatures:\n  - Show all PR branches\n  - Select a branch to view its deployment status"
+      },
+      "release": {
+        "completion": "Trigger deployment",
+        "help": "Trigger Deployment\n\nTrigger a Vercel deployment via Deploy Hook.\n\nOptions:\n  -f  Force refresh project cache\n\nFeatures:\n  - Select branch to deploy\n  - Multi-select projects to deploy\n  - Auto-open Vercel deployment page after triggering"
+      }
+    }
+  },
   "wait mihomo delay to open board": "Wait global delay test to open {url}"
 }

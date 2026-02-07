@@ -351,7 +351,7 @@ describe("io helper functions", () => {
 
     test("should display command without description when completion is empty", async () => {
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn().mockResolvedValue({ completion: "" }), // Empty completion
+        loadMeta: vi.fn().mockResolvedValue({ completion: () => "" }), // Empty completion
         loadHandler: vi.fn().mockResolvedValue(null),
       };
 
@@ -444,7 +444,7 @@ describe("io helper functions", () => {
           throw new Error("Not found");
         }
         if (path === "@/app/clash/check/meta") {
-          return { completion: "Check delay" };
+          return { completion: () => "Check delay" };
         }
         throw new Error("Module not found");
       });
@@ -521,7 +521,7 @@ describe("io helper functions", () => {
       const mockModuleLoader: ModuleLoader = {
         loadMeta: vi.fn(async (path: string) => {
           if (path === "@/app/test/meta") {
-            return { completion: "Main description" };
+            return { completion: () => "Main description" };
           }
           // Return null for subcommand meta
           return null;
@@ -560,10 +560,10 @@ describe("io helper functions", () => {
       const mockModuleLoader: ModuleLoader = {
         loadMeta: vi.fn(async (path: string) => {
           if (path === "@/app/test/meta") {
-            return { completion: "Main description" };
+            return { completion: () => "Main description" };
           }
           if (path === "@/app/test/subcmd/meta") {
-            return { completion: "" }; // Empty completion
+            return { completion: () => "" }; // Empty completion
           }
           return null;
         }),
@@ -599,7 +599,7 @@ describe("io helper functions", () => {
     test("should display help content when mod.help is available", async () => {
       const mockModuleLoader: ModuleLoader = {
         loadMeta: vi.fn().mockResolvedValue({
-          help: "Test help text",
+          help: () => "Test help text",
         }),
         loadHandler: vi.fn().mockResolvedValue(null),
       };
@@ -615,7 +615,7 @@ describe("io helper functions", () => {
     test("should display completion when mod.completion is available but mod.help is not", async () => {
       const mockModuleLoader: ModuleLoader = {
         loadMeta: vi.fn().mockResolvedValue({
-          completion: "Test completion text",
+          completion: () => "Test completion text",
         }),
         loadHandler: vi.fn().mockResolvedValue(null),
       };
@@ -752,7 +752,9 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn().mockResolvedValue({ completion: "Test command" }),
+        loadMeta: vi
+          .fn()
+          .mockResolvedValue({ completion: () => "Test command" }),
         loadHandler: vi.fn().mockResolvedValue(null),
       };
 
@@ -778,7 +780,7 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts", "-h"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn().mockResolvedValue({ help: "Root help" }),
+        loadMeta: vi.fn().mockResolvedValue({ help: () => "Root help" }),
         loadHandler: vi.fn().mockResolvedValue(null),
       };
 
@@ -818,7 +820,7 @@ describe("io helper functions", () => {
       bun.argv = ["/test/bin.ts", "test", "--help"];
 
       const mockModuleLoader: ModuleLoader = {
-        loadMeta: vi.fn().mockResolvedValue({ help: "Test help" }),
+        loadMeta: vi.fn().mockResolvedValue({ help: () => "Test help" }),
         loadHandler: vi.fn().mockResolvedValue(null),
       };
 
@@ -945,10 +947,10 @@ describe("io helper functions", () => {
       const mockModuleLoader: ModuleLoader = {
         loadMeta: vi.fn(async (path: string) => {
           if (path === "@/app/clash/meta") {
-            return { completion: "Clash management" };
+            return { completion: () => "Clash management" };
           }
           if (path === "@/app/clash/check/meta") {
-            return { completion: "Check delay" };
+            return { completion: () => "Check delay" };
           }
           return null;
         }),
@@ -1048,7 +1050,7 @@ describe("io helper functions", () => {
 
       const originalRequire = require;
       const mockRequire = vi.fn(() => ({
-        completion: "Test",
+        completion: () => "Test",
       }));
       (global as { require: typeof require }).require =
         mockRequire as unknown as typeof require;
@@ -1079,7 +1081,7 @@ describe("io helper functions", () => {
             return null;
           }
           // Subsequent calls for showAvailableActions
-          return { completion: "Test" };
+          return { completion: () => "Test" };
         }),
         loadHandler: vi.fn().mockResolvedValue(null),
       };

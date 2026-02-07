@@ -3,6 +3,10 @@ import { logger, typedBoolean } from "help";
 import type { ModuleLoader, FileSystem } from "@/types/io";
 import { CLI_NAME } from "@/help/env";
 
+/** 解析 meta 导出值：支持字符串或函数两种形式 */
+const resolveMeta = (value: string | (() => string) | undefined): string =>
+  typeof value === "function" ? value() : value || "";
+
 // 默认的 ModuleLoader 实现（内联，不分离到新文件）
 const defaultModuleLoader: ModuleLoader = {
   async loadMeta(path: string) {
@@ -107,7 +111,7 @@ export const showAvailableActions = async (
   for await (const path of fs.scanMetaFiles(appDir)) {
     const name = path.split("/")[0];
     const mod = await moduleLoader.loadMeta(`@/app/${name}/meta`);
-    const description = mod?.completion || "";
+    const description = resolveMeta(mod?.completion);
     if (!mod && name) {
       logger.error(`Error reading meta.ts for ${name}`);
     }
@@ -136,14 +140,14 @@ export const showSubcommands = async (
   const mainMod = await moduleLoader.loadMeta(
     `@/app/${actionName.join("/")}/meta`,
   );
-  const mainDescription = mainMod?.completion || "";
+  const mainDescription = resolveMeta(mainMod?.completion);
 
   for await (const path of fs.scanMetaFiles(subDir)) {
     const name = path.split("/")[0];
     const mod = await moduleLoader.loadMeta(
       `@/app/${actionName.join("/")}/${name}/meta`,
     );
-    const description = mod?.completion || "";
+    const description = resolveMeta(mod?.completion);
     subcommands.push({ name, description });
   }
 
@@ -177,10 +181,12 @@ export const showHelp = async (
     logger.error(`Can't find help for "${actionName.join(" ")}"`);
     return;
   }
-  if (mod.help) {
-    logger.info(mod.help);
-  } else if (mod.completion) {
-    logger.info(mod.completion);
+  const helpText = resolveMeta(mod.help);
+  const completionText = resolveMeta(mod.completion);
+  if (helpText) {
+    logger.info(helpText);
+  } else if (completionText) {
+    logger.info(completionText);
   } else {
     logger.info(`No help available for "${actionName.join(" ")}"`);
   }
@@ -218,7 +224,7 @@ export const main = async (
       // 显示根目录帮助
       const mod = await moduleLoader.loadMeta("@/app/meta");
       if (mod) {
-        logger.info(mod.help || mod.completion || "");
+        logger.info(resolveMeta(mod.help) || resolveMeta(mod.completion));
       } else {
         await showAvailableActions(cliName, moduleLoader, fs);
       }

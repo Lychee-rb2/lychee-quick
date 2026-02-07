@@ -1,12 +1,4 @@
-export const completion = "触发部署";
-export const help = `触发部署
+import { t } from "@/i18n";
 
-通过 Deploy Hook 触发 Vercel 部署。
-
-选项:
-  -f  强制刷新项目缓存
-
-功能:
-  - 选择要发布的分支
-  - 多选要部署的项目
-  - 触发部署后自动打开 Vercel 部署页面`;
+export const completion = () => t("app.vercel.release.completion");
+export const help = () => t("app.vercel.release.help");

@@ -1,2 +1,4 @@
-export const completion = "Mihomo 网页面板";
-export const help = `打开Mihomo 网页面板`;
+import { t } from "@/i18n";
+
+export const completion = () => t("app.clash.board.completion");
+export const help = () => t("app.clash.board.help");

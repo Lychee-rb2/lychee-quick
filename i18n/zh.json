@@ -1,3 +1,51 @@
 {
+  "app": {
+    "completion": "个人开发工作流 CLI",
+    "help": "Lychee Quick CLI - 个人开发工作流工具\n\n一个使用 Bun 构建的 CLI 工具，集成 Linear、Vercel、GitHub 和 Mihomo 代理管理。\n\n命令:\n  clash   - Mihomo/Clash 代理管理\n  linear  - Linear 项目管理\n  vercel  - Vercel 部署管理\n\n选项:\n  -h, --help  显示帮助信息\n\n示例:\n  {cli} clash now        查看当前代理状态\n  {cli} linear branch    从 Issue 创建分支\n  {cli} vercel release   触发 Vercel 部署\n\n运行 '{cli} <command> -h' 查看子命令帮助。",
+    "clash": {
+      "completion": "Mihomo/Clash 代理管理",
+      "help": "Mihomo/Clash 代理管理\n\n管理 Mihomo (Clash) 代理的相关操作，包括查看状态、切换代理和延迟测试。\n\n需要配置环境变量:\n  MIHOMO_URL        - Mihomo API 地址\n  MIHOMO_TOKEN      - Mihomo API 令牌\n  MIHOMO_TOP_PROXY  - Mihomo Top Proxy\n  MIHOMO_BOARD      - Mihomo 网页面板地址",
+      "board": {
+        "completion": "Mihomo 网页面板",
+        "help": "打开Mihomo 网页面板"
+      },
+      "check": {
+        "completion": "延迟测试",
+        "help": "延迟测试\n\n测试当前使用的代理节点延迟，使用 gstatic.com/generate_204 进行测试。\n\n输出格式: <代理名称> -> <延迟>ms"
+      },
+      "toggle": {
+        "completion": "切换代理模式",
+        "help": "切换代理模式\n\n在 rule、direct、global 三种模式之间切换。\n\n模式说明:\n  rule   - 规则模式，根据规则决定是否代理\n  direct - 直连模式，所有流量直连\n  global - 全局模式，所有流量走代理"
+      }
+    },
+    "linear": {
+      "completion": "Linear 项目管理",
+      "help": "Linear 项目管理\n\n与 Linear 项目管理工具集成，支持从 Issue 创建分支、发送预览评论等。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n需要配置环境变量:\n  LINEAR_API_KEY  - Linear API 密钥\n  LINEAR_TEAM     - Linear 团队标识",
+      "branch": {
+        "completion": "从 Issue 创建分支",
+        "help": "从 Issue 创建分支\n\n从 Linear Issue 创建 Git 分支，自动拉取最新 main 分支。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 搜索和筛选 Issue (输入 M 筛选我的，N 筛选未分配的)\n  - 按负责人分组显示\n  - 自动生成分支名并处理重名\n  - 执行 git checkout main && git pull && git checkout -b <branch>"
+      },
+      "preview": {
+        "completion": "发送预览评论",
+        "help": "发送预览评论\n\n向 Linear Issue 发送预览链接评论。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 显示有 PR 关联的 Issue\n  - 选择 PR 后发送预览链接到 Issue 评论"
+      },
+      "release": {
+        "completion": "发布 Issue",
+        "help": "发布 Issue\n\n批量发布 Linear Issue，更新状态并打开发布说明页面。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 显示 started 和 completed 状态的 Issue\n  - 多选要发布的 Issue\n  - 自动打开 RELEASE_NOTE_PAGE (如已配置)"
+      }
+    },
+    "vercel": {
+      "completion": "Vercel 部署管理",
+      "help": "Vercel 部署管理\n\n管理 Vercel 部署，包括检查部署状态和触发部署。\n\n选项:\n  -f  强制刷新缓存\n\n需要配置环境变量:\n  VERCEL_PERSONAL_TOKEN  - Vercel 个人令牌\n  VERCEL_TEAM            - Vercel 团队名称\n  VERCEL_PROJECT         - Vercel 项目名称",
+      "check": {
+        "completion": "检查部署状态",
+        "help": "检查部署状态\n\n检查指定分支的 Vercel 部署状态。\n\n选项:\n  -f  强制刷新 PR 分支和部署缓存\n\n功能:\n  - 显示所有 PR 分支\n  - 选择分支后查看其部署状态"
+      },
+      "release": {
+        "completion": "触发部署",
+        "help": "触发部署\n\n通过 Deploy Hook 触发 Vercel 部署。\n\n选项:\n  -f  强制刷新项目缓存\n\n功能:\n  - 选择要发布的分支\n  - 多选要部署的项目\n  - 触发部署后自动打开 Vercel 部署页面"
+      }
+    }
+  },
   "wait mihomo delay to open board": "等待全局延迟测试完成，准备打开Mihomo页面板"
 }
