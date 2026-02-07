@@ -98,19 +98,19 @@ handler 文件依赖交互式 CLI 提示，需要 mock `@inquirer/prompts`。
 
 ### Linear 模块
 
-#### ⬜ `app/linear/branch/handler.ts`
+#### ✅ `app/linear/branch/handler.ts`
 
 - **功能**: 从 Linear Issue 创建 Git 分支
 - **复杂度**: 复杂
 - **Mock**: `@inquirer/prompts`, `@/fetch/linear`, `@/help/cli`, `@/help/git`
 
-#### ⬜ `app/linear/preview/handler.ts`
+#### ✅ `app/linear/preview/handler.ts`
 
 - **功能**: 向 Linear Issue 发送预览链接评论
 - **复杂度**: 中等
 - **Mock**: `@inquirer/prompts`, `@/fetch/linear`, `@/help/linear`
 
-#### ⬜ `app/linear/release/handler.ts`
+#### ✅ `app/linear/release/handler.ts`
 
 - **功能**: 批量发布 Linear Issue
 - **复杂度**: 中等
@@ -219,7 +219,7 @@ test/
 3. ✅ `fetch/github.ts` + ✅ `fetch/linear.ts` - 结构相似
 4. ✅ `fetch/vercel.ts` - 完成 fetch 模块
 5. ✅ `app/clash/` handlers - 相对简单
-6. ⬜ `app/linear/` handlers - 中等复杂度
+6. ✅ `app/linear/` handlers - 中等复杂度
 7. ⬜ `app/vercel/` handlers - 中等复杂度
 8. ⬜ `scripts/postinstall.ts` - 复杂但重要
 9. ⬜ `scripts/codegen.ts` - 最后完成
