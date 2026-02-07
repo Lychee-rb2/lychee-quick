@@ -118,13 +118,13 @@ handler 文件依赖交互式 CLI 提示，需要 mock `@inquirer/prompts`。
 
 ### Vercel 模块
 
-#### ⬜ `app/vercel/check/handler.ts`
+#### ✅ `app/vercel/check/handler.ts`
 
 - **功能**: 检查指定分支的 Vercel 部署状态
 - **复杂度**: 中等
 - **Mock**: `@inquirer/prompts`, `@/fetch/vercel`, `@/fetch/github`
 
-#### ⬜ `app/vercel/release/handler.ts`
+#### ✅ `app/vercel/release/handler.ts`
 
 - **功能**: 通过 Deploy Hook 触发 Vercel 部署
 - **复杂度**: 复杂
@@ -220,7 +220,7 @@ test/
 4. ✅ `fetch/vercel.ts` - 完成 fetch 模块
 5. ✅ `app/clash/` handlers - 相对简单
 6. ✅ `app/linear/` handlers - 中等复杂度
-7. ⬜ `app/vercel/` handlers - 中等复杂度
+7. ✅ `app/vercel/` handlers - 中等复杂度
 8. ⬜ `scripts/postinstall.ts` - 复杂但重要
 9. ⬜ `scripts/codegen.ts` - 最后完成
 
