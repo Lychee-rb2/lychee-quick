@@ -78,19 +78,19 @@ handler 文件依赖交互式 CLI 提示，需要 mock `@inquirer/prompts`。
 
 ### Clash 模块
 
-#### ⬜ `app/clash/board/handler.ts`
+#### ✅ `app/clash/board/handler.ts`
 
 - **功能**: 打开 Mihomo 网页面板
 - **复杂度**: 简单
 - **Mock**: `@/help/mihomo`, `@/help/util`
 
-#### ⬜ `app/clash/check/handler.ts`
+#### ✅ `app/clash/check/handler.ts`
 
 - **功能**: 检查当前代理节点的延迟
 - **复杂度**: 中等
 - **Mock**: `@/fetch/mihomo`, `@/help/mihomo`
 
-#### ⬜ `app/clash/toggle/handler.ts`
+#### ✅ `app/clash/toggle/handler.ts`
 
 - **功能**: 切换 Clash 代理模式
 - **复杂度**: 中等
@@ -218,7 +218,7 @@ test/
 2. ✅ `fetch/mihomo.ts` - HTTP 请求封装
 3. ✅ `fetch/github.ts` + ✅ `fetch/linear.ts` - 结构相似
 4. ✅ `fetch/vercel.ts` - 完成 fetch 模块
-5. ⬜ `app/clash/` handlers - 相对简单
+5. ✅ `app/clash/` handlers - 相对简单
 6. ⬜ `app/linear/` handlers - 中等复杂度
 7. ⬜ `app/vercel/` handlers - 中等复杂度
 8. ⬜ `scripts/postinstall.ts` - 复杂但重要

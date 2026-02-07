@@ -12,7 +12,6 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       exclude: [
         "**/graphql/**",
-        "**/app/**",
         "node_modules/**",
         "**/*.config.*",
         "**/scripts/**",
