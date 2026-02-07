@@ -4,16 +4,18 @@ import { checkbox, search } from "@inquirer/prompts";
 
 export const pickBranchForCheck = async () => {
   const { get } = getPullRequestBranches();
-  let branches: Awaited<ReturnType<typeof get>>;
+  let pullRequests: Awaited<ReturnType<typeof get>>;
   return await search({
-    message: "Check which branch?",
+    message: "Check which pull request?",
     source: async (input) => {
-      branches = branches || (await get());
-      return branches
-        .filter((branch) => branch.headRefName.includes(input))
-        .map((branch) => ({
-          name: branch.headRefName,
-          value: branch,
+      pullRequests = pullRequests || (await get());
+      return pullRequests
+        .filter((pullRequest) =>
+          input ? pullRequest.headRefName.includes(input) : true,
+        )
+        .map((pullRequest) => ({
+          name: pullRequest.title,
+          value: pullRequest,
         }));
     },
   });

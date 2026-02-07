@@ -155,4 +155,31 @@ describe("logger helper functions", () => {
       expect(mockConsoleLog).toHaveBeenCalledWith();
     });
   });
+
+  describe("table method", () => {
+    test("should output table with correct width", () => {
+      const logger = createLogger();
+
+      logger.table([
+        ["a", "b", "c"],
+        ["d", "e", "f"],
+      ]);
+
+      expect(mockConsoleLog).toHaveBeenCalledTimes(2);
+      expect(mockConsoleLog).toHaveBeenCalledWith("| a | b | c |");
+      expect(mockConsoleLog).toHaveBeenCalledWith("| d | e | f |");
+    });
+
+    test("should output table with correct width when data is not a string", () => {
+      const logger = createLogger();
+
+      logger.table([
+        ["hello", "world"],
+        ["good", "morning"],
+      ]);
+      expect(mockConsoleLog).toHaveBeenCalledTimes(2);
+      expect(mockConsoleLog).toHaveBeenCalledWith("| hello | world   |");
+      expect(mockConsoleLog).toHaveBeenCalledWith("| good  | morning |");
+    });
+  });
 });

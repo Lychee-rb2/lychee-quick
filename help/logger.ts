@@ -4,6 +4,7 @@ import { LOG_LEVEL } from "@/help/env";
 // 扩展 logger 类型，添加 plain 方法
 export interface ExtendedLogger extends BaseLogger {
   plain: (...args: unknown[]) => void;
+  table: <T extends string[]>(data: T[]) => void;
 }
 
 export let logger: ExtendedLogger;
@@ -26,6 +27,23 @@ export const createLogger = () => {
   logger = Object.assign(pinoLogger, {
     plain: (...args: unknown[]) => {
       console.log(...args);
+    },
+    table: <T extends string[]>(data: T[]) => {
+      const width: Record<string, number> = {};
+      data.forEach((item) => {
+        item.forEach((value, index) => {
+          width[index] = Math.max(width[index] || 0, value.toString().length);
+        });
+      });
+      data.forEach((item) => {
+        console.log(
+          "| " +
+            item
+              .map((value, index) => value.toString().padEnd(width[index]))
+              .join(" | ") +
+            " |",
+        );
+      });
     },
   }) as ExtendedLogger;
 

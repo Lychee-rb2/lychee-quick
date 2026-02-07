@@ -74,9 +74,9 @@ describe("vercel-prompts", () => {
 
   describe("pickBranchForCheck", () => {
     const mockBranches = [
-      { headRefName: "feature/auth", id: "1" },
-      { headRefName: "feature/dashboard", id: "2" },
-      { headRefName: "fix/login-bug", id: "3" },
+      { headRefName: "feature/auth", id: "1", title: "Add auth" },
+      { headRefName: "feature/dashboard", id: "2", title: "Add dashboard" },
+      { headRefName: "fix/login-bug", id: "3", title: "Fix login bug" },
     ];
 
     test("should call search with correct message and return selected branch", async () => {
@@ -85,7 +85,7 @@ describe("vercel-prompts", () => {
 
       const selectedBranch = mockBranches[0];
       mockSearchImpl(async (options) => {
-        expect(options.message).toBe("Check which branch?");
+        expect(options.message).toBe("Check which pull request?");
         await options.source("");
         return selectedBranch;
       });
@@ -103,8 +103,8 @@ describe("vercel-prompts", () => {
       mockSearchImpl(async (options) => {
         const choices = await options.source("feature");
         expect(choices).toHaveLength(2);
-        expect(choices[0].name).toBe("feature/auth");
-        expect(choices[1].name).toBe("feature/dashboard");
+        expect(choices[0].name).toBe("Add auth");
+        expect(choices[1].name).toBe("Add dashboard");
         return mockBranches[0];
       });
 
@@ -152,7 +152,7 @@ describe("vercel-prompts", () => {
         const choices = await options.source("");
         choices.forEach((choice, index) => {
           expect(choice).toMatchObject({
-            name: mockBranches[index].headRefName,
+            name: mockBranches[index].title,
             value: mockBranches[index],
           });
         });

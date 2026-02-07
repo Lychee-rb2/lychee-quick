@@ -32841,7 +32841,7 @@ export type PullRequestQueryVariables = Exact<{
 }>;
 
 
-export type PullRequestQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', pullRequests: { __typename?: 'PullRequestConnection', nodes?: Array<{ __typename?: 'PullRequest', title: string, url: any, headRefName: string } | null> | null } } | null };
+export type PullRequestQuery = { __typename?: 'Query', repository?: { __typename?: 'Repository', pullRequests: { __typename?: 'PullRequestConnection', nodes?: Array<{ __typename?: 'PullRequest', title: string, url: any, headRefName: string, headRefOid: any } | null> | null } } | null };
 
 
 export const PullRequestDocument = gql`
@@ -32852,6 +32852,7 @@ export const PullRequestDocument = gql`
         title
         url
         headRefName
+        headRefOid
       }
     }
   }

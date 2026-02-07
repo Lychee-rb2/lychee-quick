@@ -17,6 +17,9 @@ const map = {
   vercel_error: "💥",
   vercel_building: "🔨",
   vercel_queued: "⏳",
+  vercel_initializing: "🔄",
+  vercel_canceled: "🚫",
+  vercel_deleted: "🗑️",
   //mihomo
   mihomo_rule: "🔍",
   mihomo_direct: "🚫",

@@ -54,12 +54,12 @@ export const getProjects = () => {
   };
 };
 
-export const getDeployments = (branch: string) => {
+export const getDeployments = (branch: string, sha: string) => {
   const teamId = VERCEL_TEAM();
   const cache = upstashCache(
     async () =>
       await createVercelClient()
-        .deployments.getDeployments({ teamId, branch })
+        .deployments.getDeployments({ teamId, branch, sha })
         .then((res) =>
           res.deployments.map((deployment) => ({
             ...pick(deployment, [

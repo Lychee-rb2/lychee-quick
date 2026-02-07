@@ -1,27 +1,34 @@
 import { getDeployments } from "@/fetch/vercel.ts";
-import { Deployment } from "@/types/vercel.ts";
+import { iconMap, logger } from "@/help";
 import { pickBranchForCheck } from "@/prompts/vercel";
-
+import { GetDeploymentsState } from "@vercel/sdk/models/getdeploymentsop.js";
+import { formatDistanceToNow } from "date-fns";
 export default async function handle() {
-  const branch = await pickBranchForCheck();
-  const deploymentCache = getDeployments(branch.headRefName);
-  const deployments = await deploymentCache.get();
-  deployments.reduce<
-    Record<
-      string,
-      {
-        githubCommitMessage: Deployment["meta"]["githubCommitMessage"];
-        deployments: Record<string, Deployment[]>;
-      }
-    >
-  >((pre, cur) => {
-    const sha = cur.meta?.githubCommitRef;
-    if (sha) return pre;
-    pre[sha] = pre[sha] || {
-      githubCommitMessage: cur.meta.githubCommitMessage,
-      deployments: {},
-    };
-
-    return pre;
-  }, {});
+  const pullRequest = await pickBranchForCheck();
+  const deploymentCache = getDeployments(
+    pullRequest.headRefName,
+    pullRequest.headRefOid,
+  );
+  const deployments = await deploymentCache.get().then((deployments) =>
+    deployments.map((deployment) => {
+      return {
+        vercel: deployment.inspectorUrl,
+        preview: `https://${deployment.meta.branchAlias}`,
+        readyAt: formatDistanceToNow(new Date(deployment.ready), {
+          addSuffix: true,
+        }),
+        state: deployment.state.toLowerCase() as Lowercase<GetDeploymentsState>,
+      };
+    }),
+  );
+  logger.plain("--------------------------------");
+  logger.plain(`Branch: ${pullRequest.headRefName}`);
+  logger.plain("--------------------------------");
+  logger.table(
+    deployments.map((i) => [
+      iconMap(`vercel_${i.state}`),
+      i.preview,
+      i.readyAt,
+    ]),
+  );
 }

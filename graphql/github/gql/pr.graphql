@@ -5,6 +5,7 @@ query pullRequest($name: String!, $owner: String!) {
         title
         url
         headRefName
+        headRefOid
       }
     }
   }
