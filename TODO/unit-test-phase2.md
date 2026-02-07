@@ -53,7 +53,7 @@
   - 强制刷新（`-f` 参数）
 - **Mock**: `@/graphql/github/client`, `@/help/redis`, 环境变量
 
-### ⬜ `fetch/linear.ts`
+### ✅ `fetch/linear.ts`
 
 - **导出**: `createClient()`, `getIssues()`
 - **测试点**: 与 github.ts 类似
@@ -216,7 +216,7 @@ test/
 
 1. ✅ `fetch/redis.ts` - 最简单，作为起点
 2. ✅ `fetch/mihomo.ts` - HTTP 请求封装
-3. ✅ `fetch/github.ts` + ⬜ `fetch/linear.ts` - 结构相似
+3. ✅ `fetch/github.ts` + ✅ `fetch/linear.ts` - 结构相似
 4. ✅ `fetch/vercel.ts` - 完成 fetch 模块
 5. ⬜ `app/clash/` handlers - 相对简单
 6. ⬜ `app/linear/` handlers - 中等复杂度

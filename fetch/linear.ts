@@ -17,6 +17,11 @@ export const createClient = (): Sdk => {
   return client;
 };
 
+/** @internal 仅用于测试重置单例状态 */
+export const _resetClient = () => {
+  client = null;
+};
+
 export const getIssues = () => {
   const team = LINEAR_TEAM();
   const cache = upstashCache(
