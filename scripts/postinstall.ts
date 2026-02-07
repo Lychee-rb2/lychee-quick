@@ -1,10 +1,12 @@
-import { resolve } from "node:path";
-import buildGlobalEnv from "./utils/buildGlobalEnv";
-import installCli from "./utils/installCli";
-import { installZshCompletion } from "./utils/installZshCompletion";
+import buildGlobalEnv from "@/scripts/utils/buildGlobalEnv";
+import installCli from "@/scripts/utils/installCli";
+import installZshCompletion from "@/scripts/utils/installZshCompletion";
 
-const root = resolve(import.meta.dir, "..");
+const main = async (metaUrl: string = import.meta.url) => {
+  const root = new URL("..", metaUrl).pathname.replace(/\/$/, "");
+  await buildGlobalEnv(root);
+  await installCli(root);
+  await installZshCompletion(root);
+};
 
-await buildGlobalEnv(root);
-await installCli(root);
-await installZshCompletion(root);
+export default main;

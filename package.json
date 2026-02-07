@@ -7,7 +7,7 @@
   "type": "module",
   "repository": "https://github.com/Lychee-rb2/bun-help.git",
   "scripts": {
-    "postinstall": "bun scripts/postinstall.ts",
+    "postinstall": "bun -e \"import('./scripts/postinstall.ts').then(m => m.default())\"",
     "codegen": "bun scripts/codegen.ts",
     "test": "vitest run --coverage",
     "test:watch": "vitest watch",

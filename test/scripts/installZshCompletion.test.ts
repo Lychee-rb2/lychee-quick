@@ -1,10 +1,7 @@
 import { describe, test, expect, vi, afterEach } from "vitest";
 import getCompletions from "@/scripts/utils/getCompletions";
-import {
-  editZshrc,
-  installZshCompletion,
-  writeZsh,
-} from "@/scripts/utils/installZshCompletion";
+import { editZshrc, writeZsh } from "@/scripts/utils/installZshCompletion";
+import installZshCompletion from "@/scripts/utils/installZshCompletion";
 vi.mock("@/scripts/utils/getCompletions", () => ({
   default: vi.fn().mockResolvedValue([
     {

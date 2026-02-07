@@ -101,7 +101,7 @@ export const writeZsh = async (root: string, completionFile: string) => {
   await Bun.write(completionFile, completionScript);
 };
 // Install zsh completion
-export const installZshCompletion = async (root: string) => {
+const installZshCompletion = async (root: string) => {
   const zshrcPath = `${home}/.zshrc`;
 
   if (!(await Bun.file(zshrcPath).exists())) {
@@ -121,3 +121,5 @@ export const installZshCompletion = async (root: string) => {
   );
   return 1;
 };
+
+export default installZshCompletion;
