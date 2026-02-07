@@ -1,47 +1,52 @@
+export interface CommandNode {
+  name: string;
+  completion: string;
+  children: CommandNode[];
+}
+
 const assertCommandName = (name: string, path: string) => {
   if (name.includes("-")) {
     throw new Error(`Command name cannot contain "-": ${name} (at ${path})`);
   }
 };
 
-const getCompletions = async (appDir: string) => {
-  const commands: { name: string; completion: string }[] = [];
-  const subcommands: Record<string, { name: string; completion: string }[]> =
-    {};
+const ensureNode = (nodes: CommandNode[], name: string): CommandNode => {
+  let node = nodes.find((n) => n.name === name);
+  if (!node) {
+    node = { name, completion: "", children: [] };
+    nodes.push(node);
+  }
+  return node;
+};
 
-  const ensureSubcommands = (name: string) => {
-    if (!subcommands[name]) {
-      subcommands[name] = [];
-    }
-  };
+const getCompletions = async (appDir: string): Promise<CommandNode[]> => {
+  const root: CommandNode[] = [];
 
   const glob = new Bun.Glob("**/meta.ts");
   for await (const path of glob.scan({ cwd: appDir })) {
     const parts = path.split("/");
-    // parts: ["cmd", "meta.ts"] or ["cmd", "sub", "meta.ts"]
-    if (parts.length === 2) {
-      // Top-level command: cmd/meta.ts
-      const folderName = parts[0];
-      assertCommandName(folderName, `app/${folderName}`);
-      const mod = await import(`${appDir}/${path}`);
-      commands.push({ name: folderName, completion: mod.completion });
-      ensureSubcommands(folderName);
-    } else if (parts.length === 3) {
-      // Subcommand: cmd/sub/meta.ts
-      const folderName = parts[0];
-      const subFolderName = parts[1];
-      assertCommandName(subFolderName, `app/${folderName}/${subFolderName}`);
-      const subMod = await import(`${appDir}/${path}`);
-      if (subMod.completion) {
-        ensureSubcommands(folderName);
-        subcommands[folderName].push({
-          name: subFolderName,
-          completion: subMod.completion,
-        });
-      }
+    const commandParts = parts.slice(0, -1); // remove trailing "meta.ts"
+    if (commandParts.length === 0) continue;
+
+    for (const part of commandParts) {
+      assertCommandName(part, `app/${commandParts.join("/")}`);
     }
+
+    const mod = await import(`${appDir}/${path}`);
+    if (!mod.completion) continue;
+
+    // Navigate down the tree, ensuring intermediate nodes exist
+    let currentLevel = root;
+    for (let i = 0; i < commandParts.length - 1; i++) {
+      currentLevel = ensureNode(currentLevel, commandParts[i]).children;
+    }
+
+    // Set the leaf node's completion
+    const leaf = ensureNode(currentLevel, commandParts.at(-1)!);
+    leaf.completion = mod.completion;
   }
 
-  return { commands, subcommands };
+  return root;
 };
+
 export default getCompletions;

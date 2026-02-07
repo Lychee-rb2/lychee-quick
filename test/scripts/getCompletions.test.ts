@@ -40,12 +40,11 @@ describe("getCompletions", () => {
     mockScan.mockReset();
   });
 
-  // biome-ignore lint/correctness/noUndeclaredVariables: vitest global
   afterAll(() => {
     globalThis.Bun.Glob = originalGlob;
   });
 
-  test("should get completions", async () => {
+  test("should get completions as tree", async () => {
     mockScan.mockImplementation(function* () {
       yield "foo/meta.ts";
       yield "bar/meta.ts";
@@ -57,17 +56,23 @@ describe("getCompletions", () => {
 
     const result = await getCompletions("/root");
 
-    expect(result.commands).toEqual([
-      { name: "foo", completion: "function foo" },
-      { name: "bar", completion: "function bar" },
-    ]);
-    expect(result.subcommands.foo).toEqual([
-      { name: "foo", completion: "function foo/foo" },
-      { name: "bar", completion: "function foo/bar" },
-    ]);
-    expect(result.subcommands.bar).toEqual([
-      { name: "foo", completion: "function bar/foo" },
-      { name: "bar", completion: "function bar/bar" },
+    expect(result).toEqual([
+      {
+        name: "foo",
+        completion: "function foo",
+        children: [
+          { name: "foo", completion: "function foo/foo", children: [] },
+          { name: "bar", completion: "function foo/bar", children: [] },
+        ],
+      },
+      {
+        name: "bar",
+        completion: "function bar",
+        children: [
+          { name: "foo", completion: "function bar/foo", children: [] },
+          { name: "bar", completion: "function bar/bar", children: [] },
+        ],
+      },
     ]);
   });
 
@@ -92,7 +97,7 @@ describe("getCompletions", () => {
     );
   });
 
-  test("should skip subcommand without completion", async () => {
+  test("should skip command without completion", async () => {
     vi.mock("/root/baz/meta.ts", () => ({
       completion: "function baz",
     }));
@@ -106,7 +111,9 @@ describe("getCompletions", () => {
     });
 
     const result = await getCompletions("/root");
-    expect(result.subcommands.baz).toEqual([]);
+    expect(result).toEqual([
+      { name: "baz", completion: "function baz", children: [] },
+    ]);
   });
 
   test("should handle subcommand appearing before parent command", async () => {
@@ -117,28 +124,63 @@ describe("getCompletions", () => {
     });
 
     const result = await getCompletions("/root");
-    expect(result.commands).toEqual([
-      { name: "foo", completion: "function foo" },
-    ]);
-    expect(result.subcommands.foo).toEqual([
-      { name: "bar", completion: "function foo/bar" },
+    expect(result).toEqual([
+      {
+        name: "foo",
+        completion: "function foo",
+        children: [
+          { name: "bar", completion: "function foo/bar", children: [] },
+        ],
+      },
     ]);
   });
 
-  test("should ignore deeply nested meta.ts", async () => {
-    mockScan.mockImplementation(function* () {
-      yield "foo/meta.ts";
-      yield "foo/bar/baz/meta.ts"; // depth 3, should be ignored
-    });
-
+  test("should handle deeply nested meta.ts", async () => {
     vi.mock("/root/foo/bar/baz/meta.ts", () => ({
-      completion: "should be ignored",
+      completion: "function foo/bar/baz",
     }));
 
+    mockScan.mockImplementation(function* () {
+      yield "foo/meta.ts";
+      yield "foo/bar/meta.ts";
+      yield "foo/bar/baz/meta.ts";
+    });
+
     const result = await getCompletions("/root");
-    expect(result.commands).toEqual([
-      { name: "foo", completion: "function foo" },
+    expect(result).toEqual([
+      {
+        name: "foo",
+        completion: "function foo",
+        children: [
+          {
+            name: "bar",
+            completion: "function foo/bar",
+            children: [
+              {
+                name: "baz",
+                completion: "function foo/bar/baz",
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
     ]);
-    expect(result.subcommands.foo).toEqual([]);
+  });
+
+  test("should skip root meta.ts (no command parts)", async () => {
+    vi.mock("/root/meta.ts", () => ({
+      completion: "root",
+    }));
+
+    mockScan.mockImplementation(function* () {
+      yield "meta.ts";
+      yield "foo/meta.ts";
+    });
+
+    const result = await getCompletions("/root");
+    expect(result).toEqual([
+      { name: "foo", completion: "function foo", children: [] },
+    ]);
   });
 });

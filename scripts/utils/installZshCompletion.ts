@@ -1,4 +1,7 @@
-import getCompletions from "@/scripts/utils/getCompletions";
+import getCompletions, {
+  type CommandNode,
+} from "@/scripts/utils/getCompletions";
+
 const home = Bun.env.HOME!;
 const cliName = Bun.env.CLI_NAME || "ly";
 
@@ -19,34 +22,82 @@ export const editZshrc = async (zshrcPath: string, sourceLine: string) => {
     throw err;
   }
 };
-export const writeZsh = async (root: string, completionFile: string) => {
-  const { commands, subcommands } = await getCompletions(`${root}/app`);
 
-  const commandsLine = commands
-    .map((c) => `'${c.name}:${c.completion}'`)
-    .join(" ");
-  const subcommandCases = Object.entries(subcommands)
-    .map(([cmd, subs]) => {
-      const subsLine = subs.map((s) => `'${s.name}:${s.completion}'`).join(" ");
-      return `      ${cmd}) subcommands=(${subsLine}) ;;`;
-    })
-    .join("\n");
-  const completionScript = `# Lychee Quick CLI completion
-_lychee_quick_completion() {
-  local cmd="\${words[2]}"
-  if (( CURRENT == 2 )); then
-    local -a commands=(${commandsLine})
-    _describe 'command' commands
-  elif (( CURRENT == 3 )); then
-    local -a subcommands
-    case "$cmd" in
-${subcommandCases}
-    esac
-    _describe 'subcommand' subcommands
-  fi
-}
-compdef _lychee_quick_completion ${cliName}
-`;
+const buildDescribe = (nodes: CommandNode[]) =>
+  nodes.map((c) => `'${c.name}:${c.completion}'`).join(" ");
+
+/**
+ * Collect nodes by depth level for zsh completion generation.
+ * Each entry maps a parent path (e.g. "clash/proxy") to the children at that path.
+ */
+const collectByDepth = (
+  nodes: CommandNode[],
+  depth: number,
+  parentPath: string,
+  result: Map<number, Map<string, CommandNode[]>>,
+) => {
+  if (!result.has(depth)) result.set(depth, new Map());
+  result.get(depth)!.set(parentPath, nodes);
+  for (const node of nodes) {
+    if (node.children.length > 0) {
+      const path = parentPath ? `${parentPath}/${node.name}` : node.name;
+      collectByDepth(node.children, depth + 1, path, result);
+    }
+  }
+};
+
+export const writeZsh = async (root: string, completionFile: string) => {
+  const completions = await getCompletions(`${root}/app`);
+
+  const depthMap = new Map<number, Map<string, CommandNode[]>>();
+  collectByDepth(completions, 0, "", depthMap);
+
+  const blocks: string[] = [];
+
+  for (const [depth, pathMap] of [...depthMap.entries()].sort(
+    (a, b) => a[0] - b[0],
+  )) {
+    const condition = depth === 0 ? "if" : "elif";
+    const currentIndex = depth + 2; // CURRENT == 2 for depth 0, 3 for depth 1, etc.
+
+    if (depth === 0) {
+      // Top-level: no case statement needed
+      const [, nodes] = [...pathMap.entries()][0];
+      blocks.push(
+        `  ${condition} (( CURRENT == ${currentIndex} )); then\n` +
+          `    local -a completions=(${buildDescribe(nodes)})\n` +
+          `    _describe 'command' completions`,
+      );
+    } else {
+      // Deeper levels: use case with words path as key
+      const wordsKey = Array.from(
+        { length: depth },
+        (_, i) => `\${words[${i + 2}]}`,
+      ).join("/");
+      const caseEntries = [...pathMap.entries()]
+        .map(([path, nodes]) => {
+          return `      ${path}) completions=(${buildDescribe(nodes)}) ;;`;
+        })
+        .join("\n");
+      blocks.push(
+        `  ${condition} (( CURRENT == ${currentIndex} )); then\n` +
+          `    local -a completions\n` +
+          `    case "${wordsKey}" in\n` +
+          `${caseEntries}\n` +
+          `    esac\n` +
+          `    _describe 'subcommand' completions`,
+      );
+    }
+  }
+
+  const completionScript =
+    `# Lychee Quick CLI completion\n` +
+    `_lychee_quick_completion() {\n` +
+    `${blocks.join("\n")}\n` +
+    `  fi\n` +
+    `}\n` +
+    `compdef _lychee_quick_completion ${cliName}\n`;
+
   await Bun.write(completionFile, completionScript);
 };
 // Install zsh completion

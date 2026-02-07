@@ -1,26 +1,41 @@
 import { describe, test, expect, vi, afterEach } from "vitest";
+import getCompletions from "@/scripts/utils/getCompletions";
 import {
   editZshrc,
   installZshCompletion,
   writeZsh,
 } from "@/scripts/utils/installZshCompletion";
 vi.mock("@/scripts/utils/getCompletions", () => ({
-  default: vi.fn().mockResolvedValue({
-    commands: [
-      { name: "test", completion: "test" },
-      { name: "test2", completion: "test2" },
-    ],
-    subcommands: {
-      test: [
-        { name: "sub-test-test", completion: "sub-test-test" },
-        { name: "sub-test-test2", completion: "sub-test-test2" },
-      ],
-      test2: [
-        { name: "sub-test2-test2", completion: "sub-test2-test2" },
-        { name: "sub-test2-test3", completion: "sub-test2-test3" },
+  default: vi.fn().mockResolvedValue([
+    {
+      name: "test",
+      completion: "test",
+      children: [
+        { name: "sub-test-test", completion: "sub-test-test", children: [] },
+        {
+          name: "sub-test-test2",
+          completion: "sub-test-test2",
+          children: [],
+        },
       ],
     },
-  }),
+    {
+      name: "test2",
+      completion: "test2",
+      children: [
+        {
+          name: "sub-test2-test2",
+          completion: "sub-test2-test2",
+          children: [],
+        },
+        {
+          name: "sub-test2-test3",
+          completion: "sub-test2-test3",
+          children: [],
+        },
+      ],
+    },
+  ]),
 }));
 const mockWrite = vi.fn();
 const mockFile = vi.fn();
@@ -81,9 +96,78 @@ describe("installZshCompletion", () => {
   describe("writeZsh", () => {
     test("should write zsh", async () => {
       await writeZsh("/test", "/test/completions/init.zsh");
+      const expectedScript = [
+        "# Lychee Quick CLI completion",
+        "_lychee_quick_completion() {",
+        "  if (( CURRENT == 2 )); then",
+        "    local -a completions=('test:test' 'test2:test2')",
+        "    _describe 'command' completions",
+        "  elif (( CURRENT == 3 )); then",
+        "    local -a completions",
+        '    case "${words[2]}" in',
+        "      test) completions=('sub-test-test:sub-test-test' 'sub-test-test2:sub-test-test2') ;;",
+        "      test2) completions=('sub-test2-test2:sub-test2-test2' 'sub-test2-test3:sub-test2-test3') ;;",
+        "    esac",
+        "    _describe 'subcommand' completions",
+        "  fi",
+        "}",
+        "compdef _lychee_quick_completion ly",
+        "",
+      ].join("\n");
       expect(mockWrite).toHaveBeenCalledWith(
         "/test/completions/init.zsh",
-        "# Lychee Quick CLI completion\n_lychee_quick_completion() {\n  local cmd=\"${words[2]}\"\n  if (( CURRENT == 2 )); then\n    local -a commands=('test:test' 'test2:test2')\n    _describe 'command' commands\n  elif (( CURRENT == 3 )); then\n    local -a subcommands\n    case \"$cmd\" in\n      test) subcommands=('sub-test-test:sub-test-test' 'sub-test-test2:sub-test-test2') ;;\n      test2) subcommands=('sub-test2-test2:sub-test2-test2' 'sub-test2-test3:sub-test2-test3') ;;\n    esac\n    _describe 'subcommand' subcommands\n  fi\n}\ncompdef _lychee_quick_completion ly\n",
+        expectedScript,
+      );
+    });
+
+    test("should write zsh with deeply nested commands", async () => {
+      vi.mocked(getCompletions).mockResolvedValueOnce([
+        {
+          name: "cmd",
+          completion: "top command",
+          children: [
+            {
+              name: "sub",
+              completion: "sub command",
+              children: [
+                {
+                  name: "deep",
+                  completion: "deep command",
+                  children: [],
+                },
+              ],
+            },
+          ],
+        },
+      ]);
+
+      await writeZsh("/test", "/test/completions/init.zsh");
+      const expectedScript = [
+        "# Lychee Quick CLI completion",
+        "_lychee_quick_completion() {",
+        "  if (( CURRENT == 2 )); then",
+        "    local -a completions=('cmd:top command')",
+        "    _describe 'command' completions",
+        "  elif (( CURRENT == 3 )); then",
+        "    local -a completions",
+        '    case "${words[2]}" in',
+        "      cmd) completions=('sub:sub command') ;;",
+        "    esac",
+        "    _describe 'subcommand' completions",
+        "  elif (( CURRENT == 4 )); then",
+        "    local -a completions",
+        '    case "${words[2]}/${words[3]}" in',
+        "      cmd/sub) completions=('deep:deep command') ;;",
+        "    esac",
+        "    _describe 'subcommand' completions",
+        "  fi",
+        "}",
+        "compdef _lychee_quick_completion ly",
+        "",
+      ].join("\n");
+      expect(mockWrite).toHaveBeenCalledWith(
+        "/test/completions/init.zsh",
+        expectedScript,
       );
     });
   });
