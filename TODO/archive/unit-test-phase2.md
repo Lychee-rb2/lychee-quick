@@ -1,13 +1,16 @@
-# 单元测试待办清单 - Phase 2
+# 单元测试待办清单 - Phase 2（已归档）
+
+> **归档时间**: 2025-02-07
+> **状态**: Phase 2 已基本完成，meta 模块测试已跳过（优先级低）
 
 ## 测试范围总览
 
 | 模块 | 文件数 | 优先级 | 状态 |
 | --- | --- | --- | --- |
-| `fetch/` | 5 | 高 | ⬜ 待完成 |
-| `app/` handlers | 8 | 中 | ⬜ 待完成 |
-| `app/` meta | 12 | 低 | ⬜ 待完成 |
-| `scripts/` | 2 | 中 | ⬜ 待完成 |
+| `fetch/` | 5 | 高 | ✅ 已完成 |
+| `app/` handlers | 8 | 中 | ✅ 已完成 |
+| `app/` meta | 12 | 低 | ⏭️ 已跳过 |
+| `scripts/` | 6 | 中 | ✅ 已完成 |
 
 **不需要测试的模块：**
 
@@ -23,7 +26,7 @@
 
 ---
 
-## Phase 2.1: fetch 模块
+## Phase 2.1: fetch 模块 ✅
 
 ### ✅ `fetch/redis.ts`
 
@@ -70,11 +73,7 @@
 
 ---
 
-## Phase 2.2: app handlers
-
-handler 文件依赖交互式 CLI 提示，需要 mock `@inquirer/prompts`。
-
-**注意**: `prompts/` 模块的测试已完成（Phase 1），可作为参考实现。
+## Phase 2.2: app handlers ✅
 
 ### Clash 模块
 
@@ -132,34 +131,17 @@ handler 文件依赖交互式 CLI 提示，需要 mock `@inquirer/prompts`。
 
 ---
 
-## Phase 2.3: app meta
+## Phase 2.3: app meta ⏭️ 已跳过
 
-meta.ts 文件只导出 `completion` 和 `help` 常量，使用快照测试确保导出格式正确。
-
-### ⬜ 批量测试所有 meta 文件
-
-- `app/meta.ts`
-- `app/clash/meta.ts`
-- `app/clash/board/meta.ts`
-- `app/clash/check/meta.ts`
-- `app/clash/toggle/meta.ts`
-- `app/linear/meta.ts`
-- `app/linear/branch/meta.ts`
-- `app/linear/preview/meta.ts`
-- `app/linear/release/meta.ts`
-- `app/vercel/meta.ts`
-- `app/vercel/check/meta.ts`
-- `app/vercel/release/meta.ts`
-
-**测试策略**: 验证导出 `completion` 和 `help` 字段，确保类型正确
+meta.ts 文件只导出 `completion` 和 `help` 常量，优先级低，已跳过。
 
 ---
 
-## Phase 2.4: scripts
+## Phase 2.4: scripts ✅
 
-### ⬜ `scripts/postinstall.ts`
+### ✅ `scripts/postinstall.ts`
 
-- **导出**: `installCli()`, `validateCommandName()`, `getCompletions()`, `installZshCompletion()`
+- **测试文件**: `postinstall.test.ts`, `installCli.test.ts`, `getCompletions.test.ts`, `installZshCompletion.test.ts`
 - **测试点**:
   - `validateCommandName()` - 纯函数，验证命令名不含 `-`
   - `getCompletions()` - 目录扫描逻辑
@@ -167,33 +149,37 @@ meta.ts 文件只导出 `completion` 和 `help` 常量，使用快照测试确�
   - `installZshCompletion()` - 补全脚本生成
 - **Mock**: 文件系统、`Bun.file()`、`Bun.write()`、`import()`
 
-### ⬜ `scripts/codegen.ts`
+### ✅ `scripts/codegen.ts`
 
+- **测试文件**: `codegen.test.ts`
 - **测试点**:
   - 配置文件读取
   - `generate()` 调用参数验证
 - **Mock**: `@graphql-codegen/cli`, 文件系统
 
+### ✅ `scripts/buildGlobalEnv.ts`（计划外新增）
+
+- **测试文件**: `buildGlobalEnv.test.ts`
+
 ---
 
-## 测试文件结构
+## 最终测试文件结构
 
 ```
 test/
-├── help/           # ✅ Phase 1 - 已完成
-├── i18n/           # ✅ Phase 1 - 已完成
-├── prompts/        # ✅ Phase 1 - 已完成
+├── help/           # ✅ Phase 1
+├── i18n/           # ✅ Phase 1
+├── prompts/        # ✅ Phase 1
 │   ├── linear.test.ts
 │   ├── vercel.test.ts
 │   └── mihomo.test.ts
-├── fetch/          # ⬜ Phase 2.1 - 待完成
+├── fetch/          # ✅ Phase 2.1
 │   ├── redis.test.ts
 │   ├── mihomo.test.ts
 │   ├── github.test.ts
 │   ├── linear.test.ts
 │   └── vercel.test.ts
-├── app/            # ⬜ Phase 2.2 & 2.3 - 待完成
-│   ├── meta.test.ts
+├── app/            # ✅ Phase 2.2
 │   ├── clash/
 │   │   ├── board.test.ts
 │   │   ├── check.test.ts
@@ -205,14 +191,18 @@ test/
 │   └── vercel/
 │       ├── check.test.ts
 │       └── release.test.ts
-└── scripts/        # ⬜ Phase 2.4 - 待完成
+└── scripts/        # ✅ Phase 2.4
     ├── postinstall.test.ts
+    ├── installCli.test.ts
+    ├── getCompletions.test.ts
+    ├── installZshCompletion.test.ts
+    ├── buildGlobalEnv.test.ts
     └── codegen.test.ts
 ```
 
 ---
 
-## 执行顺序
+## 执行顺序（实际完成）
 
 1. ✅ `fetch/redis.ts` - 最简单，作为起点
 2. ✅ `fetch/mihomo.ts` - HTTP 请求封装
@@ -221,15 +211,6 @@ test/
 5. ✅ `app/clash/` handlers - 相对简单
 6. ✅ `app/linear/` handlers - 中等复杂度
 7. ✅ `app/vercel/` handlers - 中等复杂度
-8. ⬜ `scripts/postinstall.ts` - 复杂但重要
-9. ⬜ `scripts/codegen.ts` - 最后完成
-
----
-
-## 运行测试
-
-```bash
-bun run test                    # 运行所有测试（带覆盖率）
-bun run test:watch              # 监听模式
-bun run test:ui                 # UI 模式
-```
+8. ✅ `scripts/postinstall.ts` - 拆分为多个测试文件
+9. ✅ `scripts/codegen.ts` + `scripts/buildGlobalEnv.ts`
+10. ⏭️ `app/meta` - 优先级低，已跳过
