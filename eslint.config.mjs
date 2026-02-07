@@ -7,7 +7,7 @@ import tsEslint from "typescript-eslint";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default tsEslint.config(
-  { ignores: ["out", "src/graphql/*.client.ts"] },
+  { ignores: ["out", "src/graphql/**/client.ts"] },
   { files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"] },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   pluginJs.configs.recommended,
