@@ -1,46 +1,46 @@
-import dotenv from "dotenv";
 import { resolve } from "node:path";
-import {
-  existsSync,
-  unlinkSync,
-  symlinkSync,
-  readFileSync,
-  appendFileSync,
-  readdirSync,
-} from "node:fs";
-import { homedir } from "node:os";
+import { unlink, symlink } from "node:fs/promises";
 
 const root = resolve(import.meta.dir, "..");
 const appDir = resolve(root, "app");
-const envFile = await Bun.file(resolve(root, ".env")).text();
-const envVars = dotenv.parse(envFile);
-const cliName = envVars.CLI_NAME || "ly";
+const home = Bun.env.HOME!;
 
-// Generate global-env.d.ts
-const content = `
+const cliName = Bun.env.CLI_NAME || "ly";
+
+// Generate global-env.d.ts from .env keys
+const buildGlobalEnv = async () => {
+  const envContent = await Bun.file(resolve(root, ".env")).text();
+  const envKeys = envContent
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"))
+    .map((line) => line.split("=")[0].trim())
+    .filter(Boolean);
+
+  const content = `
 declare namespace NodeJS {
   export interface ProcessEnv {
-    ${Object.keys(envVars)
-      .map((key) => `${key}?: string;`)
-      .join("\n    ")}
+    ${envKeys.map((key) => `${key}?: string;`).join("\n    ")}
   }
 }
 `;
-await Bun.write(resolve(root, "global-env.d.ts"), content);
+  await Bun.write(resolve(root, "global-env.d.ts"), content);
+  console.log(`global-env.d.ts generated with ${envKeys.length} env keys`);
+};
 
 // Install CLI with custom name from CLI_NAME env var (default: ly)
-const installCli = () => {
+const installCli = async () => {
   const binPath = resolve(root, "bin.ts");
-  const bunBinDir = resolve(homedir(), ".bun", "bin");
+  const bunBinDir = resolve(home, ".bun", "bin");
   const linkPath = resolve(bunBinDir, cliName);
 
   try {
     // Remove existing symlink if exists
-    if (existsSync(linkPath)) {
-      unlinkSync(linkPath);
+    if (await Bun.file(linkPath).exists()) {
+      await unlink(linkPath);
     }
     // Create new symlink
-    symlinkSync(binPath, linkPath);
+    await symlink(binPath, linkPath);
     console.log(`CLI installed: ${cliName} -> ${binPath}`);
   } catch (err) {
     console.error(`Failed to install CLI:`, err);
@@ -63,40 +63,37 @@ const getCompletions = async () => {
   const subcommands: Record<string, { name: string; completion: string }[]> =
     {};
 
-  const folders = readdirSync(appDir, { withFileTypes: true }).filter((d) =>
-    d.isDirectory(),
-  );
+  const glob = new Bun.Glob("*/meta.ts");
+  const folderNames: string[] = [];
+  for await (const path of glob.scan({ cwd: appDir })) {
+    folderNames.push(path.split("/")[0]);
+  }
 
-  for (const folder of folders) {
+  for (const folderName of folderNames) {
     // 检测命令名称是否包含 "-"
-    validateCommandName(folder.name, `app/${folder.name}`);
+    validateCommandName(folderName, `app/${folderName}`);
 
-    const folderPath = resolve(appDir, folder.name);
+    const folderPath = resolve(appDir, folderName);
 
     // Get folder completion from meta.ts
     const metaFile = resolve(folderPath, "meta.ts");
     const mod = await import(metaFile);
-    commands.push({ name: folder.name, completion: mod.completion });
+    commands.push({ name: folderName, completion: mod.completion });
 
     // Get subcommand completions from subdirectories
-    subcommands[folder.name] = [];
-    const subFolders = readdirSync(folderPath, { withFileTypes: true }).filter(
-      (d) => d.isDirectory(),
-    );
-
-    for (const subFolder of subFolders) {
+    subcommands[folderName] = [];
+    const subGlob = new Bun.Glob("*/meta.ts");
+    for await (const subPath of subGlob.scan({ cwd: folderPath })) {
+      const subFolderName = subPath.split("/")[0];
       // 检测子命令名称是否包含 "-"
-      validateCommandName(
-        subFolder.name,
-        `app/${folder.name}/${subFolder.name}`,
-      );
+      validateCommandName(subFolderName, `app/${folderName}/${subFolderName}`);
 
-      const metaPath = resolve(folderPath, subFolder.name, "meta.ts");
-      const mod = await import(metaPath);
-      if (mod.completion) {
-        subcommands[folder.name].push({
-          name: subFolder.name,
-          completion: mod.completion,
+      const metaPath = resolve(folderPath, subFolderName, "meta.ts");
+      const subMod = await import(metaPath);
+      if (subMod.completion) {
+        subcommands[folderName].push({
+          name: subFolderName,
+          completion: subMod.completion,
         });
       }
     }
@@ -107,9 +104,9 @@ const getCompletions = async () => {
 
 // Install zsh completion
 const installZshCompletion = async () => {
-  const zshrcPath = resolve(homedir(), ".zshrc");
+  const zshrcPath = resolve(home, ".zshrc");
 
-  if (!existsSync(zshrcPath)) {
+  if (!(await Bun.file(zshrcPath).exists())) {
     console.log("Zsh not detected, skipping completion setup");
     return;
   }
@@ -151,7 +148,7 @@ compdef _lychee_quick_completion ${cliName}
   await Bun.write(completionFile, completionScript);
 
   try {
-    const zshrcContent = readFileSync(zshrcPath, "utf-8");
+    const zshrcContent = await Bun.file(zshrcPath).text();
 
     // Check if already configured
     if (zshrcContent.includes(sourceLine)) {
@@ -169,11 +166,11 @@ compdef _lychee_quick_completion ${cliName}
       newContent = newContent.replace(pattern, "");
     }
     if (newContent !== zshrcContent) {
-      await Bun.write(zshrcPath, newContent);
       console.log("Removed old completion config");
     }
 
-    appendFileSync(zshrcPath, `\n${sourceLine}\n`);
+    // Write with old patterns removed + new source line appended
+    await Bun.write(zshrcPath, newContent + `\n${sourceLine}\n`);
     console.log(`Zsh completion installed for: ${cliName}`);
   } catch (err) {
     console.error("Failed to install zsh completion:", err);
@@ -185,5 +182,6 @@ compdef _lychee_quick_completion ${cliName}
   );
 };
 
-installCli();
+await buildGlobalEnv();
+await installCli();
 await installZshCompletion();

@@ -2,7 +2,6 @@
 declare namespace NodeJS {
   export interface ProcessEnv {
     CLI_NAME?: string;
-    NU_CONFIG?: string;
     LINEAR_API_KEY?: string;
     LINEAR_TEAM?: string;
     LINEAR_SPACE?: string;
