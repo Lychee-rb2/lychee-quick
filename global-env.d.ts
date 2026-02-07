@@ -1,6 +1,5 @@
-
-declare namespace NodeJS {
-  export interface ProcessEnv {
+declare module "bun" {
+  interface Env {
     CLI_NAME?: string;
     LINEAR_API_KEY?: string;
     LINEAR_TEAM?: string;

@@ -16,9 +16,8 @@ const buildGlobalEnv = async () => {
     .map((line) => line.split("=")[0].trim())
     .filter(Boolean);
 
-  const content = `
-declare namespace NodeJS {
-  export interface ProcessEnv {
+  const content = `declare module "bun" {
+  interface Env {
     ${envKeys.map((key) => `${key}?: string;`).join("\n    ")}
   }
 }
