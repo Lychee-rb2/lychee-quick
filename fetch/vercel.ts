@@ -14,6 +14,11 @@ export const createVercelClient = () => {
   return vercel;
 };
 
+/** @internal 仅用于测试重置单例状态 */
+export const _resetClient = () => {
+  vercel = null;
+};
+
 export const getProjects = () => {
   const teamId = VERCEL_TEAM();
   let project: Project[] = [];
