@@ -1,3 +1,5 @@
+import { t } from "@/i18n";
+
 export interface CommandNode {
   name: string;
   completion: string;
@@ -6,7 +8,7 @@ export interface CommandNode {
 
 const assertCommandName = (name: string, path: string) => {
   if (name.includes("-")) {
-    throw new Error(`Command name cannot contain "-": ${name} (at ${path})`);
+    throw new Error(t("script.getCompletions.dashInName", { name, path }));
   }
 };
 

@@ -2,6 +2,10 @@ import { describe, test, expect, vi, afterEach } from "vitest";
 import getCompletions from "@/scripts/utils/getCompletions";
 import { editZshrc, writeZsh } from "@/scripts/utils/installZshCompletion";
 import installZshCompletion from "@/scripts/utils/installZshCompletion";
+
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
 vi.mock("@/scripts/utils/getCompletions", () => ({
   default: vi.fn().mockResolvedValue([
     {

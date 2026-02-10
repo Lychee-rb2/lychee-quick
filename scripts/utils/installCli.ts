@@ -1,3 +1,5 @@
+import { t } from "@/i18n";
+
 interface PackageJson {
   bin: Record<string, string>;
 }
@@ -31,9 +33,9 @@ export const rewritePackageJson = async (
         pkgPath,
         JSON.stringify({ ...pkg, bin: expectedBin }, null, 2),
       );
-      console.log(`package.json bin updated: ${cliName} -> ./bin.ts`);
+      console.log(t("script.installCli.binUpdated", { cliName }));
     } catch (err) {
-      console.error(`Failed to write package.json:`, err);
+      console.error(t("script.installCli.writeFailed"), err);
       throw err;
     }
   }
@@ -42,9 +44,9 @@ export const linkCli = async () => {
   // Use bun link to install globally
   try {
     await Bun.$`bun link`.quiet();
-    console.log(`CLI installed via bun link`);
+    console.log(t("script.installCli.installed"));
   } catch (err) {
-    console.error(`Failed to install CLI:`, err);
+    console.error(t("script.installCli.installFailed"), err);
     throw err;
   }
 };

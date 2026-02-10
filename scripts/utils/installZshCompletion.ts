@@ -1,6 +1,7 @@
 import getCompletions, {
   type CommandNode,
 } from "@/scripts/utils/getCompletions";
+import { t } from "@/i18n";
 
 const home = Bun.env.HOME!;
 const cliName = Bun.env.CLI_NAME || "ly";
@@ -11,14 +12,14 @@ export const editZshrc = async (zshrcPath: string, sourceLine: string) => {
 
     // Check if already configured
     if (zshrcContent.includes(sourceLine)) {
-      console.log("Zsh completion already configured");
+      console.log(t("script.zshCompletion.alreadyConfigured"));
       return 0;
     }
 
     await Bun.write(zshrcPath, zshrcContent + `\n${sourceLine}\n`);
-    console.log(`Zsh completion installed for: ${cliName}`);
+    console.log(t("script.zshCompletion.installed", { cliName }));
   } catch (err) {
-    console.error("Failed to install zsh completion:", err);
+    console.error(t("script.zshCompletion.installFailed"), err);
     throw err;
   }
 };
@@ -105,7 +106,7 @@ const installZshCompletion = async (root: string) => {
   const zshrcPath = `${home}/.zshrc`;
 
   if (!(await Bun.file(zshrcPath).exists())) {
-    console.log("Zsh not detected, skipping completion setup");
+    console.log(t("script.zshCompletion.zshNotDetected"));
     return 0;
   }
 
@@ -116,9 +117,7 @@ const installZshCompletion = async (root: string) => {
   await editZshrc(zshrcPath, sourceLine);
 
   // Print source command for user to run
-  console.log(
-    `\nRun this to enable completion now:\n  source ${completionFile}\n`,
-  );
+  console.log(t("script.zshCompletion.enableHint", { completionFile }));
   return 1;
 };
 

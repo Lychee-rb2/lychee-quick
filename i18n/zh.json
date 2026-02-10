@@ -94,5 +94,26 @@
     "cannotFind": "找不到命令 \"{action}\"",
     "metaError": "读取 {name} 的 meta.ts 时出错",
     "aliasMultipleMatches": "缩写 \"{prefix}\" 匹配多个命令: {matches}，请使用更长的前缀"
+  },
+  "script": {
+    "installCli": {
+      "binUpdated": "package.json bin 已更新: {cliName} -> ./bin.ts",
+      "writeFailed": "写入 package.json 失败:",
+      "installed": "CLI 已通过 bun link 安装",
+      "installFailed": "安装 CLI 失败:"
+    },
+    "zshCompletion": {
+      "alreadyConfigured": "Zsh 补全已配置",
+      "installed": "Zsh 补全已安装: {cliName}",
+      "installFailed": "安装 zsh 补全失败:",
+      "zshNotDetected": "未检测到 Zsh，跳过补全安装",
+      "enableHint": "\n运行以下命令启用补全:\n  source {completionFile}\n"
+    },
+    "buildGlobalEnv": {
+      "generated": "global-env.d.ts 已生成，包含 {count} 个环境变量"
+    },
+    "getCompletions": {
+      "dashInName": "命令名不能包含 \"-\": {name} (在 {path})"
+    }
   }
 }

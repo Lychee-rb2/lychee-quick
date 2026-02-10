@@ -2,6 +2,10 @@ import { buildType, getEnvKeys } from "@/scripts/utils/buildGlobalEnv";
 import buildGlobalEnv from "@/scripts/utils/buildGlobalEnv";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
+
 interface MockedBun {
   file: ReturnType<typeof vi.fn>;
   write: ReturnType<typeof vi.fn>;

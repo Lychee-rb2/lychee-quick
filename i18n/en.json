@@ -94,5 +94,26 @@
     "cannotFind": "Can't find action \"{action}\"",
     "metaError": "Error reading meta.ts for {name}",
     "aliasMultipleMatches": "Alias \"{prefix}\" matches multiple commands: {matches}, please use a longer prefix"
+  },
+  "script": {
+    "installCli": {
+      "binUpdated": "package.json bin updated: {cliName} -> ./bin.ts",
+      "writeFailed": "Failed to write package.json:",
+      "installed": "CLI installed via bun link",
+      "installFailed": "Failed to install CLI:"
+    },
+    "zshCompletion": {
+      "alreadyConfigured": "Zsh completion already configured",
+      "installed": "Zsh completion installed for: {cliName}",
+      "installFailed": "Failed to install zsh completion:",
+      "zshNotDetected": "Zsh not detected, skipping completion setup",
+      "enableHint": "\nRun this to enable completion now:\n  source {completionFile}\n"
+    },
+    "buildGlobalEnv": {
+      "generated": "global-env.d.ts generated with {count} env keys"
+    },
+    "getCompletions": {
+      "dashInName": "Command name cannot contain \"-\": {name} (at {path})"
+    }
   }
 }

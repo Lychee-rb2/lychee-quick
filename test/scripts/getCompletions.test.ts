@@ -1,6 +1,10 @@
 import getCompletions from "@/scripts/utils/getCompletions";
 import { afterAll, afterEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
+
 vi.mock("/root/foo/meta.ts", () => ({
   completion: () => "function foo",
 }));
@@ -82,7 +86,7 @@ describe("getCompletions", () => {
     });
 
     await expect(getCompletions("/root")).rejects.toThrow(
-      'Command name cannot contain "-"',
+      "script.getCompletions.dashInName",
     );
   });
 
@@ -93,7 +97,7 @@ describe("getCompletions", () => {
     });
 
     await expect(getCompletions("/root")).rejects.toThrow(
-      'Command name cannot contain "-"',
+      "script.getCompletions.dashInName",
     );
   });
 

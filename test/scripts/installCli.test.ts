@@ -5,6 +5,10 @@ import installCli, {
 } from "@/scripts/utils/installCli";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
+
 const mockWrite = vi.fn();
 const mockFile = vi.fn();
 const mockShell = vi.fn();

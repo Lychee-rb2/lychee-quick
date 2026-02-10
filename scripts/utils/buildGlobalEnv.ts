@@ -1,3 +1,5 @@
+import { t } from "@/i18n";
+
 export const getEnvKeys = (envContent: string) => {
   return envContent
     .split("\n")
@@ -20,7 +22,9 @@ const buildGlobalEnv = async (root: string) => {
   const envKeys = getEnvKeys(envContent);
   const content = buildType(envKeys);
   await Bun.write(`${root}/global-env.d.ts`, content);
-  console.log(`global-env.d.ts generated with ${envKeys.length} env keys`);
+  console.log(
+    t("script.buildGlobalEnv.generated", { count: String(envKeys.length) }),
+  );
   return 1;
 };
 
