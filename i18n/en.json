@@ -78,6 +78,21 @@
       "notFound": "Resource not found: {uri}",
       "requestFailed": "Request failed ({status}): {detail}",
       "networkError": "Network request failed: {error}"
+    },
+    "env": {
+      "missingVar": "Missing required environment variable: {name}"
     }
+  },
+  "cli": {
+    "usage": "Usage: {cliName} <command> [subcommand] [options]\n",
+    "availableCommands": "Available commands:\n",
+    "runHelp": "\nRun '{cliName} <command>' to see available subcommands.",
+    "subcommandUsage": "Usage: {cliName} {command} <subcommand>\n",
+    "availableSubcommands": "Available subcommands:\n",
+    "cannotFindHelp": "Can't find help for \"{action}\"",
+    "noHelpAvailable": "No help available for \"{action}\"",
+    "cannotFind": "Can't find action \"{action}\"",
+    "metaError": "Error reading meta.ts for {name}",
+    "aliasMultipleMatches": "Alias \"{prefix}\" matches multiple commands: {matches}, please use a longer prefix"
   }
 }

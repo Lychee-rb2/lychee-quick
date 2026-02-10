@@ -1,9 +1,10 @@
 import { Env } from "bun";
 import { z } from "zod";
+import { t } from "@/i18n";
 
 const requireEnv = <T extends keyof Env>(name: T): string =>
   z
-    .string({ message: `Missing required environment variable: ${name}` })
+    .string({ message: t("error.env.missingVar", { name }) })
     .parse(Bun.env[name]);
 
 // Mihomo

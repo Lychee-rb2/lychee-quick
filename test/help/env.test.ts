@@ -1,5 +1,13 @@
 import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
 import { ZodError } from "zod";
+
+vi.mock("@/i18n", () => ({
+  t: vi.fn(
+    (key: string, args?: Record<string, string>) =>
+      `${key}${args ? ` ${Object.values(args).join(" ")}` : ""}`,
+  ),
+}));
+
 import {
   MIHOMO_URL,
   MIHOMO_TOKEN,

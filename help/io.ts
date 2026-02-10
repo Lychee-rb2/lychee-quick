@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import { logger, typedBoolean } from "help";
 import type { ModuleLoader, FileSystem } from "@/types/io";
 import { CLI_NAME } from "@/help/env";
+import { t } from "@/i18n";
 
 /** 解析 meta 导出值：支持字符串或函数两种形式 */
 const resolveMeta = (value: string | (() => string) | undefined): string =>
@@ -79,7 +80,10 @@ export const expandAlias = async (
       return matches[0];
     } else if (matches.length > 1) {
       logger.debug(
-        `缩写 "${prefix}" 匹配多个命令: ${matches.join(", ")}，请使用更长的前缀`,
+        t("cli.aliasMultipleMatches", {
+          prefix,
+          matches: matches.join(", "),
+        }),
       );
       return null;
     }
@@ -113,17 +117,17 @@ export const showAvailableActions = async (
     const mod = await moduleLoader.loadMeta(`@/app/${name}/meta`);
     const description = resolveMeta(mod?.completion);
     if (!mod && name) {
-      logger.error(`Error reading meta.ts for ${name}`);
+      logger.error(t("cli.metaError", { name }));
     }
     apps.push({ name, description });
   }
-  logger.info(`Usage: ${cliName} <command> [subcommand] [options]\n`);
-  logger.info("Available commands:\n");
+  logger.info(t("cli.usage", { cliName }));
+  logger.info(t("cli.availableCommands"));
   for (const app of apps) {
     const desc = app.description ? ` - ${app.description}` : "";
     logger.info(`  ${app.name}${desc}`);
   }
-  logger.info(`\nRun '${cliName} <command>' to see available subcommands.`);
+  logger.info(t("cli.runHelp", { cliName }));
 };
 
 export const showSubcommands = async (
@@ -152,11 +156,11 @@ export const showSubcommands = async (
   }
 
   const cmdName = actionName.join(" ");
-  logger.info(`Usage: ${cliName} ${cmdName} <subcommand>\n`);
+  logger.info(t("cli.subcommandUsage", { cliName, command: cmdName }));
   if (mainDescription) {
     logger.info(`${mainDescription}\n`);
   }
-  logger.info("Available subcommands:\n");
+  logger.info(t("cli.availableSubcommands"));
   for (const cmd of subcommands) {
     const desc = cmd.description ? ` - ${cmd.description}` : "";
     logger.info(`  ${cmd.name}${desc}`);
@@ -178,7 +182,7 @@ export const showHelp = async (
   const metaPath = `@/app/${actionName.join("/")}/meta`;
   const mod = await moduleLoader.loadMeta(metaPath);
   if (!mod) {
-    logger.error(`Can't find help for "${actionName.join(" ")}"`);
+    logger.error(t("cli.cannotFindHelp", { action: actionName.join(" ") }));
     return;
   }
   const helpText = resolveMeta(mod.help);
@@ -188,7 +192,7 @@ export const showHelp = async (
   } else if (completionText) {
     logger.info(completionText);
   } else {
-    logger.info(`No help available for "${actionName.join(" ")}"`);
+    logger.info(t("cli.noHelpAvailable", { action: actionName.join(" ") }));
   }
 };
 
@@ -251,7 +255,7 @@ export const main = async (
     if (await fs.fileExists(`${subDir}/meta.ts`)) {
       await showSubcommands(actionName, cliName, moduleLoader, fs);
     } else {
-      logger.error(`Can't find action "${actionName.join(" ")}"`);
+      logger.error(t("cli.cannotFind", { action: actionName.join(" ") }));
     }
   }
 };

@@ -32,6 +32,10 @@ vi.mock("@/help/logger", () => ({
   },
 }));
 
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
+
 // Import mocked modules
 import dotenv from "dotenv";
 import { logger } from "@/help/logger";
@@ -250,12 +254,7 @@ describe("io helper functions", () => {
       // Verify scanMetaFiles was called
       expect(mockScanMetaFiles).toHaveBeenCalled();
       // Verify logger.debug was called with multiple matches message
-      expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("匹配多个命令"),
-      );
-      expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("clash, clash2"),
-      );
+      expect(logger.debug).toHaveBeenCalledWith("cli.aliasMultipleMatches");
     });
 
     test("should return null when no match found", async () => {
@@ -301,12 +300,8 @@ describe("io helper functions", () => {
       await showAvailableActions("test-cli");
 
       // Verify that logger.info was called with expected content
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: test-cli"),
-      );
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Available commands"),
-      );
+      expect(logger.info).toHaveBeenCalledWith("cli.usage");
+      expect(logger.info).toHaveBeenCalledWith("cli.availableCommands");
       // Verify that logger.info was called multiple times (at least 3: usage, header, and commands)
       const mockedLogger = getMockedLogger();
       expect(mockedLogger.info.mock.calls.length).toBeGreaterThanOrEqual(3);
@@ -340,13 +335,9 @@ describe("io helper functions", () => {
       await showAvailableActions("test-cli", mockModuleLoader, mockFileSystem);
 
       // Verify error was logged for failed meta loading
-      expect(logger.error).toHaveBeenCalledWith(
-        "Error reading meta.ts for test-app",
-      );
+      expect(logger.error).toHaveBeenCalledWith("cli.metaError");
       // Should still show usage info
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: test-cli"),
-      );
+      expect(logger.info).toHaveBeenCalledWith("cli.usage");
     });
 
     test("should display command without description when completion is empty", async () => {
@@ -380,12 +371,8 @@ describe("io helper functions", () => {
       // Test with real file system
       await showSubcommands(["clash"], "test-cli");
 
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: test-cli clash"),
-      );
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Available subcommands"),
-      );
+      expect(logger.info).toHaveBeenCalledWith("cli.subcommandUsage");
+      expect(logger.info).toHaveBeenCalledWith("cli.availableSubcommands");
       // Verify that logger.info was called multiple times (at least 2: usage and header)
       const mockedLogger = getMockedLogger();
       expect(mockedLogger.info.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -395,9 +382,7 @@ describe("io helper functions", () => {
       // Test with real file system - clash meta should have completion
       await showSubcommands(["clash"], "test-cli");
 
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: test-cli clash"),
-      );
+      expect(logger.info).toHaveBeenCalledWith("cli.subcommandUsage");
       // Verify that logger.info was called multiple times
       const mockedLogger = getMockedLogger();
       const callCount = mockedLogger.info.mock.calls.length;
@@ -454,9 +439,7 @@ describe("io helper functions", () => {
       try {
         await showSubcommands(["clash"], "test-cli");
 
-        expect(logger.info).toHaveBeenCalledWith(
-          expect.stringContaining("Usage: test-cli clash"),
-        );
+        expect(logger.info).toHaveBeenCalledWith("cli.subcommandUsage");
         // Should not call logger.info with main description
         const mockedLogger = getMockedLogger();
         const infoCalls = mockedLogger.info.mock.calls;
@@ -494,9 +477,7 @@ describe("io helper functions", () => {
       );
 
       // Should display usage without main description
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: test-cli test"),
-      );
+      expect(logger.info).toHaveBeenCalledWith("cli.subcommandUsage");
       // Main description should not be displayed (only 3 logger.info calls: usage, header, subcommand)
       const mockedLogger = getMockedLogger();
       // Check that we didn't log an extra line for main description
@@ -505,8 +486,7 @@ describe("io helper functions", () => {
         const content = call[0]?.toString() || "";
         return (
           content.length > 0 &&
-          !content.includes("Usage:") &&
-          !content.includes("Available") &&
+          !content.startsWith("cli.") &&
           !content.includes("check") &&
           content !== ""
         );
@@ -636,9 +616,7 @@ describe("io helper functions", () => {
 
       await showHelp(["test-empty"], mockModuleLoader);
 
-      expect(logger.info).toHaveBeenCalledWith(
-        'No help available for "test-empty"',
-      );
+      expect(logger.info).toHaveBeenCalledWith("cli.noHelpAvailable");
       expect(mockModuleLoader.loadMeta).toHaveBeenCalledWith(
         "@/app/test-empty/meta",
       );
@@ -652,9 +630,7 @@ describe("io helper functions", () => {
 
       await showHelp(["nonexistent"], mockModuleLoader);
 
-      expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("Can't find help for"),
-      );
+      expect(logger.error).toHaveBeenCalledWith("cli.cannotFindHelp");
       expect(mockModuleLoader.loadMeta).toHaveBeenCalledWith(
         "@/app/nonexistent/meta",
       );
@@ -681,9 +657,7 @@ describe("io helper functions", () => {
       await showHelp(["nonexistent-module-path-xyz"]);
 
       // When import fails, loadMeta returns null, and showHelp logs error
-      expect(logger.error).toHaveBeenCalledWith(
-        'Can\'t find help for "nonexistent-module-path-xyz"',
-      );
+      expect(logger.error).toHaveBeenCalledWith("cli.cannotFindHelp");
     });
   });
 
@@ -769,9 +743,7 @@ describe("io helper functions", () => {
       await main(meta, mockModuleLoader, mockFileSystem);
 
       expect(dotenv.config).toHaveBeenCalled();
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: test-cli"),
-      );
+      expect(logger.info).toHaveBeenCalledWith("cli.usage");
     });
 
     test("should show help when -h flag is present", async () => {
@@ -967,12 +939,8 @@ describe("io helper functions", () => {
 
       await main(meta, mockModuleLoader, mockFileSystem);
 
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: test-cli clash"),
-      );
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Available subcommands"),
-      );
+      expect(logger.info).toHaveBeenCalledWith("cli.subcommandUsage");
+      expect(logger.info).toHaveBeenCalledWith("cli.availableSubcommands");
     });
 
     test("should show error when command does not exist", async () => {
@@ -993,9 +961,7 @@ describe("io helper functions", () => {
 
       await main(meta, mockModuleLoader, mockFileSystem);
 
-      expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Can\'t find action "nonexistent"'),
-      );
+      expect(logger.error).toHaveBeenCalledWith("cli.cannotFind");
     });
 
     test("should use default FileSystem.fileExists when fileSystem is not provided", async () => {
@@ -1058,9 +1024,7 @@ describe("io helper functions", () => {
       try {
         await main(meta);
 
-        expect(logger.info).toHaveBeenCalledWith(
-          expect.stringContaining("Usage: ly"),
-        );
+        expect(logger.info).toHaveBeenCalledWith("cli.usage");
       } finally {
         // Always restore original require, even if test fails
         (global as { require: typeof require }).require = originalRequire;
@@ -1096,9 +1060,7 @@ describe("io helper functions", () => {
 
       await main(meta, mockModuleLoader, mockFileSystem);
 
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Usage: test-cli"),
-      );
+      expect(logger.info).toHaveBeenCalledWith("cli.usage");
     });
   });
 });
