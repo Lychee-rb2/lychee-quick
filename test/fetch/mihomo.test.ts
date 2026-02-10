@@ -6,6 +6,10 @@ vi.mock("@/help/env", () => ({
   MIHOMO_TOKEN: () => "test-secret-token",
 }));
 
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
+
 // Helper to create a mock Response
 const createMockResponse = (
   body: unknown,
@@ -141,7 +145,7 @@ describe("fetch/mihomo", () => {
       );
 
       await expect(mihomo("proxies")).rejects.toThrow(
-        "请求失败 (500): Internal Server Error",
+        "error.mihomo.requestFailed",
       );
     });
 
@@ -156,7 +160,7 @@ describe("fetch/mihomo", () => {
       );
 
       await expect(mihomo("proxies")).rejects.toThrow(
-        "请求失败 (401): Unauthorized access",
+        "error.mihomo.requestFailed",
       );
     });
 
@@ -169,9 +173,7 @@ describe("fetch/mihomo", () => {
         }),
       );
 
-      await expect(mihomo("proxies")).rejects.toThrow(
-        "请求超时: Gateway Timeout",
-      );
+      await expect(mihomo("proxies")).rejects.toThrow("error.mihomo.timeout");
     });
 
     test("should throw timeout error for 408 status", async () => {
@@ -183,9 +185,7 @@ describe("fetch/mihomo", () => {
         }),
       );
 
-      await expect(mihomo("proxies")).rejects.toThrow(
-        "请求超时: Request Timeout",
-      );
+      await expect(mihomo("proxies")).rejects.toThrow("error.mihomo.timeout");
     });
 
     test("should throw service unavailable error for 503 status", async () => {
@@ -198,7 +198,7 @@ describe("fetch/mihomo", () => {
       );
 
       await expect(mihomo("proxies")).rejects.toThrow(
-        "服务不可用: Service Unavailable",
+        "error.mihomo.unavailable",
       );
     });
 
@@ -212,7 +212,7 @@ describe("fetch/mihomo", () => {
       );
 
       await expect(mihomo("proxies/unknown")).rejects.toThrow(
-        "资源未找到: proxies/unknown",
+        "error.mihomo.notFound",
       );
     });
 
@@ -228,7 +228,7 @@ describe("fetch/mihomo", () => {
       mockFetch.mockResolvedValue(response);
 
       await expect(mihomo("proxies")).rejects.toThrow(
-        "请求失败 (502): Bad Gateway",
+        "error.mihomo.requestFailed",
       );
     });
 
@@ -245,7 +245,7 @@ describe("fetch/mihomo", () => {
       mockFetch.mockResolvedValue(response);
 
       await expect(mihomo("proxies")).rejects.toThrow(
-        "请求失败 (429): Rate limit exceeded",
+        "error.mihomo.requestFailed",
       );
     });
 
@@ -263,7 +263,7 @@ describe("fetch/mihomo", () => {
       mockFetch.mockResolvedValue(response);
 
       await expect(mihomo("proxies")).rejects.toThrow(
-        `请求失败 (400): ${errorText}`,
+        "error.mihomo.requestFailed",
       );
     });
 
@@ -279,7 +279,7 @@ describe("fetch/mihomo", () => {
       mockFetch.mockResolvedValue(response);
 
       await expect(mihomo("proxies")).rejects.toThrow(
-        "请求失败 (500): <html>Server Error</html>",
+        "error.mihomo.requestFailed",
       );
     });
   });
@@ -297,7 +297,7 @@ describe("fetch/mihomo", () => {
       mockFetch.mockRejectedValue("connection timeout");
 
       await expect(mihomo("proxies")).rejects.toThrow(
-        "网络请求失败: connection timeout",
+        "error.mihomo.networkError",
       );
     });
 
@@ -305,14 +305,16 @@ describe("fetch/mihomo", () => {
       mockFetch.mockRejectedValue({ code: "ECONNREFUSED" });
 
       await expect(mihomo("proxies")).rejects.toThrow(
-        "网络请求失败: [object Object]",
+        "error.mihomo.networkError",
       );
     });
 
     test("should wrap null/undefined exceptions", async () => {
       mockFetch.mockRejectedValue(null);
 
-      await expect(mihomo("proxies")).rejects.toThrow("网络请求失败: null");
+      await expect(mihomo("proxies")).rejects.toThrow(
+        "error.mihomo.networkError",
+      );
     });
   });
 

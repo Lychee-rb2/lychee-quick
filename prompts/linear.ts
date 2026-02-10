@@ -2,6 +2,7 @@ import { Separator, checkbox, confirm, search } from "@inquirer/prompts";
 import type { GithubAttachmentMeta, Issue } from "@/types/linear";
 import { getIssues } from "@/fetch/linear";
 import { iconMap, typedBoolean } from "@/help";
+import { t } from "@/i18n";
 
 type PreviewLinkItem = GithubAttachmentMeta["previewLinks"][number];
 
@@ -9,7 +10,7 @@ export const selectPreviewLinks = async (
   previewLinks: PreviewLinkItem[],
 ): Promise<PreviewLinkItem[]> => {
   return checkbox({
-    message: "Send which preview link?",
+    message: t("prompt.linear.sendPreviewLink"),
     loop: false,
     choices: previewLinks.map((link) => ({
       name: link.url,
@@ -24,7 +25,9 @@ export const confirmSendComment = async (
   issueIdentifier: string,
 ): Promise<boolean> => {
   return confirm({
-    message: `Do you want to send preview comment to Linear issue ${issueIdentifier}?`,
+    message: t("prompt.linear.confirmSendComment", {
+      identifier: issueIdentifier,
+    }),
   });
 };
 
@@ -43,7 +46,7 @@ export const pickIssueForBranch = async (): Promise<Issue> => {
     backlog: "backlog",
   } as const;
   return await search({
-    message: "Checkout branch from which issue?",
+    message: t("prompt.linear.checkoutBranch"),
     source: async (input) => {
       issues = issues || (await get());
       const group = issues
@@ -89,7 +92,7 @@ export const pickIssueForPreview = async () => {
   const { get } = getIssues();
   let issues: Issue[];
   return await search({
-    message: "Send preview comment from which pr?",
+    message: t("prompt.linear.sendPreviewComment"),
     source: async (input) => {
       issues = issues || (await get());
       return issues
@@ -124,7 +127,7 @@ export const pickIssueForRelease = async (issues: Issue[]) => {
     completed: "completed",
   } as const;
   return await checkbox({
-    message: "Release which issue?",
+    message: t("prompt.linear.releaseIssue"),
     loop: false,
     choices: issues
       .map((issue) => {

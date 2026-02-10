@@ -51,5 +51,33 @@
         "help": "Trigger Deployment\n\nTrigger a Vercel deployment via Deploy Hook.\n\nOptions:\n  -f  Force refresh project cache\n\nFeatures:\n  - Select branch to deploy\n  - Multi-select projects to deploy\n  - Auto-open Vercel deployment page after triggering"
       }
     }
+  },
+  "prompt": {
+    "mihomo": {
+      "refresh": "Refresh",
+      "reset": "Reset",
+      "pickProxy": "Pick a proxy {name}",
+      "toWhichMode": "To which mode?"
+    },
+    "linear": {
+      "sendPreviewLink": "Send which preview link?",
+      "confirmSendComment": "Do you want to send preview comment to Linear issue {identifier}?",
+      "checkoutBranch": "Checkout branch from which issue?",
+      "sendPreviewComment": "Send preview comment from which pr?",
+      "releaseIssue": "Release which issue?"
+    },
+    "vercel": {
+      "checkPr": "Check which pull request?",
+      "releaseProject": "Release which project?"
+    }
+  },
+  "error": {
+    "mihomo": {
+      "timeout": "Request timeout: {detail}",
+      "unavailable": "Service unavailable: {detail}",
+      "notFound": "Resource not found: {uri}",
+      "requestFailed": "Request failed ({status}): {detail}",
+      "networkError": "Network request failed: {error}"
+    }
   }
 }

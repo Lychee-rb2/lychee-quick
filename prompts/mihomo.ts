@@ -4,6 +4,7 @@ import { search } from "@inquirer/prompts";
 import { iconMap } from "@/help/format";
 import { getDelay } from "@/help/mihomo";
 import { MIHOMO_TOP_PROXY } from "@/help/env";
+import { t } from "@/i18n";
 
 export function getProxyDelay(proxy: MihomoProxy) {
   return proxy.history?.at(-1)?.delay;
@@ -31,8 +32,14 @@ export const choices = (
       value: proxy.name,
     };
   }),
-  { name: `${iconMap("mihomo_refresh")} Refresh`, value: "REFRESH" },
-  { name: `${iconMap("mihomo_reset")} Reset`, value: "RESET" },
+  {
+    name: `${iconMap("mihomo_refresh")} ${t("prompt.mihomo.refresh")}`,
+    value: "REFRESH",
+  },
+  {
+    name: `${iconMap("mihomo_reset")} ${t("prompt.mihomo.reset")}`,
+    value: "RESET",
+  },
 ];
 
 export const getChildren = (
@@ -66,7 +73,7 @@ export const searchProxy = async (
   let hasRefreshed = false;
   const topProxy = MIHOMO_TOP_PROXY();
   const answer = await search({
-    message: `Pick a proxy ${current?.name || topProxy}`,
+    message: t("prompt.mihomo.pickProxy", { name: current?.name || topProxy }),
     source: async (searchTerm) => {
       if (!hasRefreshed && options?.refresh) {
         await getDelay();
@@ -117,7 +124,7 @@ const modes = ["rule", "direct", "global"] as const;
 export const pickMode = async (): Promise<MihomoConfig["mode"]> => {
   let config: MihomoConfig;
   return await search({
-    message: "To which mode?",
+    message: t("prompt.mihomo.toWhichMode"),
     source: async (searchTerm) => {
       config = config || (await mihomo<MihomoConfig>(`configs`));
       if (!searchTerm) return modes.map((mode) => formatMode(mode, config));

@@ -24,6 +24,10 @@ vi.mock("@/fetch/linear", () => ({
   getIssues: vi.fn(),
 }));
 
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
+
 import {
   selectPreviewLinks,
   confirmSendComment,
@@ -86,7 +90,7 @@ describe("linear-prompts", () => {
       const result = await selectPreviewLinks(mockPreviewLinks);
 
       expect(checkbox).toHaveBeenCalledWith({
-        message: "Send which preview link?",
+        message: "prompt.linear.sendPreviewLink",
         loop: false,
         choices: [
           {
@@ -133,7 +137,7 @@ describe("linear-prompts", () => {
       await confirmSendComment("LIN-123");
 
       expect(confirm).toHaveBeenCalledWith({
-        message: "Do you want to send preview comment to Linear issue LIN-123?",
+        message: "prompt.linear.confirmSendComment",
       });
     });
 
@@ -204,7 +208,7 @@ describe("linear-prompts", () => {
       getMockedGetIssues().mockReturnValue({ get: mockGet });
 
       mockSearchImpl(async (options) => {
-        expect(options.message).toBe("Checkout branch from which issue?");
+        expect(options.message).toBe("prompt.linear.checkoutBranch");
         await options.source("");
         return mockIssues[0];
       });
@@ -469,7 +473,7 @@ describe("linear-prompts", () => {
       getMockedGetIssues().mockReturnValue({ get: mockGet });
 
       mockSearchImpl(async (options) => {
-        expect(options.message).toBe("Send preview comment from which pr?");
+        expect(options.message).toBe("prompt.linear.sendPreviewComment");
         await options.source("");
         return { attachment: {}, issue: mockIssuesWithAttachments[0] };
       });
@@ -649,7 +653,7 @@ describe("linear-prompts", () => {
 
       expect(checkbox).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: "Release which issue?",
+          message: "prompt.linear.releaseIssue",
           loop: false,
         }),
       );

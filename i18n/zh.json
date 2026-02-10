@@ -51,5 +51,33 @@
         "help": "触发部署\n\n通过 Deploy Hook 触发 Vercel 部署。\n\n选项:\n  -f  强制刷新项目缓存\n\n功能:\n  - 选择要发布的分支\n  - 多选要部署的项目\n  - 触发部署后自动打开 Vercel 部署页面"
       }
     }
+  },
+  "prompt": {
+    "mihomo": {
+      "refresh": "刷新",
+      "reset": "重置",
+      "pickProxy": "选择代理 {name}",
+      "toWhichMode": "切换到哪个模式？"
+    },
+    "linear": {
+      "sendPreviewLink": "发送哪个预览链接？",
+      "confirmSendComment": "确认发送预览评论到 Linear issue {identifier}？",
+      "checkoutBranch": "从哪个 Issue 创建分支？",
+      "sendPreviewComment": "从哪个 PR 发送预览评论？",
+      "releaseIssue": "发布哪些 Issue？"
+    },
+    "vercel": {
+      "checkPr": "检查哪个 Pull Request？",
+      "releaseProject": "发布哪个项目？"
+    }
+  },
+  "error": {
+    "mihomo": {
+      "timeout": "请求超时: {detail}",
+      "unavailable": "服务不可用: {detail}",
+      "notFound": "资源未找到: {uri}",
+      "requestFailed": "请求失败 ({status}): {detail}",
+      "networkError": "网络请求失败: {error}"
+    }
   }
 }

@@ -1,12 +1,13 @@
 import { getPullRequestBranches } from "@/fetch/github";
 import { getProjects } from "@/fetch/vercel";
 import { checkbox, search } from "@inquirer/prompts";
+import { t } from "@/i18n";
 
 export const pickBranchForCheck = async () => {
   const { get } = getPullRequestBranches();
   let pullRequests: Awaited<ReturnType<typeof get>>;
   return await search({
-    message: "Check which pull request?",
+    message: t("prompt.vercel.checkPr"),
     source: async (input) => {
       pullRequests = pullRequests || (await get());
       return pullRequests
@@ -30,7 +31,7 @@ export const pickProjectForRelease = async () => {
   let projects: Awaited<ReturnType<typeof get>>;
   let map: Record<string, DeployHook[]>;
   const branch = await search({
-    message: "Release which project?",
+    message: t("prompt.vercel.releaseProject"),
     source: async (input) => {
       projects = projects || (await get());
       map =
@@ -55,7 +56,7 @@ export const pickProjectForRelease = async () => {
     },
   });
   return await checkbox({
-    message: "Release which project?",
+    message: t("prompt.vercel.releaseProject"),
     loop: false,
     choices: map[branch]
       .map((deployHook) => ({

@@ -38,6 +38,10 @@ vi.mock("@/help/env", () => ({
   MIHOMO_TOP_PROXY: vi.fn().mockReturnValue("TOP_PROXY"),
 }));
 
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
+
 // Import mocked modules
 import { mihomo } from "@/fetch/mihomo";
 import { search } from "@inquirer/prompts";
@@ -383,7 +387,7 @@ describe("mihomo-prompts helper functions", () => {
       expect(result.state.current).toEqual(currentProxy);
       expect(searchMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: "Pick a proxy TOP_PROXY",
+          message: "prompt.mihomo.pickProxy",
         }),
       );
     });
@@ -591,7 +595,7 @@ describe("mihomo-prompts helper functions", () => {
       mihomoMock.mockResolvedValue({ proxies });
 
       mockSearchImpl(async (options) => {
-        expect(options.message).toContain("TOP_PROXY");
+        expect(options.message).toBe("prompt.mihomo.pickProxy");
         await options.source("");
         return "child1";
       });
@@ -771,7 +775,7 @@ describe("mihomo-prompts helper functions", () => {
       getMockedMihomo().mockResolvedValue(mockConfig);
 
       mockSearchImpl(async (options) => {
-        expect(options.message).toBe("To which mode?");
+        expect(options.message).toBe("prompt.mihomo.toWhichMode");
         await options.source("");
         return "rule";
       });

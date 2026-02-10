@@ -14,6 +14,10 @@ vi.mock("@inquirer/prompts", () => ({
   checkbox: vi.fn(),
 }));
 
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
+
 // Import mocked modules
 import { getPullRequestBranches } from "@/fetch/github";
 import { getProjects } from "@/fetch/vercel";
@@ -85,7 +89,7 @@ describe("vercel-prompts", () => {
 
       const selectedBranch = mockBranches[0];
       mockSearchImpl(async (options) => {
-        expect(options.message).toBe("Check which pull request?");
+        expect(options.message).toBe("prompt.vercel.checkPr");
         await options.source("");
         return selectedBranch;
       });
@@ -198,7 +202,7 @@ describe("vercel-prompts", () => {
       getMockedGetProjects().mockReturnValue({ get: mockGet });
 
       mockSearchImpl(async (options) => {
-        expect(options.message).toBe("Release which project?");
+        expect(options.message).toBe("prompt.vercel.releaseProject");
         await options.source("");
         return "main";
       });
@@ -217,7 +221,7 @@ describe("vercel-prompts", () => {
       ];
 
       mockCheckboxImpl(async (options) => {
-        expect(options.message).toBe("Release which project?");
+        expect(options.message).toBe("prompt.vercel.releaseProject");
         expect(options.loop).toBe(false);
         return expectedDeployHooks;
       });

@@ -1,4 +1,5 @@
 import { MIHOMO_URL, MIHOMO_TOKEN } from "@/help/env";
+import { t } from "@/i18n";
 
 export const mihomo = async <RES, T = unknown>(
   uri: string,
@@ -39,16 +40,21 @@ export const mihomo = async <RES, T = unknown>(
 
       // 针对特定状态码提供更友好的错误信息
       if (response.status === 504 || response.status === 408) {
-        throw new Error(`请求超时: ${errorMessage}`);
+        throw new Error(t("error.mihomo.timeout", { detail: errorMessage }));
       }
       if (response.status === 503) {
-        throw new Error(`服务不可用: ${errorMessage}`);
+        throw new Error(t("error.mihomo.unavailable", { detail: errorMessage }));
       }
       if (response.status === 404) {
-        throw new Error(`资源未找到: ${uri}`);
+        throw new Error(t("error.mihomo.notFound", { uri }));
       }
 
-      throw new Error(`请求失败 (${response.status}): ${errorMessage}`);
+      throw new Error(
+        t("error.mihomo.requestFailed", {
+          status: String(response.status),
+          detail: errorMessage,
+        }),
+      );
     }
     return response.json() as Promise<RES>;
   } catch (error) {
@@ -57,6 +63,6 @@ export const mihomo = async <RES, T = unknown>(
       throw error;
     }
     // 处理网络错误等其他异常
-    throw new Error(`网络请求失败: ${String(error)}`);
+    throw new Error(t("error.mihomo.networkError", { error: String(error) }));
   }
 };
