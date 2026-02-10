@@ -41,6 +41,10 @@ vi.mock("date-fns", () => ({
   format: vi.fn().mockReturnValue("2024-01-15"),
 }));
 
+vi.mock("@/i18n", () => ({
+  t: vi.fn((key: string) => key),
+}));
+
 // Import after mocks
 import { releaseIssues, sendPreview } from "@/help/linear";
 import { logger } from "@/help/logger";
@@ -122,7 +126,7 @@ describe("linear helper functions", () => {
       expect(pbcopy).toHaveBeenCalledTimes(1);
       const markdown = (pbcopy as MockedFunction<typeof pbcopy>).mock
         .calls[0][0];
-      expect(markdown).toContain("# Release note: 2024-01-15");
+      expect(markdown).toContain("app.linear.release.noteTitle");
       expect(markdown).toContain("[LIN-123 Test Issue]");
       expect(markdown).toContain(
         "[PR Title](https://github.com/org/repo/pull/1)",

@@ -35,7 +35,8 @@
       },
       "release": {
         "completion": "发布 Issue",
-        "help": "发布 Issue\n\n批量发布 Linear Issue，更新状态并打开发布说明页面。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 显示 started 和 completed 状态的 Issue\n  - 多选要发布的 Issue\n  - 自动打开 RELEASE_NOTE_PAGE (如已配置)"
+        "help": "发布 Issue\n\n批量发布 Linear Issue，更新状态并打开发布说明页面。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 显示 started 和 completed 状态的 Issue\n  - 多选要发布的 Issue\n  - 自动打开 RELEASE_NOTE_PAGE (如已配置)",
+        "noteTitle": "# 发布说明: {today}"
       }
     },
     "vercel": {

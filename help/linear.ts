@@ -8,6 +8,7 @@ import type { Attachment, Issue } from "@/types/linear";
 import { format } from "date-fns";
 import { z } from "zod";
 import { PREVIEWS_COMMENT_MENTIONS, PREVIEWS_COMMENT_FOOTER } from "@/help/env";
+import { t } from "@/i18n";
 
 export { buildCommentBody } from "@/help/linear-content.ts";
 
@@ -51,7 +52,7 @@ export const releaseIssues = async (items: Issue[]) => {
   const today = format(new Date(), "yyyy-MM-dd");
   const markdown = [
     "",
-    `# Release note: ${today}`,
+    t("app.linear.release.noteTitle", { today }),
     items
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .map(({ identifier, url, attachments, title }) => ({

@@ -35,7 +35,8 @@
       },
       "release": {
         "completion": "Release Issues",
-        "help": "Release Issues\n\nBatch release Linear Issues, update status and open release notes page.\n\nOptions:\n  -f  Force refresh Issue cache\n\nFeatures:\n  - Show Issues in started and completed status\n  - Multi-select Issues to release\n  - Auto-open RELEASE_NOTE_PAGE (if configured)"
+        "help": "Release Issues\n\nBatch release Linear Issues, update status and open release notes page.\n\nOptions:\n  -f  Force refresh Issue cache\n\nFeatures:\n  - Show Issues in started and completed status\n  - Multi-select Issues to release\n  - Auto-open RELEASE_NOTE_PAGE (if configured)",
+        "noteTitle": "# Release note: {today}"
       }
     },
     "vercel": {
