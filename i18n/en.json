@@ -14,6 +14,8 @@
         "completion": "Delay test",
         "help": "Delay Test\n\nTest the latency of the current proxy node using gstatic.com/generate_204.\n\nOutput format: <proxy name> -> <latency>ms",
         "noProxy": "No proxy found",
+        "proxy": "Proxy: {proxy}",
+        "delay": "Delay: {delay}ms",
         "unknownError": "Unknown error: {error}"
       },
       "toggle": {

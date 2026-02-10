@@ -12,8 +12,12 @@ export default async function handle() {
       return;
     }
     const delay = await getDelay({ proxy: lastProxy.name });
-    await echo(`proxy: ${proxyChain.map((p) => p.name).join(" -> ")}`);
-    await echo(`delay: ${delay}ms`);
+    await echo(
+      t("app.clash.check.proxy", {
+        proxy: proxyChain.map((p) => p.name).join(" -> "),
+      }),
+    );
+    await echo(t("app.clash.check.delay", { delay: String(delay) }));
   } catch (error) {
     if (error instanceof Error) {
       logger.error(error.message);

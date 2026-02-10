@@ -14,6 +14,8 @@
         "completion": "延迟测试",
         "help": "延迟测试\n\n测试当前使用的代理节点延迟，使用 gstatic.com/generate_204 进行测试。\n\n输出格式: <代理名称> -> <延迟>ms",
         "noProxy": "未找到代理",
+        "proxy": "代理: {proxy}",
+        "delay": "延迟: {delay}ms",
         "unknownError": "未知错误: {error}"
       },
       "toggle": {
