@@ -49,3 +49,7 @@ export const gitPull = async (): Promise<void> => {
 export const gitCheckoutBranch = async (branchName: string): Promise<void> => {
   await $`git checkout -b ${branchName}`;
 };
+
+export const pbcopy = async (data: string): Promise<void> => {
+  await $`echo ${data} | pbcopy`;
+};

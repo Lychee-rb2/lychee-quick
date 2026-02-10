@@ -18,16 +18,13 @@ vi.mock("@/help/logger", () => ({
   },
 }));
 
-vi.mock("@/help/util", () => ({
-  pbcopy: vi.fn().mockResolvedValue(undefined),
-}));
-
 vi.mock("@/fetch/linear", () => ({
   createClient: vi.fn(),
 }));
 
 vi.mock("@/help/cli", () => ({
   openUrl: vi.fn().mockResolvedValue(undefined),
+  pbcopy: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/help/env", () => ({
@@ -47,7 +44,7 @@ vi.mock("date-fns", () => ({
 // Import after mocks
 import { releaseIssues, sendPreview } from "@/help/linear";
 import { logger } from "@/help/logger";
-import { pbcopy } from "@/help/util";
+import { pbcopy } from "@/help/cli";
 import { createClient } from "@/fetch/linear";
 import { openUrl } from "@/help/cli";
 import { selectPreviewLinks, confirmSendComment } from "@/prompts/linear";

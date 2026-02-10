@@ -13,6 +13,7 @@ import {
   gitCheckout,
   gitPull,
   gitCheckoutBranch,
+  pbcopy,
 } from "@/help/cli";
 
 // Mock modules (must be called before imports)
@@ -214,6 +215,13 @@ describe("cli helper functions", () => {
       const branchName = "feature/user/login";
       await gitCheckoutBranch(branchName);
 
+      expect(mockShellCommand).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("pbcopy", () => {
+    test("should copy data to clipboard using navigator.clipboard", async () => {
+      await pbcopy("test data");
       expect(mockShellCommand).toHaveBeenCalledTimes(1);
     });
   });

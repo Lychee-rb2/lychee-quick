@@ -1,5 +1,5 @@
 import { createClient } from "@/fetch/linear.ts";
-import { pbcopy } from "@/help/util.ts";
+import { pbcopy } from "@/help/cli.ts";
 import { logger } from "@/help/logger.ts";
 import { openUrl } from "@/help/cli.ts";
 import { buildCommentBody } from "@/help/linear-content.ts";
