@@ -1,13 +1,14 @@
 import { logger } from "@/help";
 import { findCurrentProxy, getDelay } from "@/help/mihomo";
 import { echo } from "@/help/cli.ts";
+import { t } from "@/i18n";
 
 export default async function handle() {
   try {
     const proxyChain = await findCurrentProxy();
     const lastProxy = proxyChain.at(-1);
     if (!lastProxy) {
-      logger.error("No proxy found");
+      logger.error(t("app.clash.check.noProxy"));
       return;
     }
     const delay = await getDelay({ proxy: lastProxy.name });
@@ -17,7 +18,7 @@ export default async function handle() {
     if (error instanceof Error) {
       logger.error(error.message);
     } else {
-      logger.error(`未知错误: ${String(error)}`);
+      logger.error(t("app.clash.check.unknownError", { error: String(error) }));
     }
     process.exit(1);
   }

@@ -3,6 +3,7 @@ import { logger } from "@/help";
 import { pickProxy } from "@/help/mihomo";
 import { pickMode } from "@/prompts/mihomo";
 import { MihomoConfig } from "@/types/mihomo";
+import { t } from "@/i18n";
 
 export default async function handle() {
   const mode = await pickMode();
@@ -11,6 +12,6 @@ export default async function handle() {
   if (newConfig.mode === "rule") {
     await pickProxy({ refresh: true });
   } else {
-    logger.info(`Mode changed to ${newConfig.mode}`);
+    logger.info(t("app.clash.toggle.modeChanged", { mode: newConfig.mode }));
   }
 }

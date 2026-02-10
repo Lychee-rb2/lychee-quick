@@ -7,15 +7,19 @@
       "help": "Mihomo/Clash 代理管理\n\n管理 Mihomo (Clash) 代理的相关操作，包括查看状态、切换代理和延迟测试。\n\n需要配置环境变量:\n  MIHOMO_URL        - Mihomo API 地址\n  MIHOMO_TOKEN      - Mihomo API 令牌\n  MIHOMO_TOP_PROXY  - Mihomo Top Proxy\n  MIHOMO_BOARD      - Mihomo 网页面板地址",
       "board": {
         "completion": "Mihomo 网页面板",
-        "help": "打开Mihomo 网页面板"
+        "help": "打开Mihomo 网页面板",
+        "openWait": "正在打开 {url}，等待全局延迟测试"
       },
       "check": {
         "completion": "延迟测试",
-        "help": "延迟测试\n\n测试当前使用的代理节点延迟，使用 gstatic.com/generate_204 进行测试。\n\n输出格式: <代理名称> -> <延迟>ms"
+        "help": "延迟测试\n\n测试当前使用的代理节点延迟，使用 gstatic.com/generate_204 进行测试。\n\n输出格式: <代理名称> -> <延迟>ms",
+        "noProxy": "未找到代理",
+        "unknownError": "未知错误: {error}"
       },
       "toggle": {
         "completion": "切换代理模式",
-        "help": "切换代理模式\n\n在 rule、direct、global 三种模式之间切换。\n\n模式说明:\n  rule   - 规则模式，根据规则决定是否代理\n  direct - 直连模式，所有流量直连\n  global - 全局模式，所有流量走代理"
+        "help": "切换代理模式\n\n在 rule、direct、global 三种模式之间切换。\n\n模式说明:\n  rule   - 规则模式，根据规则决定是否代理\n  direct - 直连模式，所有流量直连\n  global - 全局模式，所有流量走代理",
+        "modeChanged": "模式已切换为 {mode}"
       }
     },
     "linear": {
@@ -39,13 +43,13 @@
       "help": "Vercel 部署管理\n\n管理 Vercel 部署，包括检查部署状态和触发部署。\n\n选项:\n  -f  强制刷新缓存\n\n需要配置环境变量:\n  VERCEL_PERSONAL_TOKEN  - Vercel 个人令牌\n  VERCEL_TEAM            - Vercel 团队名称\n  VERCEL_PROJECT         - Vercel 项目名称",
       "check": {
         "completion": "检查部署状态",
-        "help": "检查部署状态\n\n检查指定分支的 Vercel 部署状态。\n\n选项:\n  -f  强制刷新 PR 分支和部署缓存\n\n功能:\n  - 显示所有 PR 分支\n  - 选择分支后查看其部署状态"
+        "help": "检查部署状态\n\n检查指定分支的 Vercel 部署状态。\n\n选项:\n  -f  强制刷新 PR 分支和部署缓存\n\n功能:\n  - 显示所有 PR 分支\n  - 选择分支后查看其部署状态",
+        "branch": "分支: {branch}"
       },
       "release": {
         "completion": "触发部署",
         "help": "触发部署\n\n通过 Deploy Hook 触发 Vercel 部署。\n\n选项:\n  -f  强制刷新项目缓存\n\n功能:\n  - 选择要发布的分支\n  - 多选要部署的项目\n  - 触发部署后自动打开 Vercel 部署页面"
       }
     }
-  },
-  "wait mihomo delay to open board": "等待全局延迟测试完成，准备打开Mihomo页面板"
+  }
 }

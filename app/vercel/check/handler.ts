@@ -3,6 +3,8 @@ import { iconMap, logger } from "@/help";
 import { pickBranchForCheck } from "@/prompts/vercel";
 import { GetDeploymentsState } from "@vercel/sdk/models/getdeploymentsop.js";
 import { formatDistanceToNow } from "date-fns";
+import { t } from "@/i18n";
+
 export default async function handle() {
   const pullRequest = await pickBranchForCheck();
   const deploymentCache = getDeployments(
@@ -22,7 +24,7 @@ export default async function handle() {
     }),
   );
   logger.plain("--------------------------------");
-  logger.plain(`Branch: ${pullRequest.headRefName}`);
+  logger.plain(t("app.vercel.check.branch", { branch: pullRequest.headRefName }));
   logger.plain("--------------------------------");
   logger.table(
     deployments.map((i) => [

@@ -1,14 +1,14 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import handler from "@/app/clash/toggle/handler";
 
-const { mockMihomo, mockPickProxy, mockPickMode, mockLogger } = vi.hoisted(
-  () => ({
+const { mockMihomo, mockPickProxy, mockPickMode, mockLogger, mockT } =
+  vi.hoisted(() => ({
     mockMihomo: vi.fn(),
     mockPickProxy: vi.fn(),
     mockPickMode: vi.fn(),
     mockLogger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
-  }),
-);
+    mockT: vi.fn((key: string) => key),
+  }));
 
 vi.mock("@/fetch/mihomo", () => ({
   mihomo: mockMihomo,
@@ -24,6 +24,10 @@ vi.mock("@/prompts/mihomo", () => ({
 
 vi.mock("@/help", () => ({
   logger: mockLogger,
+}));
+
+vi.mock("@/i18n", () => ({
+  t: mockT,
 }));
 
 describe("app/clash/toggle/handler", () => {
@@ -84,7 +88,12 @@ describe("app/clash/toggle/handler", () => {
 
     await handler();
 
-    expect(mockLogger.info).toHaveBeenCalledWith("Mode changed to direct");
+    expect(mockT).toHaveBeenCalledWith("app.clash.toggle.modeChanged", {
+      mode: "direct",
+    });
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      "app.clash.toggle.modeChanged",
+    );
     expect(mockPickProxy).not.toHaveBeenCalled();
   });
 
@@ -94,7 +103,12 @@ describe("app/clash/toggle/handler", () => {
 
     await handler();
 
-    expect(mockLogger.info).toHaveBeenCalledWith("Mode changed to global");
+    expect(mockT).toHaveBeenCalledWith("app.clash.toggle.modeChanged", {
+      mode: "global",
+    });
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      "app.clash.toggle.modeChanged",
+    );
     expect(mockPickProxy).not.toHaveBeenCalled();
   });
 });

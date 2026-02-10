@@ -8,6 +8,7 @@ const {
   mockLogger,
   mockIconMap,
   mockFormatDistanceToNow,
+  mockT,
 } = vi.hoisted(() => {
   const mockDeploymentGet = vi.fn();
   return {
@@ -22,6 +23,7 @@ const {
     },
     mockIconMap: vi.fn((key: string) => `[${key}]`),
     mockFormatDistanceToNow: vi.fn(() => "5 minutes ago"),
+    mockT: vi.fn((key: string) => key),
   };
 });
 
@@ -43,6 +45,10 @@ vi.mock("date-fns", () => ({
 }));
 
 vi.mock("@vercel/sdk/models/getdeploymentsop.js", () => ({}));
+
+vi.mock("@/i18n", () => ({
+  t: mockT,
+}));
 
 const mockPullRequest = {
   title: "feat: add dark mode",
@@ -116,9 +122,10 @@ describe("app/vercel/check/handler", () => {
     expect(mockLogger.plain).toHaveBeenCalledWith(
       "--------------------------------",
     );
-    expect(mockLogger.plain).toHaveBeenCalledWith(
-      "Branch: feature-dark-mode",
-    );
+    expect(mockT).toHaveBeenCalledWith("app.vercel.check.branch", {
+      branch: "feature-dark-mode",
+    });
+    expect(mockLogger.plain).toHaveBeenCalledWith("app.vercel.check.branch");
   });
 
   test("should format deployments and display as table", async () => {

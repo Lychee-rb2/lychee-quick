@@ -1,14 +1,14 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import handler from "@/app/clash/check/handler";
 
-const { mockFindCurrentProxy, mockGetDelay, mockEcho, mockLogger } = vi.hoisted(
-  () => ({
+const { mockFindCurrentProxy, mockGetDelay, mockEcho, mockLogger, mockT } =
+  vi.hoisted(() => ({
     mockFindCurrentProxy: vi.fn(),
     mockGetDelay: vi.fn(),
     mockEcho: vi.fn(),
     mockLogger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
-  }),
-);
+    mockT: vi.fn((key: string) => key),
+  }));
 
 vi.mock("@/help/mihomo", () => ({
   findCurrentProxy: mockFindCurrentProxy,
@@ -21,6 +21,10 @@ vi.mock("@/help/cli.ts", () => ({
 
 vi.mock("@/help", () => ({
   logger: mockLogger,
+}));
+
+vi.mock("@/i18n", () => ({
+  t: mockT,
 }));
 
 const mockProxyChain = [
@@ -66,7 +70,8 @@ describe("app/clash/check/handler", () => {
 
     await handler();
 
-    expect(mockLogger.error).toHaveBeenCalledWith("No proxy found");
+    expect(mockT).toHaveBeenCalledWith("app.clash.check.noProxy");
+    expect(mockLogger.error).toHaveBeenCalledWith("app.clash.check.noProxy");
     expect(mockEcho).not.toHaveBeenCalled();
   });
 
@@ -84,8 +89,11 @@ describe("app/clash/check/handler", () => {
 
     await handler();
 
+    expect(mockT).toHaveBeenCalledWith("app.clash.check.unknownError", {
+      error: "unexpected failure",
+    });
     expect(mockLogger.error).toHaveBeenCalledWith(
-      "未知错误: unexpected failure",
+      "app.clash.check.unknownError",
     );
     expect(mockExit).toHaveBeenCalledWith(1);
   });

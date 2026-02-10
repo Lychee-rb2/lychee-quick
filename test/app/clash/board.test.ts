@@ -1,10 +1,11 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import handler from "@/app/clash/board/handler";
 
-const { mockGetDelay, mockOpenUrl, mockLogger } = vi.hoisted(() => ({
+const { mockGetDelay, mockOpenUrl, mockLogger, mockT } = vi.hoisted(() => ({
   mockGetDelay: vi.fn(),
   mockOpenUrl: vi.fn(),
   mockLogger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
+  mockT: vi.fn((key: string) => key),
 }));
 
 vi.mock("@/help/mihomo", () => ({
@@ -25,6 +26,10 @@ vi.mock("@/help/env", () => ({
   MIHOMO_BOARD: vi.fn(() => "https://board.example.com"),
 }));
 
+vi.mock("@/i18n", () => ({
+  t: mockT,
+}));
+
 describe("app/clash/board/handler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -43,11 +48,13 @@ describe("app/clash/board/handler", () => {
     expect(calledUrl.hash).toBe("#/proxies");
   });
 
-  test("should log info message with the URL", async () => {
+  test("should log info message with the URL via i18n", async () => {
     await handler();
 
     expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockLogger.info.mock.calls[0][0]).toContain("Opening");
+    expect(mockT).toHaveBeenCalledWith("app.clash.board.openWait", {
+      url: expect.stringContaining("board.example.com"),
+    });
   });
 
   test("should call getDelay before opening the URL", async () => {
