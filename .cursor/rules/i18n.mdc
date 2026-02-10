@@ -1,0 +1,64 @@
+---
+description: i18n 国际化约定，在涉及用户可见字符串、翻译文件或 t() 函数时应用
+globs: "{i18n/**,app/**/handler.ts,prompts/**,fetch/**,help/**,scripts/**}"
+alwaysApply: false
+---
+
+# i18n 国际化约定
+
+## 核心机制
+
+- 使用 `t(key, args?)` 函数（来自 `@/i18n`）获取翻译文本
+- 翻译文件：`i18n/zh.json`（中文）和 `i18n/en.json`（英文）
+- 通过 `LOCALE` 环境变量切换语言，默认 `"zh"`
+- 变量插值语法：`{varName}`，如 `"请求超时: {detail}"`
+
+## Key 命名规范
+
+按 **命名空间 + 语义** 嵌套，映射文件目录结构：
+
+| 命名空间                   | 用途               | 示例                         |
+| -------------------------- | ------------------ | ---------------------------- |
+| `app.<module>.<action>.*`  | handler 日志/错误  | `app.clash.check.noProxy`    |
+| `prompt.<module>.*`        | 交互式提示消息     | `prompt.mihomo.pickProxy`    |
+| `error.<module>.*`         | fetch/业务错误     | `error.mihomo.timeout`       |
+| `cli.*`                    | CLI 框架消息       | `cli.usage`                  |
+| `script.<module>.*`        | 脚本输出消息       | `script.installCli.installed`|
+
+## 添加新字符串的流程
+
+1. **禁止硬编码用户可见字符串** — 所有 logger、console、prompt message、throw Error 中的用户可见文本必须使用 `t()`
+2. **同步更新两个 JSON** — `zh.json` 和 `en.json` 必须同时添加对应 key
+3. **导入方式** — `import { t } from "@/i18n";`
+
+```typescript
+// ❌ BAD
+logger.error("未找到代理");
+throw new Error(`请求超时: ${detail}`);
+
+// ✅ GOOD
+logger.error(t("app.clash.check.noProxy"));
+throw new Error(t("error.mihomo.timeout", { detail }));
+```
+
+## 变量插值
+
+- args 的值必须是 `string` 类型，非字符串需要 `String()` 转换
+- key 中用 `{varName}` 占位，调用时传入同名参数
+
+```typescript
+// JSON: "请求失败 ({status}): {detail}"
+t("error.mihomo.requestFailed", { status: String(response.status), detail })
+```
+
+## 测试约定
+
+- 测试文件中 mock `@/i18n`：`vi.mock("@/i18n", () => ({ t: vi.fn((key: string) => key) }))`
+- mock 的 `t()` 直接返回 key 字符串，断言时检查 key 而非翻译文本
+- 如需验证参数传递，可对 `mockT` 断言 `toHaveBeenCalledWith(key, { ... })`
+
+```typescript
+// ✅ GOOD
+expect(mockLogger.error).toHaveBeenCalledWith("app.clash.check.noProxy");
+expect(mockT).toHaveBeenCalledWith("app.clash.toggle.modeChanged", { mode: "direct" });
+```
