@@ -1,5 +1,7 @@
 import { logger } from "./logger";
 import { $ } from "bun";
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 
 interface ShellError extends Error {
   exitCode: number;
@@ -52,4 +54,36 @@ export const gitCheckoutBranch = async (branchName: string): Promise<void> => {
 
 export const pbcopy = async (data: string): Promise<void> => {
   await $`echo ${data} | pbcopy`;
+};
+
+export const sopsDecrypt = async (file: string, output: string) => {
+  await $`sops -d --input-type dotenv --output-type dotenv --output ${output} ${file}`;
+};
+
+export const listFolders = async (pattern: string, root?: string) => {
+  if (!pattern) return [];
+
+  const cwd = root ?? process.cwd();
+  const prefix = pattern.split(/[*?[{]/)[0].replace(/\/+$/, "");
+  const basePath = join(cwd, prefix || ".");
+
+  let entries: Awaited<ReturnType<typeof readdir>>;
+  try {
+    entries = await readdir(basePath, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  return entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => (prefix ? `${prefix}/${entry.name}` : entry.name))
+    .sort();
+};
+
+export const copyFile = async (source: string, target: string) => {
+  await $`cp ${source} ${target}`;
+};
+
+export const appendLine = async (file: string, line: string) => {
+  await $`echo ${line} >> ${file}`;
 };

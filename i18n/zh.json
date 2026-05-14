@@ -53,6 +53,14 @@
         "completion": "触发部署",
         "help": "触发部署\n\n通过 Deploy Hook 触发 Vercel 部署。\n\n选项:\n  -f  强制刷新项目缓存\n\n功能:\n  - 选择要发布的分支\n  - 多选要部署的项目\n  - 触发部署后自动打开 Vercel 部署页面"
       }
+    },
+    "sops": {
+      "completion": "SOPS 文件管理",
+      "help": "SOPS 文件管理\n\n提供 SOPS 相关操作，包括解密 .sops 文件并可选择覆盖到目标目录的 .env 文件。",
+      "decrypt": {
+        "completion": "解密 SOPS 文件",
+        "help": "解密 SOPS 文件\n\n交互式选择 .sops 文件并执行解密。\n\n功能:\n  - 搜索并选择要解密的 .sops 文件\n  - 输出对应的 dotenv 文件\n  - 可选择覆盖到指定目录下的 .env"
+      }
     }
   },
   "prompt": {
@@ -72,6 +80,14 @@
     "vercel": {
       "checkPr": "检查哪个 Pull Request？",
       "releaseProject": "发布哪个项目？"
+    },
+    "sops": {
+      "decryptFile": "解密哪个文件？",
+      "decryptConfirm": "确认将 {file} 覆盖到指定文件夹下的 .env 文件？",
+      "decryptSuccess": "解密成功: {file}",
+      "coverFolders": "覆盖哪些文件夹？",
+      "decryptCoverSuccess": "✅ 覆盖成功: {file}",
+      "decryptCoverError": "❌ 覆盖失败: {file}"
     }
   },
   "error": {

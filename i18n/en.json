@@ -53,6 +53,14 @@
         "completion": "Trigger deployment",
         "help": "Trigger Deployment\n\nTrigger a Vercel deployment via Deploy Hook.\n\nOptions:\n  -f  Force refresh project cache\n\nFeatures:\n  - Select branch to deploy\n  - Multi-select projects to deploy\n  - Auto-open Vercel deployment page after triggering"
       }
+    },
+    "sops": {
+      "completion": "SOPS file management",
+      "help": "SOPS File Management\n\nProvide SOPS-related operations, including decrypting .sops files and optionally overwriting .env files in target folders.",
+      "decrypt": {
+        "completion": "Decrypt SOPS file",
+        "help": "Decrypt SOPS File\n\nInteractively select a .sops file and decrypt it.\n\nFeatures:\n  - Search and select a .sops file\n  - Output the corresponding dotenv file\n  - Optionally overwrite .env files in selected folders"
+      }
     }
   },
   "prompt": {
@@ -72,6 +80,14 @@
     "vercel": {
       "checkPr": "Check which pull request?",
       "releaseProject": "Release which project?"
+    },
+    "sops": {
+      "decryptFile": "Decrypt which file?",
+      "decryptConfirm": "Confirm overwriting .env files in selected folders with {file}?",
+      "decryptSuccess": "Decryption succeeded: {file}",
+      "coverFolders": "Which folders should be overwritten?",
+      "decryptCoverSuccess": "✅ Overwrite succeeded: {file}",
+      "decryptCoverError": "❌ Overwrite failed: {file}"
     }
   },
   "error": {
