@@ -1,7 +1,7 @@
 {
 	"app": {
 		"completion": "Personal dev workflow CLI",
-		"help": "Lychee Quick CLI - Personal Dev Workflow Tool\n\nA CLI tool built with Bun, integrating Linear, Vercel, GitHub, and Mihomo proxy management.\n\nCommands:\n  clash   - Mihomo/Clash proxy management\n  linear  - Linear project management\n  vercel  - Vercel deployment management\n\nOptions:\n  -h, --help  Show help information\n\nExamples:\n  {cli} clash now        Check current proxy status\n  {cli} linear branch    Create branch from Issue\n  {cli} vercel release   Trigger Vercel deployment\n\nRun '{cli} <command> -h' to see subcommand help.",
+		"help": "Lychee Quick CLI - Personal Dev Workflow Tool\n\nA CLI tool built with Bun, integrating Linear, Vercel, GitHub, Mihomo proxy management, and SOPS file management.\n\nCommands:\n  clash   - Mihomo/Clash proxy management\n  linear  - Linear project management\n  vercel  - Vercel deployment management\n  sops    - SOPS file management\n\nOptions:\n  -h, --help  Show help information\n\nExamples:\n  {cli} clash now        Check current proxy status\n  {cli} linear branch    Create branch from Issue\n  {cli} vercel release   Trigger Vercel deployment\n  {cli} sops decrypt     Decrypt SOPS file\n\nRun '{cli} <command> -h' to see subcommand help.",
 		"clash": {
 			"completion": "Mihomo/Clash proxy management",
 			"help": "Mihomo/Clash Proxy Management\n\nManage Mihomo (Clash) proxy operations, including status check, proxy switching, and delay testing.\n\nRequired environment variables:\n  MIHOMO_URL        - Mihomo API address\n  MIHOMO_TOKEN      - Mihomo API token\n  MIHOMO_TOP_PROXY  - Mihomo Top Proxy\n  MIHOMO_BOARD      - Mihomo web dashboard URL",

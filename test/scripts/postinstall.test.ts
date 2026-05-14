@@ -13,7 +13,7 @@ vi.mock("@/scripts/buildGlobalEnv", () => ({
 vi.mock("@/scripts/utils/installCli", () => ({
 	default: mockInstallCli,
 }));
-vi.mock("@/scripts/utils/installZshCompletion", () => ({
+vi.mock("@/scripts/installZshCompletion", () => ({
 	default: mockInstallZshCompletion,
 }));
 
@@ -22,6 +22,6 @@ describe("postinstall", () => {
 		await postinstall("file:///fake/project/scripts/postinstall.ts");
 		expect(mockBuildGlobalEnv).toHaveBeenCalled();
 		expect(mockInstallCli).toHaveBeenCalledWith("/fake/project");
-		expect(mockInstallZshCompletion).toHaveBeenCalledWith("/fake/project");
+		expect(mockInstallZshCompletion).toHaveBeenCalled();
 	});
 });

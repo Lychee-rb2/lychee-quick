@@ -1,7 +1,7 @@
 {
 	"app": {
 		"completion": "个人开发工作流 CLI",
-		"help": "Lychee Quick CLI - 个人开发工作流工具\n\n一个使用 Bun 构建的 CLI 工具，集成 Linear、Vercel、GitHub 和 Mihomo 代理管理。\n\n命令:\n  clash   - Mihomo/Clash 代理管理\n  linear  - Linear 项目管理\n  vercel  - Vercel 部署管理\n\n选项:\n  -h, --help  显示帮助信息\n\n示例:\n  {cli} clash now        查看当前代理状态\n  {cli} linear branch    从 Issue 创建分支\n  {cli} vercel release   触发 Vercel 部署\n\n运行 '{cli} <command> -h' 查看子命令帮助。",
+		"help": "Lychee Quick CLI - 个人开发工作流工具\n\n一个使用 Bun 构建的 CLI 工具，集成 Linear、Vercel、GitHub、Mihomo 代理管理和 SOPS 文件管理。\n\n命令:\n  clash   - Mihomo/Clash 代理管理\n  linear  - Linear 项目管理\n  vercel  - Vercel 部署管理\n  sops    - SOPS 文件管理\n\n选项:\n  -h, --help  显示帮助信息\n\n示例:\n  {cli} clash now        查看当前代理状态\n  {cli} linear branch    从 Issue 创建分支\n  {cli} vercel release   触发 Vercel 部署\n  {cli} sops decrypt     解密 SOPS 文件\n\n运行 '{cli} <command> -h' 查看子命令帮助。",
 		"clash": {
 			"completion": "Mihomo/Clash 代理管理",
 			"help": "Mihomo/Clash 代理管理\n\n管理 Mihomo (Clash) 代理的相关操作，包括查看状态、切换代理和延迟测试。\n\n需要配置环境变量:\n  MIHOMO_URL        - Mihomo API 地址\n  MIHOMO_TOKEN      - Mihomo API 令牌\n  MIHOMO_TOP_PROXY  - Mihomo Top Proxy\n  MIHOMO_BOARD      - Mihomo 网页面板地址",

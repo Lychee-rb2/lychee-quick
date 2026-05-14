@@ -9,6 +9,7 @@
 	"scripts": {
 		"postinstall": "bun -e \"import('./scripts/postinstall.ts').then(m => m.default())\"",
 		"build:global-env": "bun scripts/buildGlobalEnv.ts",
+		"install:zsh-completion": "bun scripts/installZshCompletion.ts",
 		"codegen": "bun scripts/codegen.ts",
 		"lint": "biome check --error-on-warnings .",
 		"lint:fix": "biome check --write .",
