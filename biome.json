@@ -1,0 +1,23 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+  "files": {
+    "maxSize": 2097152,
+    "includes": [
+      "**",
+      "!out",
+      "!coverage",
+      "!node_modules",
+      "!graphql/**/client.ts",
+      "!src/graphql/**/client.ts"
+    ]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "useIterableCallbackReturn": "off"
+      }
+    }
+  }
+}

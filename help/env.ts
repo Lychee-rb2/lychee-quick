@@ -1,4 +1,4 @@
-import { Env } from "bun";
+import type { Env } from "bun";
 import { z } from "zod";
 import { t } from "@/i18n";
 

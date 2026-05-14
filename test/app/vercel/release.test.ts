@@ -93,7 +93,12 @@ describe("app/vercel/release/handler", () => {
 
     // Parse the URL to check the range parameter
     const parsed = new URL(url);
-    const range = JSON.parse(parsed.searchParams.get("range")!);
+    const rangeValue = parsed.searchParams.get("range");
+    expect(rangeValue).toBeTruthy();
+    if (!rangeValue) {
+      throw new Error("range query param should exist");
+    }
+    const range = JSON.parse(rangeValue);
     expect(range).toHaveProperty("start");
     expect(range).toHaveProperty("end");
   });

@@ -203,7 +203,7 @@ export const main = async (
 ) => {
   dotenv.config({ path: `${meta.dir}/.env` });
   const cliName = CLI_NAME();
-  const binIndex = Bun.argv.findIndex((i) => i === meta.path);
+  const binIndex = Bun.argv.indexOf(meta.path);
   if (binIndex === -1) {
     throw new Error("Parse argv fail");
   }

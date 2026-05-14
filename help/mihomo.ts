@@ -1,5 +1,5 @@
 import { mihomo } from "@/fetch/mihomo";
-import { MihomoProxy } from "@/types/mihomo";
+import type { MihomoProxy } from "@/types/mihomo";
 import { searchProxy } from "@/prompts/mihomo";
 import { MIHOMO_TOP_PROXY } from "@/help/env";
 

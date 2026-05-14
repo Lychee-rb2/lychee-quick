@@ -72,7 +72,7 @@ export const pickIssueForBranch = async (): Promise<Issue> => {
           ([a, as], [b, bs]) =>
             (SORT_BY[b] || bs.length) - (SORT_BY[a] || as.length),
         )
-        .map(([assignee, issues]) => [
+        .flatMap(([assignee, issues]) => [
           new Separator(assignee),
           ...issues.map((issue) => {
             const icon =
@@ -82,8 +82,7 @@ export const pickIssueForBranch = async (): Promise<Issue> => {
               value: issue,
             };
           }),
-        ])
-        .flat();
+        ]);
     },
   });
 };
@@ -96,7 +95,7 @@ export const pickIssueForPreview = async () => {
     source: async (input) => {
       issues = issues || (await get());
       return issues
-        .filter((i) => i.attachments?.nodes && i.attachments.nodes.length)
+        .filter((i) => i.attachments?.nodes?.length)
         .filter((i) => {
           if (!input) return true;
           return (
@@ -107,7 +106,7 @@ export const pickIssueForPreview = async () => {
             )
           );
         })
-        .map((issue) => [
+        .flatMap((issue) => [
           new Separator(issue.identifier),
           ...issue.attachments.nodes.map((attachment) => {
             return {
@@ -115,8 +114,7 @@ export const pickIssueForPreview = async () => {
               value: { attachment, issue },
             };
           }),
-        ])
-        .flat();
+        ]);
     },
   });
 };

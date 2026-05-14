@@ -65,8 +65,6 @@ describe("app/sops/decrypt/service", () => {
 
   test("should get sops files from Bun.Glob scan", async () => {
     class MockGlob {
-      constructor(private readonly _pattern: string) {}
-
       scan(_options: { cwd: string; dot: boolean }): AsyncIterable<string> {
         const files = ["a/.env.sops", "b/.secret.sops"];
         return (async function* () {

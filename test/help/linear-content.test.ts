@@ -66,8 +66,11 @@ describe("buildCommentBody", () => {
       (node): node is MentionNode => node.type === "suggestion_userMentions",
     );
     expect(mentionNode).toBeDefined();
-    expect(mentionNode!.attrs.id).toBe("user-1");
-    expect(mentionNode!.attrs.label).toBe("Alice");
+    if (!mentionNode) {
+      throw new Error("mention node should exist");
+    }
+    expect(mentionNode.attrs.id).toBe("user-1");
+    expect(mentionNode.attrs.label).toBe("Alice");
   });
 
   test("should include horizontal rule in linear document", () => {

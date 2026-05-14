@@ -2,7 +2,7 @@ import { mihomo } from "@/fetch/mihomo";
 import { logger } from "@/help";
 import { pickProxy } from "@/help/mihomo";
 import { pickMode } from "@/prompts/mihomo";
-import { MihomoConfig } from "@/types/mihomo";
+import type { MihomoConfig } from "@/types/mihomo";
 import { t } from "@/i18n";
 
 export default async function handle() {

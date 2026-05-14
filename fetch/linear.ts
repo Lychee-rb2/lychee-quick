@@ -1,7 +1,7 @@
 import { getSdk, type Sdk } from "@/graphql/linear/client.ts";
 import { GraphQLClient } from "graphql-request";
 import { upstashCache } from "@/help/redis.ts";
-import { Issue } from "@/types/linear.ts";
+import type { Issue } from "@/types/linear.ts";
 import { LINEAR_API_KEY, LINEAR_TEAM } from "@/help/env";
 
 let client: Sdk | null = null;

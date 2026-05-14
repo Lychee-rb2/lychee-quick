@@ -30,7 +30,7 @@ describe("codegen", () => {
       schema: "graphql/test1/schema.graphql",
       documents: "graphql/test1/gql/*.graphql",
       generates: {
-        [`./graphql/test1/client.ts`]: {
+        "./graphql/test1/client.ts": {
           plugins: [
             "typescript",
             "typescript-operations",
@@ -43,7 +43,7 @@ describe("codegen", () => {
       schema: "graphql/test2/schema.graphql",
       documents: "graphql/test2/gql/*.graphql",
       generates: {
-        [`./graphql/test2/client.ts`]: {
+        "./graphql/test2/client.ts": {
           plugins: [
             "typescript",
             "typescript-operations",

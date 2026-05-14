@@ -201,7 +201,11 @@ describe("fetch/linear", () => {
     test("upstashCache fetch function should call client.issues with team param", async () => {
       getIssues();
 
-      const fetchFn = mockUpstashCache.mock.calls[0]![0];
+      const fetchFn = mockUpstashCache.mock.calls[0]?.[0];
+      expect(fetchFn).toBeDefined();
+      if (!fetchFn) {
+        throw new Error("fetchFn should be defined");
+      }
 
       const mockResponse = {
         issues: { nodes: mockIssues },

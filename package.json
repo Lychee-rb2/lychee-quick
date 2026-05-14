@@ -9,6 +9,8 @@
   "scripts": {
     "postinstall": "bun -e \"import('./scripts/postinstall.ts').then(m => m.default())\"",
     "codegen": "bun scripts/codegen.ts",
+    "lint": "biome lint --error-on-warnings .",
+    "lint:fix": "biome lint --write .",
     "test": "vitest run --coverage",
     "test:watch": "vitest watch",
     "test:ui": "vitest --ui"
@@ -27,7 +29,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.22.0",
+    "@biomejs/biome": "^2.4.15",
     "@graphql-codegen/cli": "^5.0.5",
     "@graphql-codegen/typescript-graphql-request": "^6.2.0",
     "@graphql-codegen/typescript-operations": "^4.5.1",
@@ -35,12 +37,7 @@
     "@types/lodash-es": "^4.17.12",
     "@vitest/coverage-v8": "^2.1.8",
     "@vitest/ui": "^2.1.8",
-    "eslint": "9",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.3",
-    "prettier": "^3.5.3",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.26.1",
     "vitest": "^2.1.8"
   },
   "bin": {

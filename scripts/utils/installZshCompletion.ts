@@ -3,7 +3,7 @@ import getCompletions, {
 } from "@/scripts/utils/getCompletions";
 import { t } from "@/i18n";
 
-const home = Bun.env.HOME!;
+const home = Bun.env.HOME || "";
 const cliName = Bun.env.CLI_NAME || "ly";
 
 export const editZshrc = async (zshrcPath: string, sourceLine: string) => {
@@ -16,7 +16,7 @@ export const editZshrc = async (zshrcPath: string, sourceLine: string) => {
       return 0;
     }
 
-    await Bun.write(zshrcPath, zshrcContent + `\n${sourceLine}\n`);
+    await Bun.write(zshrcPath, `${zshrcContent}\n${sourceLine}\n`);
     console.log(t("script.zshCompletion.installed", { cliName }));
   } catch (err) {
     console.error(t("script.zshCompletion.installFailed"), err);
@@ -38,7 +38,9 @@ const collectByDepth = (
   result: Map<number, Map<string, CommandNode[]>>,
 ) => {
   if (!result.has(depth)) result.set(depth, new Map());
-  result.get(depth)!.set(parentPath, nodes);
+  const levelMap = result.get(depth);
+  if (!levelMap) return;
+  levelMap.set(parentPath, nodes);
   for (const node of nodes) {
     if (node.children.length > 0) {
       const path = parentPath ? `${parentPath}/${node.name}` : node.name;

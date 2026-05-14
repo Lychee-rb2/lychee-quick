@@ -210,7 +210,11 @@ describe("fetch/github", () => {
       getPullRequestBranches();
 
       // Get the fetch function passed to upstashCache
-      const fetchFn = mockUpstashCache.mock.calls[0]![0];
+      const fetchFn = mockUpstashCache.mock.calls[0]?.[0];
+      expect(fetchFn).toBeDefined();
+      if (!fetchFn) {
+        throw new Error("fetchFn should be defined");
+      }
 
       // Mock the response from client.pullRequest
       const mockResponse = {

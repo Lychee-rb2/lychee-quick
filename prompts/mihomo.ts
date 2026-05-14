@@ -1,136 +1,136 @@
-import { mihomo } from "@/fetch/mihomo";
-import { MihomoConfig, MihomoProxy } from "@/types/mihomo";
 import { search } from "@inquirer/prompts";
+import { mihomo } from "@/fetch/mihomo";
+import { MIHOMO_TOP_PROXY } from "@/help/env";
 import { iconMap } from "@/help/format";
 import { getDelay } from "@/help/mihomo";
-import { MIHOMO_TOP_PROXY } from "@/help/env";
 import { t } from "@/i18n";
+import type { MihomoConfig, MihomoProxy } from "@/types/mihomo";
 
 export function getProxyDelay(proxy: MihomoProxy) {
-  return proxy.history?.at(-1)?.delay;
+	return proxy.history?.at(-1)?.delay;
 }
 
 export function delayLevel(delay: number) {
-  if (delay === 0) return "mihomo_delay_very_bad" as const;
-  if (delay < 200) return "mihomo_delay_good" as const;
-  if (delay < 500) return "mihomo_delay_normal" as const;
-  return "mihomo_delay_bad" as const;
+	if (delay === 0) return "mihomo_delay_very_bad" as const;
+	if (delay < 200) return "mihomo_delay_good" as const;
+	if (delay < 500) return "mihomo_delay_normal" as const;
+	return "mihomo_delay_bad" as const;
 }
 
 export const choices = (
-  proxies: { proxy: MihomoProxy; delay: number; index: number }[],
+	proxies: { proxy: MihomoProxy; delay: number; index: number }[],
 ) => [
-  ...proxies.map(({ proxy, delay, index }) => {
-    if (proxy.type === "URLTest") {
-      return {
-        name: `[${index}] ${iconMap(delayLevel(delay))}${proxy.name} -> ${proxy.now} (${delay}ms)`,
-        value: proxy.name,
-      };
-    }
-    return {
-      name: `[${index}] ${iconMap(delayLevel(delay))}${proxy.name} (${delay}ms)`,
-      value: proxy.name,
-    };
-  }),
-  {
-    name: `${iconMap("mihomo_refresh")} ${t("prompt.mihomo.refresh")}`,
-    value: "REFRESH",
-  },
-  {
-    name: `${iconMap("mihomo_reset")} ${t("prompt.mihomo.reset")}`,
-    value: "RESET",
-  },
+	...proxies.map(({ proxy, delay, index }) => {
+		if (proxy.type === "URLTest") {
+			return {
+				name: `[${index}] ${iconMap(delayLevel(delay))}${proxy.name} -> ${proxy.now} (${delay}ms)`,
+				value: proxy.name,
+			};
+		}
+		return {
+			name: `[${index}] ${iconMap(delayLevel(delay))}${proxy.name} (${delay}ms)`,
+			value: proxy.name,
+		};
+	}),
+	{
+		name: `${iconMap("mihomo_refresh")} ${t("prompt.mihomo.refresh")}`,
+		value: "REFRESH",
+	},
+	{
+		name: `${iconMap("mihomo_reset")} ${t("prompt.mihomo.reset")}`,
+		value: "RESET",
+	},
 ];
 
 export const getChildren = (
-  proxy: MihomoProxy,
-  proxies: Record<string, MihomoProxy>,
+	proxy: MihomoProxy,
+	proxies: Record<string, MihomoProxy>,
 ) => {
-  return (proxy.all || []).map((name, index) => {
-    const proxy = proxies[name];
-    const delay = getProxyDelay(proxy);
-    return { proxy, delay, index };
-  });
+	return (proxy.all || []).map((name, index) => {
+		const proxy = proxies[name];
+		const delay = getProxyDelay(proxy);
+		return { proxy, delay, index };
+	});
 };
 
 export interface SearchProxyState {
-  proxies: Record<string, MihomoProxy> | null;
-  current: MihomoProxy | undefined;
+	proxies: Record<string, MihomoProxy> | null;
+	current: MihomoProxy | undefined;
 }
 
 export interface SearchProxyResult {
-  answer: string;
-  state: SearchProxyState;
+	answer: string;
+	state: SearchProxyState;
 }
 
 export const searchProxy = async (
-  state: SearchProxyState,
-  options: {
-    refresh?: boolean;
-  } = {},
+	state: SearchProxyState,
+	options: {
+		refresh?: boolean;
+	} = {},
 ): Promise<SearchProxyResult> => {
-  let { proxies, current } = state;
-  let hasRefreshed = false;
-  const topProxy = MIHOMO_TOP_PROXY();
-  const answer = await search({
-    message: t("prompt.mihomo.pickProxy", { name: current?.name || topProxy }),
-    source: async (searchTerm) => {
-      if (!hasRefreshed && options?.refresh) {
-        await getDelay();
-        hasRefreshed = true;
-      }
-      if (!proxies) {
-        const result = await mihomo<{ proxies: Record<string, MihomoProxy> }>(
-          `proxies`,
-        );
-        proxies = result.proxies;
-        current = proxies[topProxy];
-      }
-      // At this point, proxies and current should be defined
-      if (!proxies || !current) {
-        throw new Error("Failed to load proxies");
-      }
-      const children = getChildren(current, proxies);
-      if (!searchTerm) return choices(children);
-      if (!isNaN(Number(searchTerm)))
-        return choices(children.filter((i) => i.index === Number(searchTerm)));
-      return choices(children.filter((i) => i.proxy.name.includes(searchTerm)));
-    },
-  });
+	let { proxies, current } = state;
+	let hasRefreshed = false;
+	const topProxy = MIHOMO_TOP_PROXY();
+	const answer = await search({
+		message: t("prompt.mihomo.pickProxy", { name: current?.name || topProxy }),
+		source: async (searchTerm) => {
+			if (!hasRefreshed && options?.refresh) {
+				await getDelay();
+				hasRefreshed = true;
+			}
+			if (!proxies) {
+				const result = await mihomo<{ proxies: Record<string, MihomoProxy> }>(
+					`proxies`,
+				);
+				proxies = result.proxies;
+				current = proxies[topProxy];
+			}
+			// At this point, proxies and current should be defined
+			if (!proxies || !current) {
+				throw new Error("Failed to load proxies");
+			}
+			const children = getChildren(current, proxies);
+			if (!searchTerm) return choices(children);
+			if (!Number.isNaN(Number(searchTerm)))
+				return choices(children.filter((i) => i.index === Number(searchTerm)));
+			return choices(children.filter((i) => i.proxy.name.includes(searchTerm)));
+		},
+	});
 
-  // Ensure proxies and current are defined before returning
-  if (!proxies || !current) {
-    throw new Error("Proxies or current proxy is not available");
-  }
+	// Ensure proxies and current are defined before returning
+	if (!proxies || !current) {
+		throw new Error("Proxies or current proxy is not available");
+	}
 
-  return {
-    answer,
-    state: {
-      proxies,
-      current,
-    },
-  };
+	return {
+		answer,
+		state: {
+			proxies,
+			current,
+		},
+	};
 };
 
 export function formatMode(mode: MihomoConfig["mode"], config: MihomoConfig) {
-  return {
-    name: `${iconMap(`mihomo_${mode}`)}${mode}${
-      mode === config.mode ? iconMap("mihomo_active") : ``
-    }`,
-    value: mode,
-  };
+	return {
+		name: `${iconMap(`mihomo_${mode}`)}${mode}${
+			mode === config.mode ? iconMap("mihomo_active") : ``
+		}`,
+		value: mode,
+	};
 }
 const modes = ["rule", "direct", "global"] as const;
 export const pickMode = async (): Promise<MihomoConfig["mode"]> => {
-  let config: MihomoConfig;
-  return await search({
-    message: t("prompt.mihomo.toWhichMode"),
-    source: async (searchTerm) => {
-      config = config || (await mihomo<MihomoConfig>(`configs`));
-      if (!searchTerm) return modes.map((mode) => formatMode(mode, config));
-      return modes
-        .filter((mode) => mode.includes(searchTerm.toLowerCase()))
-        .map((mode) => formatMode(mode, config));
-    },
-  });
+	let config: MihomoConfig;
+	return await search({
+		message: t("prompt.mihomo.toWhichMode"),
+		source: async (searchTerm) => {
+			config = config || (await mihomo<MihomoConfig>(`configs`));
+			if (!searchTerm) return modes.map((mode) => formatMode(mode, config));
+			return modes
+				.filter((mode) => mode.includes(searchTerm.toLowerCase()))
+				.map((mode) => formatMode(mode, config));
+		},
+	});
 };

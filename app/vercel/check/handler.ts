@@ -1,7 +1,7 @@
 import { getDeployments } from "@/fetch/vercel.ts";
 import { iconMap, logger } from "@/help";
 import { pickBranchForCheck } from "@/prompts/vercel";
-import { GetDeploymentsState } from "@vercel/sdk/models/getdeploymentsop.js";
+import type { GetDeploymentsState } from "@vercel/sdk/models/getdeploymentsop.js";
 import { formatDistanceToNow } from "date-fns";
 import { t } from "@/i18n";
 

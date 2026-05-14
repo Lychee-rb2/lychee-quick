@@ -2,7 +2,7 @@ import { Vercel } from "@vercel/sdk";
 
 import mapValues from "lodash-es/mapValues";
 import pick from "lodash-es/pick";
-import { Deployment, Project } from "@/types/vercel.ts";
+import type { Deployment, Project } from "@/types/vercel.ts";
 import { upstashCache } from "@/help/redis.ts";
 import { VERCEL_PERSONAL_TOKEN, VERCEL_TEAM } from "@/help/env";
 

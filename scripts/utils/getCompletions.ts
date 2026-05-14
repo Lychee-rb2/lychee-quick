@@ -46,7 +46,9 @@ const getCompletions = async (appDir: string): Promise<CommandNode[]> => {
     }
 
     // Set the leaf node's completion
-    const leaf = ensureNode(currentLevel, commandParts.at(-1)!);
+    const leafName = commandParts.at(-1);
+    if (!leafName) continue;
+    const leaf = ensureNode(currentLevel, leafName);
     leaf.completion = completion;
   }
 
