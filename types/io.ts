@@ -4,19 +4,17 @@
  */
 
 export interface ModuleLoader {
-  loadMeta(
-    path: string,
-  ): Promise<{
-    help?: string | (() => string);
-    completion?: string | (() => string);
-  } | null>;
-  loadHandler(
-    path: string,
-  ): Promise<{ default?: (...args: unknown[]) => void | Promise<void> } | null>;
+	loadMeta(path: string): Promise<{
+		help?: string | (() => string);
+		completion?: string | (() => string);
+	} | null>;
+	loadHandler(
+		path: string,
+	): Promise<{ default?: (...args: unknown[]) => void | Promise<void> } | null>;
 }
 
 export interface FileSystem {
-  getAppDir(baseDir: string): string;
-  scanMetaFiles(dir: string): AsyncIterable<string>;
-  fileExists(path: string): Promise<boolean>;
+	getAppDir(baseDir: string): string;
+	scanMetaFiles(dir: string): AsyncIterable<string>;
+	fileExists(path: string): Promise<boolean>;
 }

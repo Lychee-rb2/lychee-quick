@@ -3,9 +3,9 @@ import { z } from "zod";
 import { t } from "@/i18n";
 
 const requireEnv = <T extends keyof Env>(name: T): string =>
-  z
-    .string({ message: t("error.env.missingVar", { name }) })
-    .parse(Bun.env[name]);
+	z
+		.string({ message: t("error.env.missingVar", { name }) })
+		.parse(Bun.env[name]);
 
 // Mihomo
 export const MIHOMO_URL = () => requireEnv("MIHOMO_URL");
@@ -38,5 +38,5 @@ export const LOCALE = () => Bun.env.LOCALE || "zh";
 // Optional
 export const RELEASE_NOTE_PAGE = () => Bun.env.RELEASE_NOTE_PAGE;
 export const PREVIEWS_COMMENT_MENTIONS = () =>
-  Bun.env.PREVIEWS_COMMENT_MENTIONS || "";
+	Bun.env.PREVIEWS_COMMENT_MENTIONS || "";
 export const PREVIEWS_COMMENT_FOOTER = () => Bun.env.PREVIEWS_COMMENT_FOOTER;

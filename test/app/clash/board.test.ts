@@ -1,81 +1,81 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import handler from "@/app/clash/board/handler";
 
 const { mockGetDelay, mockOpenUrl, mockLogger, mockT } = vi.hoisted(() => ({
-  mockGetDelay: vi.fn(),
-  mockOpenUrl: vi.fn(),
-  mockLogger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
-  mockT: vi.fn((key: string) => key),
+	mockGetDelay: vi.fn(),
+	mockOpenUrl: vi.fn(),
+	mockLogger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
+	mockT: vi.fn((key: string) => key),
 }));
 
 vi.mock("@/help/mihomo", () => ({
-  getDelay: mockGetDelay,
+	getDelay: mockGetDelay,
 }));
 
 vi.mock("@/help/cli.ts", () => ({
-  openUrl: mockOpenUrl,
+	openUrl: mockOpenUrl,
 }));
 
 vi.mock("@/help", () => ({
-  logger: mockLogger,
+	logger: mockLogger,
 }));
 
 vi.mock("@/help/env", () => ({
-  MIHOMO_URL: vi.fn(() => "http://127.0.0.1:9090"),
-  MIHOMO_TOKEN: vi.fn(() => "test-secret"),
-  MIHOMO_BOARD: vi.fn(() => "https://board.example.com"),
+	MIHOMO_URL: vi.fn(() => "http://127.0.0.1:9090"),
+	MIHOMO_TOKEN: vi.fn(() => "test-secret"),
+	MIHOMO_BOARD: vi.fn(() => "https://board.example.com"),
 }));
 
 vi.mock("@/i18n", () => ({
-  t: mockT,
+	t: mockT,
 }));
 
 describe("app/clash/board/handler", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockGetDelay.mockResolvedValue({});
-    mockOpenUrl.mockResolvedValue(undefined);
-  });
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockGetDelay.mockResolvedValue({});
+		mockOpenUrl.mockResolvedValue(undefined);
+	});
 
-  test("should construct URL with hostname, port, secret and hash", async () => {
-    await handler();
+	test("should construct URL with hostname, port, secret and hash", async () => {
+		await handler();
 
-    const calledUrl = mockOpenUrl.mock.calls[0][0] as URL;
-    expect(calledUrl.origin).toBe("https://board.example.com");
-    expect(calledUrl.searchParams.get("hostname")).toBe("127.0.0.1");
-    expect(calledUrl.searchParams.get("port")).toBe("9090");
-    expect(calledUrl.searchParams.get("secret")).toBe("test-secret");
-    expect(calledUrl.hash).toBe("#/proxies");
-  });
+		const calledUrl = mockOpenUrl.mock.calls[0][0] as URL;
+		expect(calledUrl.origin).toBe("https://board.example.com");
+		expect(calledUrl.searchParams.get("hostname")).toBe("127.0.0.1");
+		expect(calledUrl.searchParams.get("port")).toBe("9090");
+		expect(calledUrl.searchParams.get("secret")).toBe("test-secret");
+		expect(calledUrl.hash).toBe("#/proxies");
+	});
 
-  test("should log info message with the URL via i18n", async () => {
-    await handler();
+	test("should log info message with the URL via i18n", async () => {
+		await handler();
 
-    expect(mockLogger.info).toHaveBeenCalledTimes(1);
-    expect(mockT).toHaveBeenCalledWith("app.clash.board.openWait", {
-      url: expect.stringContaining("board.example.com"),
-    });
-  });
+		expect(mockLogger.info).toHaveBeenCalledTimes(1);
+		expect(mockT).toHaveBeenCalledWith("app.clash.board.openWait", {
+			url: expect.stringContaining("board.example.com"),
+		});
+	});
 
-  test("should call getDelay before opening the URL", async () => {
-    const callOrder: string[] = [];
-    mockGetDelay.mockImplementation(async () => {
-      callOrder.push("getDelay");
-      return {};
-    });
-    mockOpenUrl.mockImplementation(async () => {
-      callOrder.push("openUrl");
-    });
+	test("should call getDelay before opening the URL", async () => {
+		const callOrder: string[] = [];
+		mockGetDelay.mockImplementation(async () => {
+			callOrder.push("getDelay");
+			return {};
+		});
+		mockOpenUrl.mockImplementation(async () => {
+			callOrder.push("openUrl");
+		});
 
-    await handler();
+		await handler();
 
-    expect(callOrder).toEqual(["getDelay", "openUrl"]);
-  });
+		expect(callOrder).toEqual(["getDelay", "openUrl"]);
+	});
 
-  test("should call openUrl with a URL instance", async () => {
-    await handler();
+	test("should call openUrl with a URL instance", async () => {
+		await handler();
 
-    expect(mockOpenUrl).toHaveBeenCalledTimes(1);
-    expect(mockOpenUrl.mock.calls[0][0]).toBeInstanceOf(URL);
-  });
+		expect(mockOpenUrl).toHaveBeenCalledTimes(1);
+		expect(mockOpenUrl.mock.calls[0][0]).toBeInstanceOf(URL);
+	});
 });

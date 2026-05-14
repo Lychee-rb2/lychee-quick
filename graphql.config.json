@@ -1,12 +1,12 @@
 {
-    "projects": {
-        "linear": {
-            "schema": "graphql/linear/schema.graphql",
-            "documents": "graphql/linear/gql/*.graphql"
-        },
-        "github": {
-            "schema": "graphql/github/schema.graphql",
-            "documents": "graphql/github/gql/*.graphql"
-        }
-    }
+	"projects": {
+		"linear": {
+			"schema": "graphql/linear/schema.graphql",
+			"documents": "graphql/linear/gql/*.graphql"
+		},
+		"github": {
+			"schema": "graphql/github/schema.graphql",
+			"documents": "graphql/github/gql/*.graphql"
+		}
+	}
 }

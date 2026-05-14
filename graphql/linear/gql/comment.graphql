@@ -1,7 +1,7 @@
 mutation createComment($input: CommentCreateInput!) {
-  commentCreate(input: $input) {
-    comment {
-      url
-    }
-  }
+	commentCreate(input: $input) {
+		comment {
+			url
+		}
+	}
 }

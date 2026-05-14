@@ -1,67 +1,67 @@
-import zh from "./zh.json";
-import en from "./en.json";
 import { LOCALE } from "@/help/env";
+import en from "./en.json";
+import zh from "./zh.json";
 
 export type NestedMessages = {
-  [key: string]: string | NestedMessages;
+	[key: string]: string | NestedMessages;
 };
 
 type KeyPaths<T, Prefix extends string = ""> = T extends string
-  ? Prefix
-  : {
-      [K in keyof T & string]: T[K] extends string
-        ? Prefix extends ""
-          ? K
-          : `${Prefix}.${K}`
-        : KeyPaths<T[K], Prefix extends "" ? K : `${Prefix}.${K}`>;
-    }[keyof T & string];
+	? Prefix
+	: {
+			[K in keyof T & string]: T[K] extends string
+				? Prefix extends ""
+					? K
+					: `${Prefix}.${K}`
+				: KeyPaths<T[K], Prefix extends "" ? K : `${Prefix}.${K}`>;
+		}[keyof T & string];
 
 export type MessageKeys = KeyPaths<typeof zh>;
 
 export const getNestedValue = (
-  obj: NestedMessages,
-  path: string,
+	obj: NestedMessages,
+	path: string,
 ): string | undefined => {
-  const keys = path.split(".");
-  let current: string | NestedMessages | undefined = obj;
+	const keys = path.split(".");
+	let current: string | NestedMessages | undefined = obj;
 
-  for (const key of keys) {
-    if (current === undefined || typeof current === "string") {
-      return undefined;
-    }
-    current = current[key];
-  }
+	for (const key of keys) {
+		if (current === undefined || typeof current === "string") {
+			return undefined;
+		}
+		current = current[key];
+	}
 
-  return typeof current === "string" ? current : undefined;
+	return typeof current === "string" ? current : undefined;
 };
 
 let messages: NestedMessages | null = null;
 
 const resolveMessages = (locale: string): NestedMessages =>
-  locale === "zh" ? (zh as NestedMessages) : (en as NestedMessages);
+	locale === "zh" ? (zh as NestedMessages) : (en as NestedMessages);
 
 export const createI18n = (): NestedMessages => {
-  if (messages) return messages;
-  const locale = LOCALE();
-  messages = resolveMessages(locale);
-  return messages;
+	if (messages) return messages;
+	const locale = LOCALE();
+	messages = resolveMessages(locale);
+	return messages;
 };
 
 /** @internal 仅用于测试重置单例状态 */
 export const _resetI18n = () => {
-  messages = null;
+	messages = null;
 };
 
 export const t = (
-  key: MessageKeys | string,
-  args: Record<string, string> = {},
+	key: MessageKeys | string,
+	args: Record<string, string> = {},
 ): string => {
-  const messages = createI18n();
-  const message = getNestedValue(messages, key);
+	const messages = createI18n();
+	const message = getNestedValue(messages, key);
 
-  if (!message) {
-    return key;
-  }
+	if (!message) {
+		return key;
+	}
 
-  return message.replace(/{(\w+)}/g, (match, p1) => args[p1] ?? match);
+	return message.replace(/{(\w+)}/g, (match, p1) => args[p1] ?? match);
 };

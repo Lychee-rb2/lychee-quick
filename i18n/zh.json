@@ -1,138 +1,138 @@
 {
-  "app": {
-    "completion": "个人开发工作流 CLI",
-    "help": "Lychee Quick CLI - 个人开发工作流工具\n\n一个使用 Bun 构建的 CLI 工具，集成 Linear、Vercel、GitHub 和 Mihomo 代理管理。\n\n命令:\n  clash   - Mihomo/Clash 代理管理\n  linear  - Linear 项目管理\n  vercel  - Vercel 部署管理\n\n选项:\n  -h, --help  显示帮助信息\n\n示例:\n  {cli} clash now        查看当前代理状态\n  {cli} linear branch    从 Issue 创建分支\n  {cli} vercel release   触发 Vercel 部署\n\n运行 '{cli} <command> -h' 查看子命令帮助。",
-    "clash": {
-      "completion": "Mihomo/Clash 代理管理",
-      "help": "Mihomo/Clash 代理管理\n\n管理 Mihomo (Clash) 代理的相关操作，包括查看状态、切换代理和延迟测试。\n\n需要配置环境变量:\n  MIHOMO_URL        - Mihomo API 地址\n  MIHOMO_TOKEN      - Mihomo API 令牌\n  MIHOMO_TOP_PROXY  - Mihomo Top Proxy\n  MIHOMO_BOARD      - Mihomo 网页面板地址",
-      "board": {
-        "completion": "Mihomo 网页面板",
-        "help": "打开Mihomo 网页面板",
-        "openWait": "正在打开 {url}，等待全局延迟测试"
-      },
-      "check": {
-        "completion": "延迟测试",
-        "help": "延迟测试\n\n测试当前使用的代理节点延迟，使用 gstatic.com/generate_204 进行测试。\n\n输出格式: <代理名称> -> <延迟>ms",
-        "noProxy": "未找到代理",
-        "proxy": "代理: {proxy}",
-        "delay": "延迟: {delay}ms",
-        "unknownError": "未知错误: {error}"
-      },
-      "toggle": {
-        "completion": "切换代理模式",
-        "help": "切换代理模式\n\n在 rule、direct、global 三种模式之间切换。\n\n模式说明:\n  rule   - 规则模式，根据规则决定是否代理\n  direct - 直连模式，所有流量直连\n  global - 全局模式，所有流量走代理",
-        "modeChanged": "模式已切换为 {mode}"
-      }
-    },
-    "linear": {
-      "completion": "Linear 项目管理",
-      "help": "Linear 项目管理\n\n与 Linear 项目管理工具集成，支持从 Issue 创建分支、发送预览评论等。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n需要配置环境变量:\n  LINEAR_API_KEY  - Linear API 密钥\n  LINEAR_TEAM     - Linear 团队标识",
-      "branch": {
-        "completion": "从 Issue 创建分支",
-        "help": "从 Issue 创建分支\n\n从 Linear Issue 创建 Git 分支，自动拉取最新 main 分支。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 搜索和筛选 Issue (输入 M 筛选我的，N 筛选未分配的)\n  - 按负责人分组显示\n  - 自动生成分支名并处理重名\n  - 执行 git checkout main && git pull && git checkout -b <branch>"
-      },
-      "preview": {
-        "completion": "发送预览评论",
-        "help": "发送预览评论\n\n向 Linear Issue 发送预览链接评论。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 显示有 PR 关联的 Issue\n  - 选择 PR 后发送预览链接到 Issue 评论"
-      },
-      "release": {
-        "completion": "发布 Issue",
-        "help": "发布 Issue\n\n批量发布 Linear Issue，更新状态并打开发布说明页面。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 显示 started 和 completed 状态的 Issue\n  - 多选要发布的 Issue\n  - 自动打开 RELEASE_NOTE_PAGE (如已配置)",
-        "noteTitle": "# 发布说明: {today}"
-      }
-    },
-    "vercel": {
-      "completion": "Vercel 部署管理",
-      "help": "Vercel 部署管理\n\n管理 Vercel 部署，包括检查部署状态和触发部署。\n\n选项:\n  -f  强制刷新缓存\n\n需要配置环境变量:\n  VERCEL_PERSONAL_TOKEN  - Vercel 个人令牌\n  VERCEL_TEAM            - Vercel 团队名称\n  VERCEL_PROJECT         - Vercel 项目名称",
-      "check": {
-        "completion": "检查部署状态",
-        "help": "检查部署状态\n\n检查指定分支的 Vercel 部署状态。\n\n选项:\n  -f  强制刷新 PR 分支和部署缓存\n\n功能:\n  - 显示所有 PR 分支\n  - 选择分支后查看其部署状态",
-        "branch": "分支: {branch}"
-      },
-      "release": {
-        "completion": "触发部署",
-        "help": "触发部署\n\n通过 Deploy Hook 触发 Vercel 部署。\n\n选项:\n  -f  强制刷新项目缓存\n\n功能:\n  - 选择要发布的分支\n  - 多选要部署的项目\n  - 触发部署后自动打开 Vercel 部署页面"
-      }
-    },
-    "sops": {
-      "completion": "SOPS 文件管理",
-      "help": "SOPS 文件管理\n\n提供 SOPS 相关操作，包括解密 .sops 文件并可选择覆盖到目标目录的 .env 文件。",
-      "decrypt": {
-        "completion": "解密 SOPS 文件",
-        "help": "解密 SOPS 文件\n\n交互式选择 .sops 文件并执行解密。\n\n功能:\n  - 搜索并选择要解密的 .sops 文件\n  - 输出对应的 dotenv 文件\n  - 可选择覆盖到指定目录下的 .env"
-      }
-    }
-  },
-  "prompt": {
-    "mihomo": {
-      "refresh": "刷新",
-      "reset": "重置",
-      "pickProxy": "选择代理 {name}",
-      "toWhichMode": "切换到哪个模式？"
-    },
-    "linear": {
-      "sendPreviewLink": "发送哪个预览链接？",
-      "confirmSendComment": "确认发送预览评论到 Linear issue {identifier}？",
-      "checkoutBranch": "从哪个 Issue 创建分支？",
-      "sendPreviewComment": "从哪个 PR 发送预览评论？",
-      "releaseIssue": "发布哪些 Issue？"
-    },
-    "vercel": {
-      "checkPr": "检查哪个 Pull Request？",
-      "releaseProject": "发布哪个项目？"
-    },
-    "sops": {
-      "decryptFile": "解密哪个文件？",
-      "decryptConfirm": "确认将 {file} 覆盖到指定文件夹下的 .env 文件？",
-      "decryptSuccess": "解密成功: {file}",
-      "coverFolders": "覆盖哪些文件夹？",
-      "decryptCoverSuccess": "✅ 覆盖成功: {file}",
-      "decryptCoverError": "❌ 覆盖失败: {file}"
-    }
-  },
-  "error": {
-    "mihomo": {
-      "timeout": "请求超时: {detail}",
-      "unavailable": "服务不可用: {detail}",
-      "notFound": "资源未找到: {uri}",
-      "requestFailed": "请求失败 ({status}): {detail}",
-      "networkError": "网络请求失败: {error}"
-    },
-    "env": {
-      "missingVar": "缺少必需的环境变量: {name}"
-    }
-  },
-  "cli": {
-    "usage": "用法: {cliName} <命令> [子命令] [选项]\n",
-    "availableCommands": "可用命令:\n",
-    "runHelp": "\n运行 '{cliName} <command>' 查看可用子命令。",
-    "subcommandUsage": "用法: {cliName} {command} <子命令>\n",
-    "availableSubcommands": "可用子命令:\n",
-    "cannotFindHelp": "找不到 \"{action}\" 的帮助信息",
-    "noHelpAvailable": "\"{action}\" 没有可用的帮助信息",
-    "cannotFind": "找不到命令 \"{action}\"",
-    "metaError": "读取 {name} 的 meta.ts 时出错",
-    "aliasMultipleMatches": "缩写 \"{prefix}\" 匹配多个命令: {matches}，请使用更长的前缀"
-  },
-  "script": {
-    "installCli": {
-      "binUpdated": "package.json bin 已更新: {cliName} -> ./bin.ts",
-      "writeFailed": "写入 package.json 失败:",
-      "installed": "CLI 已通过 bun link 安装",
-      "installFailed": "安装 CLI 失败:"
-    },
-    "zshCompletion": {
-      "alreadyConfigured": "Zsh 补全已配置",
-      "installed": "Zsh 补全已安装: {cliName}",
-      "installFailed": "安装 zsh 补全失败:",
-      "zshNotDetected": "未检测到 Zsh，跳过补全安装",
-      "enableHint": "\n运行以下命令启用补全:\n  source {completionFile}\n"
-    },
-    "buildGlobalEnv": {
-      "generated": "global-env.d.ts 已生成，包含 {count} 个环境变量"
-    },
-    "getCompletions": {
-      "dashInName": "命令名不能包含 \"-\": {name} (在 {path})"
-    }
-  }
+	"app": {
+		"completion": "个人开发工作流 CLI",
+		"help": "Lychee Quick CLI - 个人开发工作流工具\n\n一个使用 Bun 构建的 CLI 工具，集成 Linear、Vercel、GitHub 和 Mihomo 代理管理。\n\n命令:\n  clash   - Mihomo/Clash 代理管理\n  linear  - Linear 项目管理\n  vercel  - Vercel 部署管理\n\n选项:\n  -h, --help  显示帮助信息\n\n示例:\n  {cli} clash now        查看当前代理状态\n  {cli} linear branch    从 Issue 创建分支\n  {cli} vercel release   触发 Vercel 部署\n\n运行 '{cli} <command> -h' 查看子命令帮助。",
+		"clash": {
+			"completion": "Mihomo/Clash 代理管理",
+			"help": "Mihomo/Clash 代理管理\n\n管理 Mihomo (Clash) 代理的相关操作，包括查看状态、切换代理和延迟测试。\n\n需要配置环境变量:\n  MIHOMO_URL        - Mihomo API 地址\n  MIHOMO_TOKEN      - Mihomo API 令牌\n  MIHOMO_TOP_PROXY  - Mihomo Top Proxy\n  MIHOMO_BOARD      - Mihomo 网页面板地址",
+			"board": {
+				"completion": "Mihomo 网页面板",
+				"help": "打开Mihomo 网页面板",
+				"openWait": "正在打开 {url}，等待全局延迟测试"
+			},
+			"check": {
+				"completion": "延迟测试",
+				"help": "延迟测试\n\n测试当前使用的代理节点延迟，使用 gstatic.com/generate_204 进行测试。\n\n输出格式: <代理名称> -> <延迟>ms",
+				"noProxy": "未找到代理",
+				"proxy": "代理: {proxy}",
+				"delay": "延迟: {delay}ms",
+				"unknownError": "未知错误: {error}"
+			},
+			"toggle": {
+				"completion": "切换代理模式",
+				"help": "切换代理模式\n\n在 rule、direct、global 三种模式之间切换。\n\n模式说明:\n  rule   - 规则模式，根据规则决定是否代理\n  direct - 直连模式，所有流量直连\n  global - 全局模式，所有流量走代理",
+				"modeChanged": "模式已切换为 {mode}"
+			}
+		},
+		"linear": {
+			"completion": "Linear 项目管理",
+			"help": "Linear 项目管理\n\n与 Linear 项目管理工具集成，支持从 Issue 创建分支、发送预览评论等。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n需要配置环境变量:\n  LINEAR_API_KEY  - Linear API 密钥\n  LINEAR_TEAM     - Linear 团队标识",
+			"branch": {
+				"completion": "从 Issue 创建分支",
+				"help": "从 Issue 创建分支\n\n从 Linear Issue 创建 Git 分支，自动拉取最新 main 分支。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 搜索和筛选 Issue (输入 M 筛选我的，N 筛选未分配的)\n  - 按负责人分组显示\n  - 自动生成分支名并处理重名\n  - 执行 git checkout main && git pull && git checkout -b <branch>"
+			},
+			"preview": {
+				"completion": "发送预览评论",
+				"help": "发送预览评论\n\n向 Linear Issue 发送预览链接评论。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 显示有 PR 关联的 Issue\n  - 选择 PR 后发送预览链接到 Issue 评论"
+			},
+			"release": {
+				"completion": "发布 Issue",
+				"help": "发布 Issue\n\n批量发布 Linear Issue，更新状态并打开发布说明页面。\n\n选项:\n  -f  强制刷新 Issue 缓存\n\n功能:\n  - 显示 started 和 completed 状态的 Issue\n  - 多选要发布的 Issue\n  - 自动打开 RELEASE_NOTE_PAGE (如已配置)",
+				"noteTitle": "# 发布说明: {today}"
+			}
+		},
+		"vercel": {
+			"completion": "Vercel 部署管理",
+			"help": "Vercel 部署管理\n\n管理 Vercel 部署，包括检查部署状态和触发部署。\n\n选项:\n  -f  强制刷新缓存\n\n需要配置环境变量:\n  VERCEL_PERSONAL_TOKEN  - Vercel 个人令牌\n  VERCEL_TEAM            - Vercel 团队名称\n  VERCEL_PROJECT         - Vercel 项目名称",
+			"check": {
+				"completion": "检查部署状态",
+				"help": "检查部署状态\n\n检查指定分支的 Vercel 部署状态。\n\n选项:\n  -f  强制刷新 PR 分支和部署缓存\n\n功能:\n  - 显示所有 PR 分支\n  - 选择分支后查看其部署状态",
+				"branch": "分支: {branch}"
+			},
+			"release": {
+				"completion": "触发部署",
+				"help": "触发部署\n\n通过 Deploy Hook 触发 Vercel 部署。\n\n选项:\n  -f  强制刷新项目缓存\n\n功能:\n  - 选择要发布的分支\n  - 多选要部署的项目\n  - 触发部署后自动打开 Vercel 部署页面"
+			}
+		},
+		"sops": {
+			"completion": "SOPS 文件管理",
+			"help": "SOPS 文件管理\n\n提供 SOPS 相关操作，包括解密 .sops 文件并可选择覆盖到目标目录的 .env 文件。",
+			"decrypt": {
+				"completion": "解密 SOPS 文件",
+				"help": "解密 SOPS 文件\n\n交互式选择 .sops 文件并执行解密。\n\n功能:\n  - 搜索并选择要解密的 .sops 文件\n  - 输出对应的 dotenv 文件\n  - 可选择覆盖到指定目录下的 .env"
+			}
+		}
+	},
+	"prompt": {
+		"mihomo": {
+			"refresh": "刷新",
+			"reset": "重置",
+			"pickProxy": "选择代理 {name}",
+			"toWhichMode": "切换到哪个模式？"
+		},
+		"linear": {
+			"sendPreviewLink": "发送哪个预览链接？",
+			"confirmSendComment": "确认发送预览评论到 Linear issue {identifier}？",
+			"checkoutBranch": "从哪个 Issue 创建分支？",
+			"sendPreviewComment": "从哪个 PR 发送预览评论？",
+			"releaseIssue": "发布哪些 Issue？"
+		},
+		"vercel": {
+			"checkPr": "检查哪个 Pull Request？",
+			"releaseProject": "发布哪个项目？"
+		},
+		"sops": {
+			"decryptFile": "解密哪个文件？",
+			"decryptConfirm": "确认将 {file} 覆盖到指定文件夹下的 .env 文件？",
+			"decryptSuccess": "解密成功: {file}",
+			"coverFolders": "覆盖哪些文件夹？",
+			"decryptCoverSuccess": "✅ 覆盖成功: {file}",
+			"decryptCoverError": "❌ 覆盖失败: {file}"
+		}
+	},
+	"error": {
+		"mihomo": {
+			"timeout": "请求超时: {detail}",
+			"unavailable": "服务不可用: {detail}",
+			"notFound": "资源未找到: {uri}",
+			"requestFailed": "请求失败 ({status}): {detail}",
+			"networkError": "网络请求失败: {error}"
+		},
+		"env": {
+			"missingVar": "缺少必需的环境变量: {name}"
+		}
+	},
+	"cli": {
+		"usage": "用法: {cliName} <命令> [子命令] [选项]\n",
+		"availableCommands": "可用命令:\n",
+		"runHelp": "\n运行 '{cliName} <command>' 查看可用子命令。",
+		"subcommandUsage": "用法: {cliName} {command} <子命令>\n",
+		"availableSubcommands": "可用子命令:\n",
+		"cannotFindHelp": "找不到 \"{action}\" 的帮助信息",
+		"noHelpAvailable": "\"{action}\" 没有可用的帮助信息",
+		"cannotFind": "找不到命令 \"{action}\"",
+		"metaError": "读取 {name} 的 meta.ts 时出错",
+		"aliasMultipleMatches": "缩写 \"{prefix}\" 匹配多个命令: {matches}，请使用更长的前缀"
+	},
+	"script": {
+		"installCli": {
+			"binUpdated": "package.json bin 已更新: {cliName} -> ./bin.ts",
+			"writeFailed": "写入 package.json 失败:",
+			"installed": "CLI 已通过 bun link 安装",
+			"installFailed": "安装 CLI 失败:"
+		},
+		"zshCompletion": {
+			"alreadyConfigured": "Zsh 补全已配置",
+			"installed": "Zsh 补全已安装: {cliName}",
+			"installFailed": "安装 zsh 补全失败:",
+			"zshNotDetected": "未检测到 Zsh，跳过补全安装",
+			"enableHint": "\n运行以下命令启用补全:\n  source {completionFile}\n"
+		},
+		"buildGlobalEnv": {
+			"generated": "global-env.d.ts 已生成，包含 {count} 个环境变量"
+		},
+		"getCompletions": {
+			"dashInName": "命令名不能包含 \"-\": {name} (在 {path})"
+		}
+	}
 }

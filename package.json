@@ -1,46 +1,46 @@
 {
-  "name": "lychee-quick",
-  "displayName": "Lychee quick cli",
-  "description": "Quick cli for Lychee",
-  "version": "0.0.1",
-  "publisher": "Lychee",
-  "type": "module",
-  "repository": "https://github.com/Lychee-rb2/bun-help.git",
-  "scripts": {
-    "postinstall": "bun -e \"import('./scripts/postinstall.ts').then(m => m.default())\"",
-    "codegen": "bun scripts/codegen.ts",
-    "lint": "biome lint --error-on-warnings .",
-    "lint:fix": "biome lint --write .",
-    "test": "vitest run --coverage",
-    "test:watch": "vitest watch",
-    "test:ui": "vitest --ui"
-  },
-  "dependencies": {
-    "@inquirer/prompts": "^7.4.1",
-    "@upstash/redis": "^1.34.6",
-    "@vercel/sdk": "^1.16.1",
-    "date-fns": "^4.1.0",
-    "dotenv": "^16.4.5",
-    "graphql": "^16.10.0",
-    "graphql-request": "^7.1.2",
-    "lodash-es": "^4.17.21",
-    "pino": "^9.3.1",
-    "pino-pretty": "^11.2.1",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.4.15",
-    "@graphql-codegen/cli": "^5.0.5",
-    "@graphql-codegen/typescript-graphql-request": "^6.2.0",
-    "@graphql-codegen/typescript-operations": "^4.5.1",
-    "@types/bun": "^1.3.8",
-    "@types/lodash-es": "^4.17.12",
-    "@vitest/coverage-v8": "^2.1.8",
-    "@vitest/ui": "^2.1.8",
-    "typescript": "^5.8.2",
-    "vitest": "^2.1.8"
-  },
-  "bin": {
-    "ly": "./bin.ts"
-  }
+	"name": "lychee-quick",
+	"displayName": "Lychee quick cli",
+	"description": "Quick cli for Lychee",
+	"version": "0.0.1",
+	"publisher": "Lychee",
+	"type": "module",
+	"repository": "https://github.com/Lychee-rb2/bun-help.git",
+	"scripts": {
+		"postinstall": "bun -e \"import('./scripts/postinstall.ts').then(m => m.default())\"",
+		"codegen": "bun scripts/codegen.ts",
+		"lint": "biome check --error-on-warnings .",
+		"lint:fix": "biome check --write .",
+		"test": "vitest run --coverage",
+		"test:watch": "vitest watch",
+		"test:ui": "vitest --ui"
+	},
+	"dependencies": {
+		"@inquirer/prompts": "^7.4.1",
+		"@upstash/redis": "^1.34.6",
+		"@vercel/sdk": "^1.16.1",
+		"date-fns": "^4.1.0",
+		"dotenv": "^16.4.5",
+		"graphql": "^16.10.0",
+		"graphql-request": "^7.1.2",
+		"lodash-es": "^4.17.21",
+		"pino": "^9.3.1",
+		"pino-pretty": "^11.2.1",
+		"zod": "^3.24.2"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.15",
+		"@graphql-codegen/cli": "^5.0.5",
+		"@graphql-codegen/typescript-graphql-request": "^6.2.0",
+		"@graphql-codegen/typescript-operations": "^4.5.1",
+		"@types/bun": "^1.3.8",
+		"@types/lodash-es": "^4.17.12",
+		"@vitest/coverage-v8": "^2.1.8",
+		"@vitest/ui": "^2.1.8",
+		"typescript": "^5.8.2",
+		"vitest": "^2.1.8"
+	},
+	"bin": {
+		"ly": "./bin.ts"
+	}
 }

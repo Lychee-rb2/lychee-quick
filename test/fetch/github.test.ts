@@ -1,238 +1,238 @@
-import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
-  createClient,
-  getPullRequestBranches,
-  _resetClient,
+	_resetClient,
+	createClient,
+	getPullRequestBranches,
 } from "@/fetch/github";
 
 // vi.hoisted ensures these are available when vi.mock factory runs
 const {
-  mockGetSdk,
-  mockSdk,
-  MockGraphQLClient,
-  mockCacheGet,
-  mockUpstashCache,
+	mockGetSdk,
+	mockSdk,
+	MockGraphQLClient,
+	mockCacheGet,
+	mockUpstashCache,
 } = vi.hoisted(() => {
-  const mockPullRequestFn = vi.fn();
-  const mockSdk = { pullRequest: mockPullRequestFn };
-  const mockGetSdk = vi.fn(() => mockSdk);
-  const MockGraphQLClient = vi.fn();
-  const mockCacheGet = vi.fn();
-  const mockUpstashCache = vi.fn((_fetch: () => Promise<unknown>) => ({
-    get: mockCacheGet,
-    remove: vi.fn(),
-  }));
-  return {
-    mockGetSdk,
-    mockSdk,
-    MockGraphQLClient,
-    mockCacheGet,
-    mockUpstashCache,
-  };
+	const mockPullRequestFn = vi.fn();
+	const mockSdk = { pullRequest: mockPullRequestFn };
+	const mockGetSdk = vi.fn(() => mockSdk);
+	const MockGraphQLClient = vi.fn();
+	const mockCacheGet = vi.fn();
+	const mockUpstashCache = vi.fn((_fetch: () => Promise<unknown>) => ({
+		get: mockCacheGet,
+		remove: vi.fn(),
+	}));
+	return {
+		mockGetSdk,
+		mockSdk,
+		MockGraphQLClient,
+		mockCacheGet,
+		mockUpstashCache,
+	};
 });
 
 vi.mock("@/graphql/github/client.ts", () => ({
-  getSdk: mockGetSdk,
+	getSdk: mockGetSdk,
 }));
 
 vi.mock("graphql-request", () => ({
-  GraphQLClient: MockGraphQLClient,
+	GraphQLClient: MockGraphQLClient,
 }));
 
 vi.mock("@/help/redis.ts", () => ({
-  upstashCache: mockUpstashCache,
+	upstashCache: mockUpstashCache,
 }));
 
 vi.mock("@/help/env", () => ({
-  GIT_TOKEN: vi.fn(() => "test-github-token"),
-  GIT_ORGANIZATION: vi.fn(() => "test-org"),
-  GIT_REPO: vi.fn(() => "test-repo"),
+	GIT_TOKEN: vi.fn(() => "test-github-token"),
+	GIT_ORGANIZATION: vi.fn(() => "test-org"),
+	GIT_REPO: vi.fn(() => "test-repo"),
 }));
 
 const mockPullRequests = [
-  {
-    title: "Add feature A",
-    url: "https://github.com/test-org/test-repo/pull/1",
-    headRefName: "feature-a",
-    headRefOid: "abc123",
-  },
-  {
-    title: "Fix bug B",
-    url: "https://github.com/test-org/test-repo/pull/2",
-    headRefName: "fix-bug-b",
-    headRefOid: "def456",
-  },
+	{
+		title: "Add feature A",
+		url: "https://github.com/test-org/test-repo/pull/1",
+		headRefName: "feature-a",
+		headRefOid: "abc123",
+	},
+	{
+		title: "Fix bug B",
+		url: "https://github.com/test-org/test-repo/pull/2",
+		headRefName: "fix-bug-b",
+		headRefOid: "def456",
+	},
 ];
 
 describe("fetch/github", () => {
-  let savedArgv: string[];
+	let savedArgv: string[];
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    _resetClient();
-    savedArgv = globalThis.Bun?.argv ?? [];
-    globalThis.Bun = {
-      ...globalThis.Bun,
-      argv: ["bun", "run", "script.ts"],
-    } as typeof Bun;
-  });
+	beforeEach(() => {
+		vi.clearAllMocks();
+		_resetClient();
+		savedArgv = globalThis.Bun?.argv ?? [];
+		globalThis.Bun = {
+			...globalThis.Bun,
+			argv: ["bun", "run", "script.ts"],
+		} as typeof Bun;
+	});
 
-  afterEach(() => {
-    globalThis.Bun = { ...globalThis.Bun, argv: savedArgv } as typeof Bun;
-  });
+	afterEach(() => {
+		globalThis.Bun = { ...globalThis.Bun, argv: savedArgv } as typeof Bun;
+	});
 
-  describe("createClient", () => {
-    test("should create a GraphQL client with correct endpoint and auth header", () => {
-      createClient();
+	describe("createClient", () => {
+		test("should create a GraphQL client with correct endpoint and auth header", () => {
+			createClient();
 
-      expect(MockGraphQLClient).toHaveBeenCalledWith(
-        "https://api.github.com/graphql",
-        { headers: { Authorization: "bearer test-github-token" } },
-      );
-    });
+			expect(MockGraphQLClient).toHaveBeenCalledWith(
+				"https://api.github.com/graphql",
+				{ headers: { Authorization: "bearer test-github-token" } },
+			);
+		});
 
-    test("should pass GraphQLClient instance to getSdk", () => {
-      const mockClientInstance = {};
-      MockGraphQLClient.mockReturnValue(mockClientInstance);
+		test("should pass GraphQLClient instance to getSdk", () => {
+			const mockClientInstance = {};
+			MockGraphQLClient.mockReturnValue(mockClientInstance);
 
-      createClient();
+			createClient();
 
-      expect(mockGetSdk).toHaveBeenCalledWith(mockClientInstance);
-    });
+			expect(mockGetSdk).toHaveBeenCalledWith(mockClientInstance);
+		});
 
-    test("should return the same instance on subsequent calls (singleton)", () => {
-      const client1 = createClient();
-      const client2 = createClient();
+		test("should return the same instance on subsequent calls (singleton)", () => {
+			const client1 = createClient();
+			const client2 = createClient();
 
-      expect(client1).toBe(client2);
-      expect(mockGetSdk).toHaveBeenCalledTimes(1);
-    });
+			expect(client1).toBe(client2);
+			expect(mockGetSdk).toHaveBeenCalledTimes(1);
+		});
 
-    test("should return the SDK instance from getSdk", () => {
-      const client = createClient();
+		test("should return the SDK instance from getSdk", () => {
+			const client = createClient();
 
-      expect(client).toBe(mockSdk);
-    });
-  });
+			expect(client).toBe(mockSdk);
+		});
+	});
 
-  describe("getPullRequestBranches", () => {
-    test("should return an object with pullRequest array and get method", () => {
-      const result = getPullRequestBranches();
+	describe("getPullRequestBranches", () => {
+		test("should return an object with pullRequest array and get method", () => {
+			const result = getPullRequestBranches();
 
-      expect(result).toHaveProperty("pullRequest");
-      expect(result).toHaveProperty("get");
-      expect(Array.isArray(result.pullRequest)).toBe(true);
-      expect(result.pullRequest).toHaveLength(0);
-      expect(typeof result.get).toBe("function");
-    });
+			expect(result).toHaveProperty("pullRequest");
+			expect(result).toHaveProperty("get");
+			expect(Array.isArray(result.pullRequest)).toBe(true);
+			expect(result.pullRequest).toHaveLength(0);
+			expect(typeof result.get).toBe("function");
+		});
 
-    test("should create upstashCache with a fetch function", () => {
-      getPullRequestBranches();
+		test("should create upstashCache with a fetch function", () => {
+			getPullRequestBranches();
 
-      expect(mockUpstashCache).toHaveBeenCalledWith(expect.any(Function));
-    });
+			expect(mockUpstashCache).toHaveBeenCalledWith(expect.any(Function));
+		});
 
-    test("get() should call cache.get with correct key and cache time", async () => {
-      mockCacheGet.mockResolvedValue(mockPullRequests);
+		test("get() should call cache.get with correct key and cache time", async () => {
+			mockCacheGet.mockResolvedValue(mockPullRequests);
 
-      const branches = getPullRequestBranches();
-      await branches.get();
+			const branches = getPullRequestBranches();
+			await branches.get();
 
-      expect(mockCacheGet).toHaveBeenCalledWith(
-        "github-test-org-test-repo-pr-branches",
-        1000 * 60,
-        false,
-      );
-    });
+			expect(mockCacheGet).toHaveBeenCalledWith(
+				"github-test-org-test-repo-pr-branches",
+				1000 * 60,
+				false,
+			);
+		});
 
-    test("get() should return pull request data from cache", async () => {
-      mockCacheGet.mockResolvedValue(mockPullRequests);
+		test("get() should return pull request data from cache", async () => {
+			mockCacheGet.mockResolvedValue(mockPullRequests);
 
-      const branches = getPullRequestBranches();
-      const result = await branches.get();
+			const branches = getPullRequestBranches();
+			const result = await branches.get();
 
-      expect(result).toEqual(mockPullRequests);
-    });
+			expect(result).toEqual(mockPullRequests);
+		});
 
-    test("get() should not re-fetch if pullRequest already has data", async () => {
-      mockCacheGet.mockResolvedValue(mockPullRequests);
+		test("get() should not re-fetch if pullRequest already has data", async () => {
+			mockCacheGet.mockResolvedValue(mockPullRequests);
 
-      const branches = getPullRequestBranches();
-      await branches.get(); // first call - fetches from cache
-      await branches.get(); // second call - should use existing data
+			const branches = getPullRequestBranches();
+			await branches.get(); // first call - fetches from cache
+			await branches.get(); // second call - should use existing data
 
-      expect(mockCacheGet).toHaveBeenCalledTimes(1);
-    });
+			expect(mockCacheGet).toHaveBeenCalledTimes(1);
+		});
 
-    test("get() should pass force=true when Bun.argv contains '-f'", async () => {
-      globalThis.Bun = {
-        ...globalThis.Bun,
-        argv: ["bun", "run", "script.ts", "-f"],
-      } as typeof Bun;
-      mockCacheGet.mockResolvedValue(mockPullRequests);
+		test("get() should pass force=true when Bun.argv contains '-f'", async () => {
+			globalThis.Bun = {
+				...globalThis.Bun,
+				argv: ["bun", "run", "script.ts", "-f"],
+			} as typeof Bun;
+			mockCacheGet.mockResolvedValue(mockPullRequests);
 
-      const branches = getPullRequestBranches();
-      await branches.get();
+			const branches = getPullRequestBranches();
+			await branches.get();
 
-      expect(mockCacheGet).toHaveBeenCalledWith(
-        "github-test-org-test-repo-pr-branches",
-        1000 * 60,
-        true,
-      );
-    });
+			expect(mockCacheGet).toHaveBeenCalledWith(
+				"github-test-org-test-repo-pr-branches",
+				1000 * 60,
+				true,
+			);
+		});
 
-    test("get() should reset pullRequest and re-fetch when force flag is present", async () => {
-      const updatedPullRequests = [
-        { ...mockPullRequests[0], title: "Updated PR" },
-      ];
-      mockCacheGet
-        .mockResolvedValueOnce(mockPullRequests)
-        .mockResolvedValueOnce(updatedPullRequests);
+		test("get() should reset pullRequest and re-fetch when force flag is present", async () => {
+			const updatedPullRequests = [
+				{ ...mockPullRequests[0], title: "Updated PR" },
+			];
+			mockCacheGet
+				.mockResolvedValueOnce(mockPullRequests)
+				.mockResolvedValueOnce(updatedPullRequests);
 
-      const branches = getPullRequestBranches();
+			const branches = getPullRequestBranches();
 
-      // First call without force
-      await branches.get();
-      expect(mockCacheGet).toHaveBeenCalledTimes(1);
+			// First call without force
+			await branches.get();
+			expect(mockCacheGet).toHaveBeenCalledTimes(1);
 
-      // Second call with force flag - should re-fetch
-      globalThis.Bun = {
-        ...globalThis.Bun,
-        argv: ["bun", "run", "script.ts", "-f"],
-      } as typeof Bun;
-      const result = await branches.get();
+			// Second call with force flag - should re-fetch
+			globalThis.Bun = {
+				...globalThis.Bun,
+				argv: ["bun", "run", "script.ts", "-f"],
+			} as typeof Bun;
+			const result = await branches.get();
 
-      expect(mockCacheGet).toHaveBeenCalledTimes(2);
-      expect(result[0].title).toBe("Updated PR");
-    });
+			expect(mockCacheGet).toHaveBeenCalledTimes(2);
+			expect(result[0].title).toBe("Updated PR");
+		});
 
-    test("upstashCache fetch function should call client.pullRequest with correct params", async () => {
-      getPullRequestBranches();
+		test("upstashCache fetch function should call client.pullRequest with correct params", async () => {
+			getPullRequestBranches();
 
-      // Get the fetch function passed to upstashCache
-      const fetchFn = mockUpstashCache.mock.calls[0]?.[0];
-      expect(fetchFn).toBeDefined();
-      if (!fetchFn) {
-        throw new Error("fetchFn should be defined");
-      }
+			// Get the fetch function passed to upstashCache
+			const fetchFn = mockUpstashCache.mock.calls[0]?.[0];
+			expect(fetchFn).toBeDefined();
+			if (!fetchFn) {
+				throw new Error("fetchFn should be defined");
+			}
 
-      // Mock the response from client.pullRequest
-      const mockResponse = {
-        repository: {
-          pullRequests: {
-            nodes: mockPullRequests,
-          },
-        },
-      };
-      mockSdk.pullRequest.mockResolvedValue(mockResponse);
+			// Mock the response from client.pullRequest
+			const mockResponse = {
+				repository: {
+					pullRequests: {
+						nodes: mockPullRequests,
+					},
+				},
+			};
+			mockSdk.pullRequest.mockResolvedValue(mockResponse);
 
-      const result = await fetchFn();
+			const result = await fetchFn();
 
-      expect(mockSdk.pullRequest).toHaveBeenCalledWith({
-        owner: "test-org",
-        name: "test-repo",
-      });
-      expect(result).toEqual(mockPullRequests);
-    });
-  });
+			expect(mockSdk.pullRequest).toHaveBeenCalledWith({
+				owner: "test-org",
+				name: "test-repo",
+			});
+			expect(result).toEqual(mockPullRequests);
+		});
+	});
 });

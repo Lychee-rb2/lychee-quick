@@ -1,49 +1,49 @@
-import { getSdk, type Sdk } from "@/graphql/github/client.ts";
 import { GraphQLClient } from "graphql-request";
+import { getSdk, type Sdk } from "@/graphql/github/client.ts";
+import { GIT_ORGANIZATION, GIT_REPO, GIT_TOKEN } from "@/help/env";
 import { upstashCache } from "@/help/redis.ts";
 import type { PullRequest } from "@/types/github.ts";
-import { GIT_TOKEN, GIT_ORGANIZATION, GIT_REPO } from "@/help/env";
 
 let client: Sdk | null = null;
 
 export const createClient = (): Sdk => {
-  if (client) return client;
-  const gitToken = GIT_TOKEN();
-  client = getSdk(
-    new GraphQLClient("https://api.github.com/graphql", {
-      headers: { Authorization: `bearer ${gitToken}` },
-    }),
-  );
-  return client;
+	if (client) return client;
+	const gitToken = GIT_TOKEN();
+	client = getSdk(
+		new GraphQLClient("https://api.github.com/graphql", {
+			headers: { Authorization: `bearer ${gitToken}` },
+		}),
+	);
+	return client;
 };
 
 /** @internal 仅用于测试重置单例状态 */
 export const _resetClient = () => {
-  client = null;
+	client = null;
 };
 
 export const getPullRequestBranches = () => {
-  const githubOwner = GIT_ORGANIZATION();
-  const githubRepo = GIT_REPO();
-  let pullRequest: PullRequest[] = [];
-  const cache = upstashCache(() =>
-    createClient()
-      .pullRequest({ owner: githubOwner, name: githubRepo })
-      .then((res) => res.repository.pullRequests.nodes),
-  );
-  return {
-    pullRequest,
-    get: async () => {
-      const force = Bun.argv.some((i) => i === "-f");
-      pullRequest = force ? [] : pullRequest;
-      if (!pullRequest.length) {
-        pullRequest = await cache.get(
-          `github-${githubOwner}-${githubRepo}-pr-branches`,
-          1000 * 60,
-          force,
-        );
-      }
-      return pullRequest;
-    },
-  };
+	const githubOwner = GIT_ORGANIZATION();
+	const githubRepo = GIT_REPO();
+	let pullRequest: PullRequest[] = [];
+	const cache = upstashCache(() =>
+		createClient()
+			.pullRequest({ owner: githubOwner, name: githubRepo })
+			.then((res) => res.repository.pullRequests.nodes),
+	);
+	return {
+		pullRequest,
+		get: async () => {
+			const force = Bun.argv.some((i) => i === "-f");
+			pullRequest = force ? [] : pullRequest;
+			if (!pullRequest.length) {
+				pullRequest = await cache.get(
+					`github-${githubOwner}-${githubRepo}-pr-branches`,
+					1000 * 60,
+					force,
+				);
+			}
+			return pullRequest;
+		},
+	};
 };

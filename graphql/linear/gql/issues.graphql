@@ -1,33 +1,33 @@
 query issues($team: String!) {
-  issues(
-    filter: { team: { name: { eq: $team } }, cycle: { isActive: { eq: true } } }
-    sort: { workflowState: { order: Ascending } }
-    first: 200
-  ) {
-    nodes {
-      id
-      identifier
-      title
-      url
-      branchName
-      updatedAt
-      assignee {
-        isMe
-        displayName
-        avatarUrl
-      }
-      state {
-        type
-        color
-        position
-      }
-      attachments(filter: { sourceType: { eq: "github" } }) {
-        nodes {
-          id
-          url
-          metadata
-        }
-      }
-    }
-  }
+	issues(
+		filter: { team: { name: { eq: $team } }, cycle: { isActive: { eq: true } } }
+		sort: { workflowState: { order: Ascending } }
+		first: 200
+	) {
+		nodes {
+			id
+			identifier
+			title
+			url
+			branchName
+			updatedAt
+			assignee {
+				isMe
+				displayName
+				avatarUrl
+			}
+			state {
+				type
+				color
+				position
+			}
+			attachments(filter: { sourceType: { eq: "github" } }) {
+				nodes {
+					id
+					url
+					metadata
+				}
+			}
+		}
+	}
 }
