@@ -1,0 +1,36 @@
+---
+description: git 提交前检查 .env 与 global-env.d.ts 是否同步
+alwaysApply: true
+---
+
+# 提交前 Env 同步规则
+
+## 触发场景
+
+当用户要求你执行 git 提交相关操作（例如 `git commit`、整理提交内容、准备提交）时，必须先检查 `.env` 是否发生变更。
+
+## 强制要求
+
+如果检测到 `.env` 有任何变更，你必须先提醒用户运行：
+
+```bash
+bun run build:global-env
+```
+
+并确认 `global-env.d.ts` 已同步后，才能继续提交流程。
+
+如果还能识别到 `.env` 有新增环境变量键，则应额外明确说明这是强制同步场景，必须先执行该命令再提交。
+
+## 推荐检查方式
+
+1. 检查 `.env` 是否变更
+2. 若 `.env` 变更，先提醒运行 `bun run build:global-env`
+3. 对比 `.env` 与 `global-env.d.ts` 的改动状态
+4. 若 `global-env.d.ts` 未同步，暂停提交
+5. 用户同步后，再继续 `git add` / `git commit`
+
+## 禁止行为
+
+1. ❌ 在 `.env` 已变更时不提醒 `build:global-env` 就直接提交
+2. ❌ 在发现 `.env` 新增键时仍不强调“先同步再提交”
+3. ❌ 忽略 `global-env.d.ts` 同步状态直接提交
